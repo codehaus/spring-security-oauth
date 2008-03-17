@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE beans PUBLIC "-//SPRING//DTD BEAN//EN" "http://www.springframework.org/dtd/spring-beans.dtd">
+
+<beans>
+
+  <bean id="propertyConfigurer" class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
+    <property name="location" value="/WEB-INF/sparklr.properties"/>
+  </bean>
+
+  <!--
+    Definition of protected resources.
+
+    There is only one protected resource that Tonr needs to access, that of Sparklr photos.  Other protected
+    resources can be added to the map.
+  -->
+  <bean id="resourceDetailsService" class="org.springframework.security.oauth.consumer.InMemoryProtectedResourceDetailsService">
+    <property name="resourceDetailsStore">
+      <map>
+        <entry key="sparklrPhotos">
+          <bean class="org.springframework.security.oauth.consumer.BaseProtectedResourceDetails">
+            <property name="id" value="sparklrPhotos"/>
+            <property name="consumerKey" value="tonr-consumer-key"/>
+            <property name="sharedSecret">
+              <bean class="org.springframework.security.oauth.common.signature.SharedConsumerSecret">
+                <constructor-arg value="SHHHHH!!!!!!!!!!"/>
+              </bean>
+            </property>
+            <property name="accessTokenURL" value="${accessTokenURL}"/>
+            <property name="requestTokenURL" value="${requestTokenURL}"/>
+            <property name="signatureMethod" value="HMAC-SHA1"/>
+            <property name="userAuthorizationURL" value="${userAuthorizationURL}"/>
+          </bean>
+        </entry>
+      </map>
+    </property>
+  </bean>
+
+</beans>
