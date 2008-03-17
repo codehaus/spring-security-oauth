@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<project name="OAuth for Spring Security">
+
+  <bannerLeft>
+    <name>OAuth for Spring Security</name>
+  </bannerLeft>
+
+  <body>
+
+    <menu name="OAuth for Spring Security">
+      <item name="Home" href="index.html"/>
+      <item name="Tutorial" href="tutorial.html"/>
+      <item name="User Guide" href="userguide.html"/>
+      <item name="Support" href="support.html"/>
+      <item name="Downloads" href="downloads.html"/>
+    </menu>
+
+    <menu name="Other Links">
+      <item name="OAuth" href="http://oauth.net/"/>
+      <item name="Spring Security" href="http://www.acegisecurity.org/"/>
+      <item name="Spring" href="http://springframework.org/"/>
+    </menu>
+
+  </body>
+</project>

@@ -1,0 +1,27 @@
+  ---
+  OAuth for Spring Security
+  ---
+  Ryan Heaton
+  ---
+
+Welcome
+
+  Welcome to OAuth for Spring Security!
+
+  As you can probably deduce from its name, the purpose of this project is to provide an {{{http://oauth.net}OAuth}}
+  implementation for {{{http://www.acegisecurity.org/}Spring Security}}.  Support is provided for both OAuth
+  provider developers and OAuth consumer developers.
+
+  Applying security to an application is not for the faint of heart, and OAuth is no exception. Before you get started,
+  you're going to want to make sure you understand OAuth and the problem it's designed to address. There is good
+  documentation at {{{http://oauth.net}the OAuth site}} and {{{http://oauth.net/documentation/getting-started}a good
+  illustration of how OAuth is applied}}. You will also want to make sure you understand how {{{http://springframework.org/}Spring}}
+  and {{{http://www.acegisecurity.org/}Spring Security}} work.
+
+  With that, you're ready to get started.  You'll want to see {{{./tutorial.html}OAuth for Spring Security in action}}
+  and read a more detailed explanation in the {{{./userguide.html}user guide}}.
+
+  If you run into problems or have other questions, use the mailing list
+  ({{{http://spring-security-oauth.codehaus.markmail.org/}archive}},
+  {{{http://xircles.codehaus.org/manage_email/user\@spring-security-oauth.codehaus.org}subscribe}}).  Keep in mind that
+  {{{http://webcohesion.com/}commercial support}} is also available.
