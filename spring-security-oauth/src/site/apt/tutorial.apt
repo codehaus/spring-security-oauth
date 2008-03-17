@@ -1,0 +1,20 @@
+  ---
+  Tutorial: OAuth for Spring Security
+  ---
+  Ryan Heaton
+  ---
+
+Introduction
+
+  There's a good {{{http://www.hueniverse.com/hueniverse/2007/10/beginners-gui-1.html}getting started guide}} that illustrates OAuth
+  by describing two different (but related) services.  One is a photo-sharing application.  The other is a photo-printing
+  application.  In OAuth terms, the photo sharing application is the OAuth <provider> and the photo printing application
+  is the OAuth <consumer>.
+
+  For this tutorial, we will see OAuth for Spring Security in action by deploying a photo-sharing application and a
+  photo-printing application on our local machine.  We'll named the photo-sharing application "Sparklr" and the
+  photo-printing application "Tonr".  A user named "Marissa" (who has an account at both Sparkr and Tonr) will use Tonr
+  to access her photos on Sparklr without ever giving Tonr her credentials to Sparklr.
+
+  Each application is a standard {{{http://maven.apache.org/}Maven}} project, so you will need Maven installed.  You will
+  also need {{{http://subversion.tigris.org/}Subversion}} installed in order to obtain access to these applications.
