@@ -22,7 +22,7 @@ public class AccessConfirmationController extends AbstractController {
   private OAuthProviderTokenServices tokenServices;
   private ConsumerDetailsService consumerDetailsService;
 
-  protected ModelAndView handleRequestInter.nal(HttpServletRequest request, HttpServletResponse response) throws Exception {
+  protected ModelAndView handleRequestInternal(HttpServletRequest request, HttpServletResponse response) throws Exception {
     String token = request.getParameter("oauth_token");
     if (token == null) {
       throw new IllegalArgumentException("An access token must be provided.");
