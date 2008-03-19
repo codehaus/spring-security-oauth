@@ -1,11 +1,21 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
 <project name="OAuth for Spring Security">
 
-  <bannerLeft>
-    <name>OAuth for Spring Security</name>
-  </bannerLeft>
+  <skin>
+    <groupId>com.webcohesion.site</groupId>
+    <artifactId>web-cohesion-site</artifactId>
+    <version>1.0</version>
+  </skin>
 
   <body>
+
+    <links>
+      <item name="Home" href="index.html"/>
+      <item name="Tutorial" href="tutorial.html"/>
+      <item name="User Guide" href="userguide.html"/>
+      <item name="Support" href="support.html"/>
+      <item name="Downloads" href="downloads.html"/>
+    </links>
 
     <menu name="OAuth for Spring Security">
       <item name="Home" href="index.html"/>
