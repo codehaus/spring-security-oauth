@@ -1,9 +1,65 @@
   ---
-  Tutorial: OAuth for Spring Security
   ---
   Ryan Heaton
   ---
 
-Introduction
+Beware
 
-  Probably the
+  Unless you've got a reasonable grasp of both {{{http://oauth.net}OAuth}} and {{{http://www.acegisecurity.org/}Spring Security}},
+  this user guide will likely lose you. Okay, let's face it, you'll probably get lost anyway.  But understanding the following
+  will help a lot:
+
+*OAuth
+
+  *{{{http://oauth.net/core/1.0/#anchor3}OAuth Consumer}}
+
+  *{{{http://oauth.net/core/1.0/#anchor3}OAuth Provider}}
+
+  *{{{http://oauth.net/core/1.0/#anchor3}OAuth Protected Resource}}
+
+  *{{{http://oauth.net/core/1.0/#anchor3}Consumer Key}}
+
+  *{{{http://oauth.net/core/1.0/#anchor3}Consumer Secret}}
+
+  *{{{http://oauth.net/core/1.0/#anchor3}Request Token}}
+
+  *{{{http://oauth.net/core/1.0/#anchor3}Access Token}}
+
+*Spring Security
+
+  *{{{http://www.acegisecurity.org/guide/springsecurity.html#mechanisms-providers-entry-points}Mechanisms, Providers, and Entry Points}}
+
+  *{{{http://www.acegisecurity.org/guide/springsecurity.html#userdetails-and-associated-types}User Details}}
+
+  *{{{http://www.acegisecurity.org/guide/springsecurity.html#authorization-common}Common Authorization Concepts}}
+
+  *{{{http://www.acegisecurity.org/guide/springsecurity.html#aop-alliance}MethodInvocation Security Interceptor}}
+
+Contents
+
+  This user guide is divided into two parts, the first for the OAuth provider, the second for the OAuth consumer.  Here's a
+  TOC for quick navigation:
+
+  *{{{provider}OAuth Provider}}
+
+    *{{{managing_consumers}Managing Consumers}}
+
+    *{{{managing_consumers}Managing Consumers}}
+
+  *{{{consumer}OAuth Consumer}}
+
+{provider}
+OAuth Provider
+
+  The OAuth provider is responsible for managing the OAuth consumers that can access its protected resources on behalf of
+  a user. The provider does this by managing and verifying the OAuth tokens that can be used to access the protected
+  resources. Of course, the provider must also supply an interface for the user to confirm that a consumer can be granted
+  given access to the protected resources.
+
+{managing_consumers}
+*Managing Consumers
+
+  Keeping with the conventions of Spring Security the interface for
+
+{consumer}
+OAuth Consumer
