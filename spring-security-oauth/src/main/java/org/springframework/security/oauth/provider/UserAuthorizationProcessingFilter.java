@@ -13,7 +13,16 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
 /**
- * Processing filter for handling a request to authenticate an OAuth request token. According to the OAuth spec, the
+ * Processing filter for handling a request to authenticate an OAuth request token. The default {@link #setFilterProcessesUrl(String) processes URL}
+ * is "/oauth_authenticate_token"<br/><br/>
+ *
+ * This filter looks for two request parameters, one for the token id and one for the callback URL. The
+ * default names of these paramaters are "oauth_token" and "oauth_callback", but this can be configured.<br/><br/>
+ *
+ * Upon successful authorization of the request token, the response is a redirect back to the callback, if supplied.
+ * Otherwise, the response is a redirect to the {@link #setDefaultTargetUrl(String) default target URL}. Upon failure
+ * to authorize, the response is a redirect to {@link #setAuthenticationFailureUrl(String) failure URL}.
+ *
  *
  * @author Ryan Heaton
  */

@@ -1,0 +1,6 @@
+1. Change the pom to point to the new version.
+2. mvn -Dssoauth.repo.url=file:///home/heatonra/mnt/spring-security-oauth/m2 deploy
+3. mvn clean
+4. mvn site:site
+5. rsync -av --delete target/site/ /home/heatonra/mnt/spring-security-oauth/web
+6. svn ci

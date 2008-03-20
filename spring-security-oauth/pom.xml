@@ -27,6 +27,15 @@
     </plugins>
   </build>
 
+  <reporting>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-javadoc-plugin</artifactId>
+      </plugin>
+    </plugins>
+  </reporting>
+
   <dependencies>
     <dependency>
       <groupId>javax.servlet</groupId>
@@ -56,4 +65,18 @@
     </dependency>
 
   </dependencies>
+
+  <distributionManagement>
+    <repository>
+      <id>ssoauth.m2.codehaus.org</id>
+      <name>OAuth for Spring Security Central Repository</name>
+      <url>${ssoauth.repo.url}</url>
+    </repository>
+    <site>
+      <id>ssoauth.site.codehaus.org</id>
+      <name>OAuth for Spring Security Central Repository</name>
+      <url>${ssoauth.site.url}</url>
+    </site>
+  </distributionManagement>
+
 </project>
