@@ -13,7 +13,7 @@ import java.io.IOException;
 
 /**
  * Processing filter for handling a request for an OAuth token. The default implementation assumes a request for a new
- * unauthenticated request token.
+ * unauthenticated request token. The default {@link #setFilterProcessesUrl(String) processes URL} is "/oauth_request_token".
  *
  * @author Ryan Heaton
  */

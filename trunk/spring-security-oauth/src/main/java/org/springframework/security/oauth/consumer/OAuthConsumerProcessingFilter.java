@@ -8,22 +8,18 @@ import org.acegisecurity.ui.AuthenticationEntryPoint;
 import org.acegisecurity.ui.savedrequest.SavedRequest;
 import org.acegisecurity.util.PortResolver;
 import org.acegisecurity.util.PortResolverImpl;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.context.MessageSource;
 import org.springframework.context.MessageSourceAware;
 import org.springframework.context.support.MessageSourceAccessor;
 import org.springframework.security.oauth.common.OAuthException;
-import org.springframework.security.oauth.common.signature.CoreOAuthSignatureMethodFactory;
-import org.springframework.security.oauth.common.signature.OAuthSignatureMethodFactory;
 import org.springframework.security.oauth.consumer.token.HttpSessionBasedTokenServicesFactory;
 import org.springframework.security.oauth.consumer.token.OAuthConsumerToken;
 import org.springframework.security.oauth.consumer.token.OAuthConsumerTokenServices;
 import org.springframework.security.oauth.consumer.token.OAuthConsumerTokenServicesFactory;
-import org.springframework.security.oauth.provider.nonce.ExpiringTimestampNonceServices;
-import org.springframework.security.oauth.provider.nonce.OAuthNonceServices;
 import org.springframework.util.Assert;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 
 import javax.servlet.*;
 import javax.servlet.http.HttpServletRequest;
@@ -34,7 +30,10 @@ import java.net.URLEncoder;
 import java.util.*;
 
 /**
- * OAuth processing filter. This filter should be applied to requests for OAuth protected resources (see OAuth Core 1.0).<br/><br/>
+ * OAuth consumer processing filter. This filter should be applied to requests for OAuth protected resources (see OAuth Core 1.0).<br/><br/>
+ *
+ * When servicing a request that requires protected resources, this filter sets a request attribute (default "OAUTH_ACCESS_TOKENS") that contains
+ * the list of {@link org.springframework.security.oauth.consumer.token.OAuthConsumerToken}s.
  *
  * @author Ryan Heaton
  */
@@ -48,8 +47,6 @@ public class OAuthConsumerProcessingFilter implements Filter, InitializingBean, 
   protected MessageSourceAccessor messages = AcegiMessageSource.getAccessor();
   private FilterInvocationDefinitionSource objectDefinitionSource;
   private OAuthConsumerSupport consumerSupport;
-  private OAuthSignatureMethodFactory signatureMethodFactory = new CoreOAuthSignatureMethodFactory();
-  private OAuthNonceServices nonceServices = new ExpiringTimestampNonceServices();
   private boolean requireAuthenticated = true;
   private String accessTokensRequestAttribute = ACCESS_TOKENS_DEFAULT_ATTRIBUTE;
   private PortResolver portResolver = new PortResolverImpl();
@@ -253,24 +250,6 @@ public class OAuthConsumerProcessingFilter implements Filter, InitializingBean, 
   }
 
   /**
-   * The nonce services.
-   *
-   * @return The nonce services.
-   */
-  public OAuthNonceServices getNonceServices() {
-    return nonceServices;
-  }
-
-  /**
-   * The nonce services.
-   *
-   * @param nonceServices The nonce services.
-   */
-  public void setNonceServices(OAuthNonceServices nonceServices) {
-    this.nonceServices = nonceServices;
-  }
-
-  /**
    * Get the OAuth token services factory.
    *
    * @return The OAuth token services factory.
@@ -331,24 +310,6 @@ public class OAuthConsumerProcessingFilter implements Filter, InitializingBean, 
    */
   public void setConsumerSupport(OAuthConsumerSupport consumerSupport) {
     this.consumerSupport = consumerSupport;
-  }
-
-  /**
-   * The OAuth signature method factory.
-   *
-   * @return The OAuth signature method factory.
-   */
-  public OAuthSignatureMethodFactory getSignatureMethodFactory() {
-    return signatureMethodFactory;
-  }
-
-  /**
-   * The OAuth signature method factory.
-   *
-   * @param signatureMethodFactory The OAuth signature method factory.
-   */
-  public void setSignatureMethodFactory(OAuthSignatureMethodFactory signatureMethodFactory) {
-    this.signatureMethodFactory = signatureMethodFactory;
   }
 
   /**
