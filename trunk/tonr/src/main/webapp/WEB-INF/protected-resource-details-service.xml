@@ -29,6 +29,8 @@
             <property name="requestTokenURL" value="${requestTokenURL}"/>
             <property name="signatureMethod" value="HMAC-SHA1"/>
             <property name="userAuthorizationURL" value="${userAuthorizationURL}"/>
+            <property name="userAuthorizationTokenParameterName" value="${userAuthorizationTokenParameterName}"/>
+            <property name="userAuthorizationCallbackParameterName" value="${userAuthorizationCallbackParameterName}"/>
           </bean>
         </entry>
       </map>
