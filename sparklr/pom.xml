@@ -26,7 +26,7 @@
 
   <dependencies>
     <dependency>
-      <groupId>org.codehaus.enunciate</groupId>
+      <groupId>org.codehaus.spring-security-oauth</groupId>
       <artifactId>spring-security-oauth</artifactId>
       <version>1.0</version>
     </dependency>
