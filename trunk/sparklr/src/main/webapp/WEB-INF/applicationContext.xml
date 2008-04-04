@@ -30,6 +30,8 @@
   <bean id="oauthUserAuthorizationFilter" class="org.springframework.security.oauth.provider.UserAuthorizationProcessingFilter">
     <property name="filterProcessesUrl" value="/oauth/authorize"/>
     <property name="tokenServices" ref="tokenServices"/>
+    <property name="tokenIdParameterName" value="requestToken"/>
+    <property name="callbackParameterName" value="callbackURL"/>
     <property name="authenticationFailureUrl" value="/oauth/confirm_access"/>
 
     <!--This is where the user will be redirected if the consumer didn't provide a callback URL.-->
@@ -62,9 +64,10 @@
 			<value><![CDATA[
 				CONVERT_URL_TO_LOWERCASE_BEFORE_COMPARISON
 				PATTERN_TYPE_APACHE_ANT
-				/photo/**=httpSessionContextIntegrationFilter,securityContextHolderAwareRequestFilter,rememberMeProcessingFilter,anonymousProcessingFilter,oauthProtectedResourceFilter,exceptionTranslationFilter,filterInvocationInterceptor
-				/xml/photos=httpSessionContextIntegrationFilter,securityContextHolderAwareRequestFilter,rememberMeProcessingFilter,anonymousProcessingFilter,oauthProtectedResourceFilter,exceptionTranslationFilter,filterInvocationInterceptor
-				/**=httpSessionContextIntegrationFilter,logoutFilter,authenticationProcessingFilter,oauthRequestTokenFilter,oauthUserAuthorizationFilter,oauthAccessTokenFilter,securityContextHolderAwareRequestFilter,rememberMeProcessingFilter,anonymousProcessingFilter,exceptionTranslationFilter,filterInvocationInterceptor
+        /rest/jpg/photo/**=httpSessionContextIntegrationFilter,securityContextHolderAwareRequestFilter,rememberMeProcessingFilter,anonymousProcessingFilter,exceptionTranslationFilter,oauthProtectedResourceFilter,filterInvocationInterceptor
+        /*/photos=httpSessionContextIntegrationFilter,securityContextHolderAwareRequestFilter,rememberMeProcessingFilter,anonymousProcessingFilter,exceptionTranslationFilter,oauthProtectedResourceFilter,filterInvocationInterceptor
+        /*/photos=httpSessionContextIntegrationFilter,securityContextHolderAwareRequestFilter,rememberMeProcessingFilter,anonymousProcessingFilter,exceptionTranslationFilter,oauthProtectedResourceFilter,filterInvocationInterceptor
+        /**=httpSessionContextIntegrationFilter,logoutFilter,authenticationProcessingFilter,securityContextHolderAwareRequestFilter,rememberMeProcessingFilter,anonymousProcessingFilter,exceptionTranslationFilter,oauthRequestTokenFilter,oauthUserAuthorizationFilter,oauthAccessTokenFilter,filterInvocationInterceptor
 			]]></value>
 		</property>
 	</bean>

@@ -31,7 +31,7 @@
 
   <servlet-mapping>
     <servlet-name>spring</servlet-name>
-    <url-pattern>xml/photos</url-pattern>
+    <url-pattern>rest/photos</url-pattern>
   </servlet-mapping>
 
   <servlet-mapping>
@@ -41,7 +41,7 @@
 
   <servlet-mapping>
     <servlet-name>spring</servlet-name>
-    <url-pattern>photo/*</url-pattern>
+    <url-pattern>rest/jpg/photo/*</url-pattern>
   </servlet-mapping>
 
   <servlet-mapping>

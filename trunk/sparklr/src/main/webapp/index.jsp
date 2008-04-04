@@ -12,7 +12,7 @@
       function pictureDisplay(json) {
         for (var i = 0; i < json.photos.length; i++) {
           var photo = json.photos[i];
-          document.write('<img src="photo/' + photo.id + '" alt="' + photo.name + '">');
+          document.write('<img src="rest/jpg/photo/' + photo.id + '" alt="' + photo.name + '">');
         }
       }
     </script>
