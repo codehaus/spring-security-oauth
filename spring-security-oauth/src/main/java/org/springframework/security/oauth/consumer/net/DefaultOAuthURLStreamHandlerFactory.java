@@ -29,11 +29,11 @@ import java.net.URLStreamHandler;
  */
 public class DefaultOAuthURLStreamHandlerFactory implements OAuthURLStreamHandlerFactory {
 
-  public URLStreamHandler getHttpStreamHandler(ProtectedResourceDetails resourceDetails, OAuthConsumerToken accessToken, OAuthConsumerSupport support) {
-    return new OAuthOverHttpURLStreamHandler(resourceDetails, accessToken, support);
+  public URLStreamHandler getHttpStreamHandler(ProtectedResourceDetails resourceDetails, OAuthConsumerToken accessToken, OAuthConsumerSupport support, String httpMethod) {
+    return new OAuthOverHttpURLStreamHandler(resourceDetails, accessToken, support, httpMethod);
   }
 
-  public URLStreamHandler getHttpsStreamHandler(ProtectedResourceDetails resourceDetails, OAuthConsumerToken accessToken, OAuthConsumerSupport support) {
-    return new OAuthOverHttpsURLStreamHandler(resourceDetails, accessToken, support);
+  public URLStreamHandler getHttpsStreamHandler(ProtectedResourceDetails resourceDetails, OAuthConsumerToken accessToken, OAuthConsumerSupport support, String httpMethod) {
+    return new OAuthOverHttpsURLStreamHandler(resourceDetails, accessToken, support, httpMethod);
   }
 }

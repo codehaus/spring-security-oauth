@@ -45,24 +45,26 @@ public interface OAuthConsumerSupport {
   OAuthConsumerToken getAccessToken(OAuthConsumerToken requestToken) throws OAuthRequestFailedException;
 
   /**
-   * Read a protected resource from the given URL using the specified access token.
+   * Read a protected resource from the given URL using the specified access token and HTTP method.
    *
    * @param url The URL.
    * @param accessToken The access token.
+   * @param httpMethod The HTTP method.
    * @return The protected resource.
    */
-  InputStream readProtectedResource(URL url, OAuthConsumerToken accessToken) throws OAuthRequestFailedException;
+  InputStream readProtectedResource(URL url, OAuthConsumerToken accessToken, String httpMethod) throws OAuthRequestFailedException;
 
   /**
-   * Configure a URL for protected access.  The result will be a URL that can be used to access
-   * the protected resource.
+   * Create a configured URL.  If the HTTP method to access the resource is "POST" or "PUT" and the "Authorization"
+   * header isn't supported, then the OAuth parameters will be expected to be sent in the body of the request. Otherwise,
+   * you can assume that the given URL is ready to be used without further work.
    *
-   * @param url The URL.
+   * @param url         The base URL.
    * @param accessToken The access token.
-   * @return The URL.
-   * @throws OAuthRequestFailedException If the protocol for the URL isn't supported. 
+   * @param httpMethod The HTTP method.
+   * @return The configured URL.
    */
-  URL configureURLForProtectedAccess(URL url, OAuthConsumerToken accessToken) throws OAuthRequestFailedException;
+  URL configureURLForProtectedAccess(URL url, OAuthConsumerToken accessToken, String httpMethod) throws OAuthRequestFailedException;
 
   /**
    * Get the authorization header using the given access token that should be applied to the specified URL.
@@ -70,9 +72,10 @@ public interface OAuthConsumerSupport {
    * @param details     The details of the protected resource.
    * @param accessToken The access token.
    * @param url         The URL of the request.
+   * @param httpMethod  The http method for the protected resource.
    * @return The authorization header, or null if the authorization header isn't supported by the provider of this resource.
    */
-  String getAuthorizationHeader(ProtectedResourceDetails details, OAuthConsumerToken accessToken, URL url);
+  String getAuthorizationHeader(ProtectedResourceDetails details, OAuthConsumerToken accessToken, URL url, String httpMethod);
 
   /**
    * Get the query string that is to be used in the given request. The query string will
@@ -86,7 +89,8 @@ public interface OAuthConsumerSupport {
    * @param details The resource details.
    * @param accessToken The access token.
    * @param url The URL
+   * @param httpMethod The http method.
    * @return The query string.
    */
-  String getOAuthQueryString(ProtectedResourceDetails details, OAuthConsumerToken accessToken, URL url);
+  String getOAuthQueryString(ProtectedResourceDetails details, OAuthConsumerToken accessToken, URL url, String httpMethod);
 }

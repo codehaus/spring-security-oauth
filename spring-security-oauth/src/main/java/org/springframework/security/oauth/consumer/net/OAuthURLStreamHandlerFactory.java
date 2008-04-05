@@ -35,9 +35,10 @@ public interface OAuthURLStreamHandlerFactory {
    * @param resourceDetails The resource details.
    * @param accessToken The access token.
    * @param support The logic support.
+   * @param httpMethod The http method.
    * @return The stream handler.
    */
-  URLStreamHandler getHttpStreamHandler(ProtectedResourceDetails resourceDetails, OAuthConsumerToken accessToken, OAuthConsumerSupport support);
+  URLStreamHandler getHttpStreamHandler(ProtectedResourceDetails resourceDetails, OAuthConsumerToken accessToken, OAuthConsumerSupport support, String httpMethod);
 
   /**
    * Get the handler for an HTTPS stream.
@@ -45,7 +46,8 @@ public interface OAuthURLStreamHandlerFactory {
    * @param resourceDetails The resource details.
    * @param accessToken The access token.
    * @param support The logic support.
+   * @param httpMethod The http method.
    * @return The stream handler.
    */
-  URLStreamHandler getHttpsStreamHandler(ProtectedResourceDetails resourceDetails, OAuthConsumerToken accessToken, OAuthConsumerSupport support);
+  URLStreamHandler getHttpsStreamHandler(ProtectedResourceDetails resourceDetails, OAuthConsumerToken accessToken, OAuthConsumerSupport support, String httpMethod);
 }
