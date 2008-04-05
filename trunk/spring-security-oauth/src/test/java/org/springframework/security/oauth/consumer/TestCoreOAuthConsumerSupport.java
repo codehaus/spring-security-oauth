@@ -36,7 +36,6 @@ import java.io.*;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.HashMap;
-import java.util.Collections;
 
 /**
  * @author Ryan Heaton
@@ -110,7 +109,7 @@ public class TestCoreOAuthConsumerSupport extends TestCase {
 
     CoreOAuthConsumerSupport support = new CoreOAuthConsumerSupport() {
       @Override
-      public URL configureURLForProtectedAccess(URL url, OAuthConsumerToken accessToken, ProtectedResourceDetails details) throws OAuthRequestFailedException {
+      public URL configureURLForProtectedAccess(URL url, OAuthConsumerToken accessToken, ProtectedResourceDetails details, String httpMethod) throws OAuthRequestFailedException {
         try {
           return new URL(url.getProtocol(), url.getHost(), url.getPort(), url.getFile(), new SteamHandlerForTestingPurposes(connectionMock));
         }
@@ -120,18 +119,17 @@ public class TestCoreOAuthConsumerSupport extends TestCase {
       }
 
       @Override
-      public String getOAuthQueryString(ProtectedResourceDetails details, OAuthConsumerToken accessToken, URL url) {
+      public String getOAuthQueryString(ProtectedResourceDetails details, OAuthConsumerToken accessToken, URL url, String httpMethod) {
         return "POSTBODY";
       }
     };
     support.setStreamHandlerFactory(new DefaultOAuthURLStreamHandlerFactory());
 
     expect(details.getAuthorizationHeaderRealm()).andReturn("realm1");
-    expect(details.getHTTPMethod()).andReturn(null);
     expect(details.isAcceptsAuthorizationHeader()).andReturn(true);
     replay(details);
     try {
-      support.readResouce(details, url, token);
+      support.readResource(details, url, token, "POST");
       fail("shouldn't have been a valid response code.");
     }
     catch (OAuthRequestFailedException e) {
@@ -145,13 +143,12 @@ public class TestCoreOAuthConsumerSupport extends TestCase {
     connectionProps.reset();
 
     expect(details.getAuthorizationHeaderRealm()).andReturn(null);
-    expect(details.getHTTPMethod()).andReturn("POST");
     expect(details.isAcceptsAuthorizationHeader()).andReturn(true);
     connectionProps.responseCode = 400;
     connectionProps.responseMessage = "Nasty";
     replay(details);
     try {
-      support.readResouce(details, url, token);
+      support.readResource(details, url, token, "POST");
       fail("shouldn't have been a valid response code.");
     }
     catch (OAuthRequestFailedException e) {
@@ -165,14 +162,13 @@ public class TestCoreOAuthConsumerSupport extends TestCase {
     connectionProps.reset();
 
     expect(details.getAuthorizationHeaderRealm()).andReturn(null);
-    expect(details.getHTTPMethod()).andReturn("POST");
     expect(details.isAcceptsAuthorizationHeader()).andReturn(true);
     connectionProps.responseCode = 401;
     connectionProps.responseMessage = "Bad Realm";
     connectionProps.headerFields.put("WWW-Authenticate", "realm=\"goodrealm\"");
     replay(details);
     try {
-      support.readResouce(details, url, token);
+      support.readResource(details, url, token, "POST");
       fail("shouldn't have been a valid response code.");
     }
     catch (InvalidOAuthRealmException e) {
@@ -186,12 +182,11 @@ public class TestCoreOAuthConsumerSupport extends TestCase {
     connectionProps.reset();
 
     expect(details.getAuthorizationHeaderRealm()).andReturn(null);
-    expect(details.getHTTPMethod()).andReturn("GET");
     expect(details.isAcceptsAuthorizationHeader()).andReturn(true);
     connectionProps.responseCode = 200;
     connectionProps.responseMessage = "Congrats";
     replay(details);
-    assertSame(inputStream, support.readResouce(details, url, token));
+    assertSame(inputStream, support.readResource(details, url, token, "GET"));
     verify(details);
     reset(details);
     assertFalse(connectionProps.doOutput);
@@ -200,12 +195,11 @@ public class TestCoreOAuthConsumerSupport extends TestCase {
     connectionProps.reset();
 
     expect(details.getAuthorizationHeaderRealm()).andReturn(null);
-    expect(details.getHTTPMethod()).andReturn("POST");
     expect(details.isAcceptsAuthorizationHeader()).andReturn(false);
     connectionProps.responseCode = 200;
     connectionProps.responseMessage = "Congrats";
     replay(details);
-    assertSame(inputStream, support.readResouce(details, url, token));
+    assertSame(inputStream, support.readResource(details, url, token, "POST"));
     assertEquals("POSTBODY", new String(((ByteArrayOutputStream) connectionProps.outputStream).toByteArray()));
     verify(details);
     reset(details);
@@ -222,7 +216,7 @@ public class TestCoreOAuthConsumerSupport extends TestCase {
     CoreOAuthConsumerSupport support = new CoreOAuthConsumerSupport() {
       // Inherited.
       @Override
-      public String getOAuthQueryString(ProtectedResourceDetails details, OAuthConsumerToken accessToken, URL url) {
+      public String getOAuthQueryString(ProtectedResourceDetails details, OAuthConsumerToken accessToken, URL url, String httpMethod) {
         return "myquerystring";
       }
     };
@@ -231,21 +225,18 @@ public class TestCoreOAuthConsumerSupport extends TestCase {
     OAuthConsumerToken token = new OAuthConsumerToken();
     URL url = new URL("https://myhost.com/somepath?with=some&query=params&too");
 
-    expect(details.getHTTPMethod()).andReturn("GET");
     replay(details);
-    assertEquals("https://myhost.com/somepath?myquerystring", support.configureURLForProtectedAccess(url, token, details).toString());
+    assertEquals("https://myhost.com/somepath?myquerystring", support.configureURLForProtectedAccess(url, token, details, "GET").toString());
     verify(details);
     reset(details);
 
-    expect(details.getHTTPMethod()).andReturn("POST");
     replay(details);
-    assertEquals("https://myhost.com/somepath", support.configureURLForProtectedAccess(url, token, details).toString());
+    assertEquals("https://myhost.com/somepath", support.configureURLForProtectedAccess(url, token, details, "POST").toString());
     verify(details);
     reset(details);
 
-    expect(details.getHTTPMethod()).andReturn("PUT");
     replay(details);
-    assertEquals("https://myhost.com/somepath", support.configureURLForProtectedAccess(url, token, details).toString());
+    assertEquals("https://myhost.com/somepath", support.configureURLForProtectedAccess(url, token, details, "PUT").toString());
     verify(details);
     reset(details);
   }
@@ -257,7 +248,7 @@ public class TestCoreOAuthConsumerSupport extends TestCase {
     final TreeMap<String, String> params = new TreeMap<String, String>();
     CoreOAuthConsumerSupport support = new CoreOAuthConsumerSupport() {
       @Override
-      protected Map<String, String> loadOAuthParameters(ProtectedResourceDetails details, URL requestURL, OAuthConsumerToken requestToken) {
+      protected Map<String, String> loadOAuthParameters(ProtectedResourceDetails details, URL requestURL, OAuthConsumerToken requestToken, String httpMethod) {
         return params;
       }
     };
@@ -267,7 +258,7 @@ public class TestCoreOAuthConsumerSupport extends TestCase {
 
     expect(details.isAcceptsAuthorizationHeader()).andReturn(false);
     replay(details);
-    assertNull(support.getAuthorizationHeader(details, token, url));
+    assertNull(support.getAuthorizationHeader(details, token, url, "POST"));
     verify(details);
     reset(details);
 
@@ -277,7 +268,7 @@ public class TestCoreOAuthConsumerSupport extends TestCase {
     expect(details.isAcceptsAuthorizationHeader()).andReturn(true);
     expect(details.getAuthorizationHeaderRealm()).andReturn("myrealm");
     replay(details);
-    assertEquals("OAuth realm=\"myrealm\"", support.getAuthorizationHeader(details, token, url));
+    assertEquals("OAuth realm=\"myrealm\"", support.getAuthorizationHeader(details, token, url, "POST"));
     verify(details);
     reset(details);
 
@@ -287,7 +278,7 @@ public class TestCoreOAuthConsumerSupport extends TestCase {
     expect(details.isAcceptsAuthorizationHeader()).andReturn(true);
     expect(details.getAuthorizationHeaderRealm()).andReturn("myrealm");
     replay(details);
-    assertEquals("OAuth realm=\"myrealm\", oauth_consumer_key=\"mykey\", oauth_timestamp=\"myts\", oauth_nonce=\"mynonce\"", support.getAuthorizationHeader(details, token, url));
+    assertEquals("OAuth realm=\"myrealm\", oauth_consumer_key=\"mykey\", oauth_timestamp=\"myts\", oauth_nonce=\"mynonce\"", support.getAuthorizationHeader(details, token, url, "POST"));
     verify(details);
     reset(details);
   }
@@ -299,7 +290,7 @@ public class TestCoreOAuthConsumerSupport extends TestCase {
     final TreeMap<String, String> params = new TreeMap<String, String>();
     CoreOAuthConsumerSupport support = new CoreOAuthConsumerSupport() {
       @Override
-      protected Map<String, String> loadOAuthParameters(ProtectedResourceDetails details, URL requestURL, OAuthConsumerToken requestToken) {
+      protected Map<String, String> loadOAuthParameters(ProtectedResourceDetails details, URL requestURL, OAuthConsumerToken requestToken, String httpMethod) {
         return params;
       }
     };
@@ -316,7 +307,7 @@ public class TestCoreOAuthConsumerSupport extends TestCase {
     params.put(OAuthConsumerParameter.oauth_nonce.toString(), "mynonce");
     params.put(OAuthConsumerParameter.oauth_timestamp.toString(), "myts");
     replay(details);
-    assertEquals("query=params&too&with=some", support.getOAuthQueryString(details, token, url));
+    assertEquals("query=params&too&with=some", support.getOAuthQueryString(details, token, url, "POST"));
     verify(details);
     reset(details);
 
@@ -328,7 +319,7 @@ public class TestCoreOAuthConsumerSupport extends TestCase {
     params.put(OAuthConsumerParameter.oauth_nonce.toString(), "mynonce");
     params.put(OAuthConsumerParameter.oauth_timestamp.toString(), "myts");
     replay(details);
-    assertEquals("oauth_consumer_key=mykey&oauth_nonce=mynonce&oauth_timestamp=myts&query=params&too&with=some", support.getOAuthQueryString(details, token, url));
+    assertEquals("oauth_consumer_key=mykey&oauth_nonce=mynonce&oauth_timestamp=myts&query=params&too&with=some", support.getOAuthQueryString(details, token, url, "POST"));
     verify(details);
     reset(details);
   }
@@ -340,7 +331,7 @@ public class TestCoreOAuthConsumerSupport extends TestCase {
     final ByteArrayInputStream in = new ByteArrayInputStream("oauth_token=mytoken&oauth_token_secret=mytokensecret".getBytes("UTF-8"));
     CoreOAuthConsumerSupport support = new CoreOAuthConsumerSupport() {
       @Override
-      protected InputStream readResouce(ProtectedResourceDetails details, URL url, OAuthConsumerToken token) {
+      protected InputStream readResource(ProtectedResourceDetails details, URL url, OAuthConsumerToken token, String httpMethod) {
         return in;
       }
     };
@@ -382,7 +373,6 @@ public class TestCoreOAuthConsumerSupport extends TestCase {
     token.setNonce("mynonce");
     OAuthSignatureMethod sigMethod = createMock(OAuthSignatureMethod.class);
 
-    expect(details.getHTTPMethod()).andReturn("POST");
     expect(details.getConsumerKey()).andReturn("my-consumer-key");
     expect(details.getSignatureMethod()).andReturn(HMAC_SHA1SignatureMethod.SIGNATURE_NAME);
     expect(details.getSignatureMethod()).andReturn(HMAC_SHA1SignatureMethod.SIGNATURE_NAME);
@@ -392,7 +382,7 @@ public class TestCoreOAuthConsumerSupport extends TestCase {
     expect(sigMethod.sign("MYSIGBASESTRING")).andReturn("MYSIGNATURE");
 
     replay(details, sigFactory, sigMethod);
-    Map<String, String> params = support.loadOAuthParameters(details, url, token);
+    Map<String, String> params = support.loadOAuthParameters(details, url, token, "POST");
     verify(details, sigFactory, sigMethod);
     reset(details, sigFactory, sigMethod);
     assertEquals("some", params.remove("with"));

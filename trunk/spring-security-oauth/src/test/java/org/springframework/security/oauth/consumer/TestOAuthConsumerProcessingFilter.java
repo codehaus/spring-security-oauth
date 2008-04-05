@@ -165,8 +165,10 @@ public class TestOAuthConsumerProcessingFilter extends TestCase {
     token.setValue("mytoken");
     expect(detailsService.loadProtectedResourceDetailsById("resourceId")).andReturn(details);
     expect(details.getUserAuthorizationURL()).andReturn("http://user-auth/context?with=some&queryParams");
+    expect(details.getUserAuthorizationTokenParameterName()).andReturn("requestToken");
+    expect(details.getUserAuthorizationCallbackParameterName()).andReturn("callbackURL");
     replay(detailsService, details);
-    assertEquals("http://user-auth/context?with=some&queryParams&oauth_token=mytoken&oauth_callback=urn%3A%2F%2Fcallback%3Fwith%3Dsome%26query%3Dparams",
+    assertEquals("http://user-auth/context?with=some&queryParams&requestToken=mytoken&callbackURL=urn%3A%2F%2Fcallback%3Fwith%3Dsome%26query%3Dparams",
                  filter.getUserAuthorizationRedirectURL(token, "urn://callback?with=some&query=params"));
     verify(detailsService, details);
     reset(detailsService, details);

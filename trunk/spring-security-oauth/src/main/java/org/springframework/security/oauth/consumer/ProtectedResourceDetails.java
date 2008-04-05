@@ -68,18 +68,25 @@ public interface ProtectedResourceDetails {
   String getUserAuthorizationURL();
 
   /**
+   * The parameter name of the request token parameter at the user authorization URL.
+   *
+   * @return The parameter name of the request token parameter at the user authorization URL.
+   */
+  String getUserAuthorizationTokenParameterName();
+
+  /**
+   * The parameter name of the callback parameter at the user authorization URL.
+   *
+   * @return The parameter name of the the callback parameter at the user authorization URL.
+   */
+  String getUserAuthorizationCallbackParameterName();
+
+  /**
    * The URL to use to obtain an OAuth access token.
    *
    * @return The URL to use to obtain an OAuth access token.
    */
   String getAccessTokenURL();
-
-  /**
-   * The HTTP method to use for interfacing with the provider. (Default is "POST").
-   *
-   * @return The HTTP method to use for interfacing with the provider.
-   */
-  String getHTTPMethod();
 
   /**
    * Whether the provider of this resource accepts the OAuth Authorization HTTP header.  Default: true.

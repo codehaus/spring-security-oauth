@@ -6,22 +6,15 @@ import org.springframework.security.oauth.consumer.ProtectedResourceDetailsServi
 import org.springframework.security.oauth.consumer.token.OAuthConsumerToken;
 import org.springframework.security.oauth.examples.tonr.SparklrException;
 import org.springframework.security.oauth.examples.tonr.SparklrService;
-import org.springframework.security.oauth.common.OAuthException;
 import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
-import javax.activation.DataHandler;
-import javax.mail.util.ByteArrayDataSource;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.ByteArrayInputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
@@ -32,8 +25,6 @@ import java.util.List;
  */
 public class SparklrServiceImpl implements SparklrService {
 
-  private static final Log LOG = LogFactory.getLog(SparklrServiceImpl.class);
-
   private String sparklrPhotoListURL;
   private String sparklrPhotoURLPattern;
   private OAuthConsumerSupport support = new CoreOAuthConsumerSupport();
@@ -41,7 +32,7 @@ public class SparklrServiceImpl implements SparklrService {
 
   public List<String> getSparklrPhotoIds(OAuthConsumerToken accessToken) throws SparklrException {
     try {
-      InputStream photosXML = getSupport().readProtectedResource(new URL(getSparklrPhotoListURL()), accessToken);
+      InputStream photosXML = getSupport().readProtectedResource(new URL(getSparklrPhotoListURL()), accessToken, "GET");
 
       final List<String> photoIds = new ArrayList<String>();
       SAXParserFactory parserFactory = SAXParserFactory.newInstance();
@@ -72,7 +63,7 @@ public class SparklrServiceImpl implements SparklrService {
 
   public InputStream loadSparklrPhoto(String id, OAuthConsumerToken accessToken) throws SparklrException {
     try {
-      return getSupport().readProtectedResource(new URL(String.format(getSparklrPhotoURLPattern(), id)), accessToken);
+      return getSupport().readProtectedResource(new URL(String.format(getSparklrPhotoURLPattern(), id)), accessToken, "GET");
     }
     catch (MalformedURLException e) {
       throw new IllegalStateException(e);

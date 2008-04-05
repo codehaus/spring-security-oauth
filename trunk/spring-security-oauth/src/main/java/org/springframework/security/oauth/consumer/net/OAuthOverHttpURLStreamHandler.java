@@ -24,6 +24,7 @@ import java.io.IOException;
 import java.net.Proxy;
 import java.net.URL;
 import java.net.URLConnection;
+import java.net.HttpURLConnection;
 
 /**
  * Stream handler to handle the request stream to a protected resource over HTTP.
@@ -35,18 +36,21 @@ public class OAuthOverHttpURLStreamHandler extends sun.net.www.protocol.http.Han
   private final ProtectedResourceDetails resourceDetails;
   private final OAuthConsumerToken accessToken;
   private final OAuthConsumerSupport support;
+  private final String httpMethod;
 
-  public OAuthOverHttpURLStreamHandler(ProtectedResourceDetails resourceDetails, OAuthConsumerToken accessToken, OAuthConsumerSupport support) {
+  public OAuthOverHttpURLStreamHandler(ProtectedResourceDetails resourceDetails, OAuthConsumerToken accessToken, OAuthConsumerSupport support, String httpMethod) {
     this.resourceDetails = resourceDetails;
     this.accessToken = accessToken;
     this.support = support;
+    this.httpMethod = httpMethod;
   }
 
   @Override
   protected URLConnection openConnection(URL url) throws IOException {
-    URLConnection connection = super.openConnection(url);
+    HttpURLConnection connection = (HttpURLConnection) super.openConnection(url);
+    connection.setRequestMethod(this.httpMethod);
     if (resourceDetails.isAcceptsAuthorizationHeader()) {
-      String authHeader = support.getAuthorizationHeader(resourceDetails, accessToken, url);
+      String authHeader = support.getAuthorizationHeader(resourceDetails, accessToken, url, httpMethod);
       connection.setRequestProperty("Authorization", authHeader);
     }
     return connection;
@@ -54,9 +58,10 @@ public class OAuthOverHttpURLStreamHandler extends sun.net.www.protocol.http.Han
 
   @Override
   protected URLConnection openConnection(URL url, Proxy proxy) throws IOException {
-    URLConnection connection = super.openConnection(url, proxy);
+    HttpURLConnection connection = (HttpURLConnection) super.openConnection(url, proxy);
+    connection.setRequestMethod(this.httpMethod);
     if (resourceDetails.isAcceptsAuthorizationHeader()) {
-      String authHeader = support.getAuthorizationHeader(resourceDetails, accessToken, url);
+      String authHeader = support.getAuthorizationHeader(resourceDetails, accessToken, url, httpMethod);
       connection.setRequestProperty("Authorization", authHeader);
     }
     return connection;

@@ -31,8 +31,9 @@ public class BaseProtectedResourceDetails implements ProtectedResourceDetails {
   private SignatureSecret sharedSecret;
   private String requestTokenURL;
   private String userAuthorizationURL;
+  private String userAuthorizationTokenParameterName = "oauth_token";
+  private String userAuthorizationCallbackParameterName = "oauth_callback";
   private String accessTokenURL;
-  private String HTTPMethod = "POST";
   private boolean acceptsAuthorizationHeader = true;
   private String authorizationHeaderRealm;
 
@@ -84,20 +85,28 @@ public class BaseProtectedResourceDetails implements ProtectedResourceDetails {
     this.userAuthorizationURL = userAuthorizationURL;
   }
 
+  public String getUserAuthorizationTokenParameterName() {
+    return userAuthorizationTokenParameterName;
+  }
+
+  public void setUserAuthorizationTokenParameterName(String userAuthorizationTokenParameterName) {
+    this.userAuthorizationTokenParameterName = userAuthorizationTokenParameterName;
+  }
+
+  public String getUserAuthorizationCallbackParameterName() {
+    return userAuthorizationCallbackParameterName;
+  }
+
+  public void setUserAuthorizationCallbackParameterName(String userAuthorizationCallbackParameterName) {
+    this.userAuthorizationCallbackParameterName = userAuthorizationCallbackParameterName;
+  }
+
   public String getAccessTokenURL() {
     return accessTokenURL;
   }
 
   public void setAccessTokenURL(String accessTokenURL) {
     this.accessTokenURL = accessTokenURL;
-  }
-
-  public String getHTTPMethod() {
-    return HTTPMethod;
-  }
-
-  public void setHTTPMethod(String HTTPMethod) {
-    this.HTTPMethod = HTTPMethod;
   }
 
   public boolean isAcceptsAuthorizationHeader() {
