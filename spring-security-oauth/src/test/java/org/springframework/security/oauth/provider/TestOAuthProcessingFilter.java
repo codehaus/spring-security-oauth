@@ -86,6 +86,11 @@ public class TestOAuthProcessingFilter extends TestCase {
       protected void resetPreviousAuthentication(Authentication previousAuthentication) {
         //no-op
       }
+
+      @Override
+      protected boolean skipProcessing(HttpServletRequest request) {
+        return false;
+      }
     };
 
     OAuthProviderSupport providerSupport = createMock(OAuthProviderSupport.class);
@@ -141,6 +146,7 @@ public class TestOAuthProcessingFilter extends TestCase {
     requestParams.put(OAuthConsumerParameter.oauth_signature.toString(), "signaturevalue");
     expect(providerSupport.getSignatureBaseString(request)).andReturn("sigbasestring");
     filterChain.doFilter(null, null);
+    request.setAttribute(OAuthProviderProcessingFilter.OAUTH_PROCESSING_HANDLED, Boolean.TRUE);
     replay(request, response, filterChain, providerSupport, consumerDetailsService, nonceServices, signatureFactory, tokenServices, consumerDetails);
     filter.doFilter(request, response, filterChain);
     ConsumerAuthentication authentication = (ConsumerAuthentication) SecurityContextHolder.getContext().getAuthentication();

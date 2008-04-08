@@ -50,6 +50,11 @@ import java.util.Map;
  */
 public abstract class OAuthProviderProcessingFilter implements Filter, InitializingBean, MessageSourceAware {
 
+  /**
+   * Attribute for indicating that OAuth processing has already occurred.
+   */
+  public static final String OAUTH_PROCESSING_HANDLED = "org.springframework.security.oauth.provider.OAuthProviderProcessingFilter#SKIP_PROCESSING";
+
   private static final Log LOG = LogFactory.getLog(OAuthProviderProcessingFilter.class);
   private final List<String> allowedMethods = new ArrayList<String>(Arrays.asList("GET", "POST"));
   private OAuthProcessingFilterEntryPoint authenticationEntryPoint = new OAuthProcessingFilterEntryPoint();
@@ -78,7 +83,7 @@ public abstract class OAuthProviderProcessingFilter implements Filter, Initializ
     HttpServletRequest request = (HttpServletRequest) servletRequest;
     HttpServletResponse response = (HttpServletResponse) servletResponse;
 
-    if (requiresAuthentication(request, response, chain)) {
+    if (!skipProcessing(request) && requiresAuthentication(request, response, chain)) {
       if (!allowMethod(request.getMethod().toUpperCase())) {
         response.sendError(HttpServletResponse.SC_METHOD_NOT_ALLOWED);
         return;
@@ -120,6 +125,9 @@ public abstract class OAuthProviderProcessingFilter implements Filter, Initializ
 
             //mark the authentication request as validated.
             authentication.setSignatureValidated(true);
+
+            //mark that processing has been handled.
+            request.setAttribute(OAUTH_PROCESSING_HANDLED, Boolean.TRUE);
 
             //go.
             onValidSignature(request, response, chain);
@@ -323,6 +331,16 @@ public abstract class OAuthProviderProcessingFilter implements Filter, Initializ
     }
 
     return uri.endsWith(request.getContextPath() + filterProcessesUrl);
+  }
+
+  /**
+   * Whether to skip processing for the specified request.
+   *
+   * @param request The request.
+   * @return Whether to skip processing.
+   */
+  protected boolean skipProcessing(HttpServletRequest request) {
+    return ((request.getAttribute(OAUTH_PROCESSING_HANDLED) != null) && (Boolean.TRUE.equals(request.getAttribute(OAUTH_PROCESSING_HANDLED))));
   }
 
   /**
