@@ -17,6 +17,7 @@
 package org.springframework.security.oauth.provider;
 
 import org.acegisecurity.Authentication;
+import org.acegisecurity.AccessDeniedException;
 import org.acegisecurity.providers.AbstractAuthenticationToken;
 import org.acegisecurity.context.SecurityContextHolder;
 import org.springframework.security.oauth.common.OAuthConsumerParameter;
@@ -58,7 +59,7 @@ public class ProtectedResourceProcessingFilter extends OAuthProviderProcessingFi
     ConsumerAuthentication authentication = (ConsumerAuthentication) SecurityContextHolder.getContext().getAuthentication();
     OAuthProviderToken authToken = getTokenServices().getToken(authentication.getConsumerCredentials().getToken());
     if (!authToken.isAccessToken()) {
-      throw new IllegalStateException("Token should be an access token.");
+      throw new AccessDeniedException("Token should be an access token.");
     }
     else {
       Authentication userAuthentication = ((OAuthAccessProviderToken) authToken).getUserAuthentication();
