@@ -7,7 +7,7 @@
 Support
 
   Support for OAuth for Spring Security is provided through the mailing list
-  ({{{http://spring-security-oauth.codehaus.markmail.org/}archive}},
+  ({{{http://spring-security-oauth.markmail.org/}archive}},
   {{{http://xircles.codehaus.org/manage_email/user\@spring-security-oauth.codehaus.org}subscribe}}). To report bugs, submit
   enchancement requests or add something to the wish list, use {{{http://jira.codehaus.org/browse/OAUTHSS}JIRA}}. 
 
