@@ -1,0 +1,176 @@
+  ---
+  User Guide
+  ---
+  Ryan Heaton
+  ---
+
+Beware
+
+  Unless you've got a reasonable grasp of both {{{http://oauth.net}OAuth}} and {{{http://www.acegisecurity.org/}Spring Security}},
+  this user guide will likely lose you. Okay, let's face it, you'll probably get lost anyway.  But understanding the following
+  will help a lot:
+
+*OAuth
+
+  *{{{http://oauth.net/core/1.0/#anchor3}OAuth Consumer}}
+
+  *{{{http://oauth.net/core/1.0/#anchor3}OAuth Provider}}
+
+  *{{{http://oauth.net/core/1.0/#anchor3}OAuth Protected Resource}}
+
+  *{{{http://oauth.net/core/1.0/#anchor3}Consumer Key}}
+
+  *{{{http://oauth.net/core/1.0/#anchor3}Consumer Secret}}
+
+  *{{{http://oauth.net/core/1.0/#anchor3}Request Token}}
+
+  *{{{http://oauth.net/core/1.0/#anchor3}Access Token}}
+
+*Spring Security
+
+  *{{{http://www.acegisecurity.org/guide/springsecurity.html#mechanisms-providers-entry-points}Mechanisms, Providers, and Entry Points}}
+
+  *{{{http://www.acegisecurity.org/guide/springsecurity.html#userdetails-and-associated-types}User Details}}
+
+  *{{{http://www.acegisecurity.org/guide/springsecurity.html#authorization-common}Common Authorization Concepts}}
+
+  *{{{http://www.acegisecurity.org/guide/springsecurity.html#aop-alliance}MethodInvocation Security Interceptor}}
+
+Contents
+
+  This user guide is divided into two parts, the first for the OAuth provider, the second for the OAuth consumer.  Here's a
+  TOC for quick navigation:
+
+  *{{{#OAuth_Provider}OAuth Provider}}
+
+    *{{{#Managing_Consumers}Managing Consumers}}
+
+    *{{{#Managing_Tokens}Managing Tokens}}
+
+    *{{{#OAuth_Provider_Request_Filters}OAuth Provider Request Filters}}
+
+    *{{{#Managing_Nonces}Managing Nonces}}
+
+    *{{{#Authorization_By_Consumer}Authorization By Consumer}}
+
+  *{{{#OAuth_Consumer}OAuth Consumer}}
+
+    *{{{#Managing_Protected_Resources}Managing Protected Resources}}
+
+    *{{{#Managing_Provider_Tokens}Managing Provider Tokens}}
+
+    *{{{#OAuth_Consumer_Request_Filters}OAuth Consumer Request Filters}}
+
+    *{{{#Requesting_Protected_Resources}Requesting Protected Resources}}
+
+{OAuth Provider}
+
+  The OAuth provider is responsible for managing the OAuth consumers that can access its protected resources on behalf of
+  a user. The provider does this by managing and verifying the OAuth tokens that can be used to access the protected
+  resources. Of course, the provider must also supply an interface for the user to confirm that a consumer can be granted
+  access to the protected resources (i.e. a confirmation page).
+
+*{Managing Consumers}
+
+  The entry point into your database of consumers is defined by the <<<{{{./apidocs/org/springframework/security/oauth/provider/ConsumerDetailsService.html}ConsumerDetailsService}}>>>.
+  You must define your own <<<ConsumerDetailsService>>> that will load <<<{{{./apidocs/org/springframework/security/oauth/provider/ConsumerDetails.html}ConsumerDetails}}>>>
+  by the <consumer key>.  Note the existence of an {{{./apidocs/org/springframework/security/oauth/provider/InMemoryConsumerDetailsService.html}in-memory implementation}} of <<<ConsumerDetailsService>>>.
+
+  When implementing your <<<ConsumerDetailsService>>> consider returning instances of {{{./apidocs/org/springframework/security/oauth/provider/BaseConsumerDetails.html}BaseConsumerDetails}} which
+  contains additional information about the consumer that may be useful when displaying a confirmation screen to the user.
+
+*{Managing Tokens}
+
+  The <<<{{{./apidocs/org/springframework/security/oauth/provider/token/OAuthProviderTokenServices.html}OAuthProviderTokenServices}}>>> interface defines
+  the operations that are necessary to manage OAuth tokens. Note the following:
+
+  *When a request token is created, care must be taken to ensure that it is not an access token.
+
+  *When a request token is authorized, the authentication must be stored so that the subsequent access token can reference it.
+
+  *When an access token is created, it must reference the authentication that was used to authorized the request token that is used to create the access token.
+
+  When creating your <<<OAuthProviderTokenServices>>> implementation, you may want to consider extending
+  the <<<{{{./apidocs/org/springframework/security/oauth/provider/token/RandomValueProviderTokenServices.html}RandomValueProviderTokenServices}}>>> which creates
+  tokens via random value and handles everything except for the persistence of the tokens.  There is also an <<<{{{./apidocs/org/springframework/security/oauth/provider/token/InMemoryProviderTokenServices.html}in-memory implementation}}>>>
+  of the <<<OAuthProviderTokenServices>>> that may be suitable, but note that when using the in-memory implementation
+  a separate thread is spawned to take care of the cleanup of expired tokens.
+
+*{OAuth Provider Request Filters}
+
+  The requests for the tokens and for access to protected resources are handled by standard Spring Security request filters. The following filters
+  are required in the Spring Security filter chain in order to implement OAuth:
+
+  *The <<<{{{./apidocs/org/springframework/security/oauth/provider/UnauthenticatedRequestTokenProcessingFilter.html}UnauthenticatedRequestTokenProcessingFilter}}>>> is used
+  to service the request for an unauthenticated request token. Default URL: <<</oauth_request_token>>>.
+
+  *The <<<{{{./apidocs/org/springframework/security/oauth/provider/UserAuthorizationProcessingFilter.html}UserAuthorizationProcessingFilter}}>>> is used
+  authorize a request token. The user must be authenticated and it is assumed that the user has been presented with the appropriate
+  confirmation page.
+
+  *The <<<{{{./apidocs/org/springframework/security/oauth/provider/AccessTokenProcessingFilter.html}AccessTokenProcessingFilter}}>>> is used
+  to service the request for an OAuth access token. Default URL: <<</oauth_access_token>>>.
+
+  *The <<<{{{./apidocs/org/springframework/security/oauth/provider/ProtectedResourceProcessingFilter.html}ProtectedResourceProcessingFilter}}>>> is used
+  to load the Authentication for the request given an authenticated access token.
+
+*{Managing Nonces}
+
+  The OAuth spec also recommends that the nonce that is supplied on every OAuth request be checked to ensure it isn't used twice for the
+  same timestamp. In order to do this, nonces must be stored and verified on every OAuth request.  The interface that is used
+  to validate nonces is <<<{{{./apidocs/org/springframework/security/oauth/provider/nonce/OAuthNonceServices.html}OAuthNonceServices}}>>>.
+  <<The default implementation, <<<{{{./apidocs/org/springframework/security/oauth/provider/nonce/ExpiringTimestampNonceServices.html}ExpiringTimestampNonceServices}}>>>, does
+  not adhere to this recommendation>>, but only validates that the timestamp isn't too old. If further assurance is required, you will need
+  to supply your own implementation of <<<OAuthNonceServices>>>. Note the existence of an
+  <<<{{{./apidocs/org/springframework/security/oauth/provider/nonce/InMemoryNonceServices.html}in-memory implementation}}>>>.
+
+*{Authorization By Consumer}
+
+  It is sometimes required to limit access to a resource to a specific consumer or to a consumer that has specific roles. The classes in the
+  {{{./apidocs/org/springframework/security/oauth/provider/attributes/package-summary.html}org.springframework.security.oauth.provider.attributes}} package
+  can be used to do this. Methods can be protected using the annotations in that package, and the <<<{{{./apidocs/org/springframework/security/oauth/provider/attributes/ConsumerSecurityConfig.html}ConsumerSecurityConfig}}>>>
+  can be supplied to the standard Spring Security filter interceptor in order to enable the annotations. Finally, the <<<{{{./apidocs/org/springframework/security/oauth/provider/attributes/ConsumerSecurityVoter.html}ConsumerSecurityVoter}}>>>
+  would need to be supplied to the Spring Security authentication manager.
+
+{OAuth Consumer}
+
+  The OAuth consumer is responsible for ensuring that a proper access token is acquired before attempting a request for a protected resource. OAuth
+  for Spring Security provides request filters for ensuring that the access token is acquired and utilities for making a request
+  for a protected resource. A consumer must be responsible for maintaing a list of protected resources that can be accessed and,
+  like the provider, a consumer must be responsible for managing the OAuth tokens.
+
+  If you were discouraged by the complexity of implementing an OAuth provider, take heart.  Implementation of an OAuth
+  consumer is easier, partially because OAuth for Spring Security provides suitable defaults for most cases.
+
+*{Managing Protected Resources}
+
+  A database of protected resources that are accessible by a consumer must be provided through the <<<{{{./apidocs/org/springframework/security/oauth/consumer/ProtectedResourceDetailsService.html}ProtectedResourceDetailsService}}>>>.
+  Each protected resource must provide all information related to obtaining access to it. This includes the URL to obtain a request token, the URL to which to
+  redirect the user for authorization, the URL at which to obtain an access token, etc.  It also contains various properties that describe the provider of the
+  protected resource. Consider the existence of the <<<{{{./apidocs/org/springframework/security/oauth/consumer/InMemoryProtectedResourceDetailsService.html}InMemoryProtectedResourceDetailsService}}>>>
+  and the <<<{{{./apidocs/org/springframework/security/oauth/consumer/BaseProtectedResourceDetails.html}BaseProtectedResourceDetails}}>>> for help in creating
+  the database of protected resources.
+
+*{Managing Provider Tokens}
+
+  Like the provider, the consumer must be responsible for managing the OAuth tokens. The necessary interface for managing the consumer tokens is
+  <<<{{{./apidocs/org/springframework/security/oauth/consumer/token/OAuthConsumerTokenServices.html}OAuthConsumerTokenServices}}>>> which are only
+  accessible via <<<{{{./apidocs/org/springframework/security/oauth/consumer/token/OAuthConsumerTokenServicesFactory.html}factory method}}>>>. Assuming
+  that the consumer can leverage an active HTTP session, the default <<<{{{./apidocs/org/springframework/security/oauth/consumer/token/HttpSessionBasedTokenServices.html}HttpSessionBasedTokenServices}}>>>
+  and <<<{{{./apidocs/org/springframework/security/oauth/consumer/token/HttpSessionBasedTokenServicesFactory.html}HttpSessionBasedTokenServicesFactory}}>>>
+  should be adequate.
+
+*{OAuth Consumer Request Filters}
+
+  There is a single consumer request filter, <<<{{{./apidocs/org/springframework/security/oauth/consumer/OAuthConsumerProcessingFilter.html}OAuthConsumerProcessingFilter}}>>>,
+  that can be applied to the resources that require access to a remote protected resource. Put this filter in the Spring Security filter chain
+  and supply the patterns that require access to which protected resources and you'll have access to the
+  <<<{{{./apidocs/org/springframework/security/oauth/consumer/token/OAuthConsumerToken.html}OAuthConsumerToken}}>>>s that are required via request attribute.
+
+*{Requesting Protected Resources}
+
+  The <<<{{{./apidocs/org/springframework/security/oauth/consumer/OAuthConsumerSupport.html}OAuthConsumerSupport}}>>> interface can be used
+  to configure a request for a protected resource. The <<<{{{./apidocs/org/springframework/security/oauth/consumer/CoreOAuthConsumerSupport.html}CoreOAuthConsumerSupport}}>>>
+  class is the OAuth Core 1.0 implementation of the <<<OAuthConsumerSupport>>>. Note particularly the <<<readProtectedResource>>> method and the <<<configureURLForProtectedAccess>>>
+  methods.
+
