@@ -17,9 +17,9 @@
 package org.springframework.security.oauth.consumer;
 
 import junit.framework.TestCase;
-import org.acegisecurity.Authentication;
-import org.acegisecurity.InsufficientAuthenticationException;
-import org.acegisecurity.context.SecurityContextHolder;
+import org.springframework.security.Authentication;
+import org.springframework.security.InsufficientAuthenticationException;
+import org.springframework.security.context.SecurityContextHolder;
 import static org.easymock.EasyMock.*;
 import org.springframework.security.oauth.common.OAuthException;
 import org.springframework.security.oauth.consumer.token.OAuthConsumerToken;

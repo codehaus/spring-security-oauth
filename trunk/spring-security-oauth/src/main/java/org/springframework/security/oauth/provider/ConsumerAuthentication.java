@@ -16,8 +16,7 @@
 
 package org.springframework.security.oauth.provider;
 
-import org.acegisecurity.GrantedAuthority;
-import org.acegisecurity.providers.AbstractAuthenticationToken;
+import org.springframework.security.providers.AbstractAuthenticationToken;
 
 /**
  * Authentication for an OAuth consumer.
@@ -31,19 +30,9 @@ public class ConsumerAuthentication extends AbstractAuthenticationToken {
   private boolean signatureValidated = false;
 
   public ConsumerAuthentication(ConsumerDetails consumerDetails, ConsumerCredentials consumerCredentials) {
+    super(consumerDetails.getAuthorities());
     this.consumerDetails = consumerDetails;
     this.consumerCredentials = consumerCredentials;
-  }
-
-  /**
-   * The authorities of the consumer (these do not include the authorities granted to the consumer with
-   * an authorized request token).
-   *
-   * @return The authorities of the consumer.
-   */
-  @Override
-  public GrantedAuthority[] getAuthorities() {
-    return getConsumerDetails().getAuthorities();
   }
 
   /**

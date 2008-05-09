@@ -17,10 +17,10 @@
 package org.springframework.security.oauth.provider;
 
 import junit.framework.TestCase;
-import org.acegisecurity.Authentication;
-import org.acegisecurity.AuthenticationException;
-import org.acegisecurity.BadCredentialsException;
-import org.acegisecurity.context.SecurityContextHolder;
+import org.springframework.security.Authentication;
+import org.springframework.security.AuthenticationException;
+import org.springframework.security.BadCredentialsException;
+import org.springframework.security.context.SecurityContextHolder;
 import static org.easymock.EasyMock.*;
 import org.springframework.security.oauth.common.OAuthConsumerParameter;
 import org.springframework.security.oauth.common.signature.OAuthSignatureMethod;

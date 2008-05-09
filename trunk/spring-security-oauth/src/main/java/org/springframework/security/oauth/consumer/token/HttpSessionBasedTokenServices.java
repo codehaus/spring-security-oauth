@@ -16,7 +16,7 @@
 
 package org.springframework.security.oauth.consumer.token;
 
-import org.acegisecurity.AuthenticationException;
+import org.springframework.security.AuthenticationException;
 
 import javax.servlet.http.HttpSession;
 

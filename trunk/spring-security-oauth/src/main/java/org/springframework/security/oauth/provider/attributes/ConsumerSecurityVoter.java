@@ -16,14 +16,14 @@
 
 package org.springframework.security.oauth.provider.attributes;
 
-import org.acegisecurity.Authentication;
-import org.acegisecurity.ConfigAttribute;
-import org.acegisecurity.ConfigAttributeDefinition;
-import org.acegisecurity.GrantedAuthority;
-import org.acegisecurity.vote.AccessDecisionVoter;
+import org.springframework.security.Authentication;
+import org.springframework.security.ConfigAttribute;
+import org.springframework.security.ConfigAttributeDefinition;
+import org.springframework.security.GrantedAuthority;
 import org.springframework.security.oauth.provider.OAuthAuthenticationDetails;
+import org.springframework.security.vote.AccessDecisionVoter;
 
-import java.util.Iterator;
+import java.util.Collection;
 
 /**
  * @author Ryan Heaton
@@ -63,9 +63,9 @@ public class ConsumerSecurityVoter implements AccessDecisionVoter {
 
     if (authentication.getDetails() instanceof OAuthAuthenticationDetails) {
       OAuthAuthenticationDetails details = (OAuthAuthenticationDetails) authentication.getDetails();
-      Iterator configAttributes = definition.getConfigAttributes();
-      while (configAttributes.hasNext()) {
-        ConfigAttribute attribute = (ConfigAttribute) configAttributes.next();
+      Collection configAttributes = definition.getConfigAttributes();
+      for (Object configAttribute : configAttributes) {
+        ConfigAttribute attribute = (ConfigAttribute) configAttribute;
 
         if (ConsumerSecurityConfig.PERMIT_ALL_ATTRIBUTE.equals(attribute)) {
           return ACCESS_GRANTED;

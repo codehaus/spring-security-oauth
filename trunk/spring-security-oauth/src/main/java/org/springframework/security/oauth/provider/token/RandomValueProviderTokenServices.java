@@ -16,7 +16,7 @@
 
 package org.springframework.security.oauth.provider.token;
 
-import org.acegisecurity.*;
+import org.springframework.security.*;
 import org.springframework.beans.factory.InitializingBean;
 import org.apache.commons.codec.binary.Base64;
 

@@ -16,7 +16,7 @@
 
 package org.springframework.security.oauth.common;
 
-import org.acegisecurity.AuthenticationException;
+import org.springframework.security.AuthenticationException;
 
 /**
  * Base exception for OAuth processing.

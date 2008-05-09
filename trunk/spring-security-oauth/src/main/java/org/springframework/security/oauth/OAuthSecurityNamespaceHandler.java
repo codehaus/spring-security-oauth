@@ -14,27 +14,17 @@
  * limitations under the License.
  */
 
-package org.springframework.security.oauth.provider;
+package org.springframework.security.oauth;
 
-import org.springframework.security.ui.WebAuthenticationDetails;
-
-import javax.servlet.http.HttpServletRequest;
+import org.springframework.beans.factory.xml.NamespaceHandlerSupport;
 
 /**
- * Authentication details and includes the details of the OAuth consumer.
- * 
  * @author Ryan Heaton
  */
-public class OAuthAuthenticationDetails extends WebAuthenticationDetails {
+public class OAuthSecurityNamespaceHandler extends NamespaceHandlerSupport {
 
-  private final ConsumerDetails consumerDetails;
-
-  public OAuthAuthenticationDetails(HttpServletRequest request, ConsumerDetails consumerDetails) {
-    super(request);
-    this.consumerDetails = consumerDetails;
-  }
-
-  public ConsumerDetails getConsumerDetails() {
-    return consumerDetails;
+  public void init() {
+    registerBeanDefinitionParser("", );
+    
   }
 }

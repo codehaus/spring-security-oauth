@@ -16,7 +16,7 @@
 
 package org.springframework.security.oauth.provider.nonce;
 
-import org.acegisecurity.AuthenticationException;
+import org.springframework.security.AuthenticationException;
 import org.springframework.security.oauth.provider.ConsumerDetails;
 
 /**
@@ -33,7 +33,7 @@ public interface OAuthNonceServices {
    * @param timestamp The timestamp.
    * @param nonce The nonce.
    * @return Whether the timestamp is a new timestamp.  This gives the authentication processor the chance to enforce that all peer requests have the same timestamp, per the OAuth spec.
-   * @throws org.acegisecurity.AuthenticationException If the nonce failed to validate.
+   * @throws org.springframework.security.AuthenticationException If the nonce failed to validate.
    */
   boolean validateNonce(ConsumerDetails consumerDetails, long timestamp, String nonce) throws AuthenticationException;
   

@@ -16,10 +16,10 @@
 
 package org.springframework.security.oauth.provider;
 
-import org.acegisecurity.Authentication;
-import org.acegisecurity.AccessDeniedException;
-import org.acegisecurity.providers.AbstractAuthenticationToken;
-import org.acegisecurity.context.SecurityContextHolder;
+import org.springframework.security.Authentication;
+import org.springframework.security.AccessDeniedException;
+import org.springframework.security.providers.AbstractAuthenticationToken;
+import org.springframework.security.context.SecurityContextHolder;
 import org.springframework.security.oauth.common.OAuthConsumerParameter;
 import org.springframework.security.oauth.provider.token.OAuthAccessProviderToken;
 import org.springframework.security.oauth.provider.token.OAuthProviderToken;
@@ -41,6 +41,8 @@ import java.util.Map;
  * @author Ryan Heaton
  */
 public class ProtectedResourceProcessingFilter extends OAuthProviderProcessingFilter {
+
+  public static final int FILTER_CHAIN_ORDER = AccessTokenProcessingFilter.FILTER_CHAIN_ORDER + 1;
 
   private boolean allowAllMethods = true;
 
@@ -90,6 +92,15 @@ public class ProtectedResourceProcessingFilter extends OAuthProviderProcessingFi
   @Override
   public void setFilterProcessesUrl(String filterProcessesUrl) {
     throw new UnsupportedOperationException("The OAuth protected resource processing filter doesn't support a filter processes URL.");
+  }
+
+  /**
+   * The protected resource filtering happens after the access token filtering.
+   *
+   * @return The order after the access token.
+   */
+  public int getOrder() {
+    return ProtectedResourceProcessingFilter.FILTER_CHAIN_ORDER;
   }
 
   /**

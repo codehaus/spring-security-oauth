@@ -16,7 +16,7 @@
 
 package org.springframework.security.oauth.provider.attributes;
 
-import org.acegisecurity.SecurityConfig;
+import org.springframework.security.SecurityConfig;
 
 import java.util.Collection;
 import java.util.Collections;

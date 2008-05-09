@@ -20,7 +20,7 @@ import static org.easymock.EasyMock.*;
 import org.springframework.security.oauth.provider.token.OAuthProviderToken;
 import org.springframework.security.oauth.provider.token.OAuthProviderTokenServices;
 import org.springframework.security.oauth.provider.token.OAuthAccessProviderToken;
-import org.acegisecurity.context.SecurityContextHolder;
+import org.springframework.security.context.SecurityContextHolder;
 
 import junit.framework.TestCase;
 

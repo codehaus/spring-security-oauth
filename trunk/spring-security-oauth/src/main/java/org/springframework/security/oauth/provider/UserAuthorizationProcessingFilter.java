@@ -16,11 +16,12 @@
 
 package org.springframework.security.oauth.provider;
 
-import org.acegisecurity.Authentication;
-import org.acegisecurity.AuthenticationException;
-import org.acegisecurity.InsufficientAuthenticationException;
-import org.acegisecurity.context.SecurityContextHolder;
-import org.acegisecurity.ui.AbstractProcessingFilter;
+import org.springframework.security.Authentication;
+import org.springframework.security.AuthenticationException;
+import org.springframework.security.InsufficientAuthenticationException;
+import org.springframework.security.context.SecurityContextHolder;
+import org.springframework.security.ui.AbstractProcessingFilter;
+import org.springframework.security.ui.FilterChainOrder;
 import org.springframework.security.oauth.provider.token.OAuthProviderTokenServices;
 import org.springframework.util.Assert;
 
@@ -44,9 +45,11 @@ import java.io.IOException;
  */
 public class UserAuthorizationProcessingFilter extends AbstractProcessingFilter {
 
+  public static final int FILTER_CHAIN_ORDER = UnauthenticatedRequestTokenProcessingFilter.FILTER_CHAIN_ORDER + 1;
+
   private OAuthProviderTokenServices tokenServices;
-  private String tokenIdParameterName = "oauth_token";
-  private String callbackParameterName = "oauth_callback";
+  private String tokenIdParameterName = "requestToken";
+  private String callbackParameterName = "callbackURL";
 
   public UserAuthorizationProcessingFilter() {
     setDefaultTargetUrl("/");
@@ -93,6 +96,15 @@ public class UserAuthorizationProcessingFilter extends AbstractProcessingFilter 
 
   public String getDefaultFilterProcessesUrl() {
     return "/oauth_authenticate_token";
+  }
+
+  /**
+   * User authorization comes after the request token.
+   *
+   * @return The order after the request token.
+   */
+  public int getOrder() {
+    return UserAuthorizationProcessingFilter.FILTER_CHAIN_ORDER;
   }
 
   /**

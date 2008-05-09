@@ -16,7 +16,7 @@
 
 package org.springframework.security.oauth.provider.token;
 
-import org.acegisecurity.Authentication;
+import org.springframework.security.Authentication;
 
 /**
  * @author Ryan Heaton

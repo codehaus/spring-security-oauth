@@ -16,9 +16,8 @@
 
 package org.springframework.security.oauth.common.signature;
 
-import org.acegisecurity.Authentication;
-import org.acegisecurity.context.SecurityContextHolder;
-import org.acegisecurity.providers.x509.X509AuthenticationToken;
+import org.springframework.security.Authentication;
+import org.springframework.security.context.SecurityContextHolder;
 import static org.springframework.security.oauth.common.OAuthCodec.oauthEncode;
 
 import javax.crypto.spec.SecretKeySpec;
@@ -94,8 +93,8 @@ public class CoreOAuthSignatureMethodFactory implements OAuthSignatureMethodFact
       }
       else {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if ((authentication.isAuthenticated()) && (authentication instanceof X509AuthenticationToken)) {
-          X509Certificate certificate = (X509Certificate) ((X509AuthenticationToken) authentication).getCredentials();
+        if (authentication.getCredentials() instanceof X509Certificate) {
+          X509Certificate certificate = (X509Certificate) authentication.getCredentials();
           if (certificate != null) {
             return new RSA_SHA1SignatureMethod(certificate.getPublicKey());
           }

@@ -16,15 +16,13 @@
 
 package org.springframework.security.oauth.provider;
 
-import org.acegisecurity.util.StringSplitUtils;
-import static org.springframework.security.oauth.common.OAuthCodec.oauthEncode;
-import static org.springframework.security.oauth.common.OAuthCodec.oauthDecode;
-import org.springframework.security.oauth.common.OAuthConsumerParameter;
 import org.apache.commons.codec.DecoderException;
+import static org.springframework.security.oauth.common.OAuthCodec.oauthDecode;
+import static org.springframework.security.oauth.common.OAuthCodec.oauthEncode;
+import org.springframework.security.oauth.common.OAuthConsumerParameter;
+import org.springframework.security.util.StringSplitUtils;
 
 import javax.servlet.http.HttpServletRequest;
-import java.io.UnsupportedEncodingException;
-import java.net.URLDecoder;
 import java.util.*;
 
 /**
@@ -55,9 +53,8 @@ public class CoreOAuthProviderSupport implements OAuthProviderSupport {
 
       //create a map of the authorization header values per OAuth Core 1.0, section 5.4.1
       String[] headerEntries = StringSplitUtils.splitIgnoringQuotes(authHeaderValue, ',');
-      Iterator headerEntriesIt = StringSplitUtils.splitEachArrayElementAndCreateMap(headerEntries, "=", "\"").entrySet().iterator();
-      while (headerEntriesIt.hasNext()) {
-        Map.Entry entry = (Map.Entry) headerEntriesIt.next();
+      for (Object o : StringSplitUtils.splitEachArrayElementAndCreateMap(headerEntries, "=", "\"").entrySet()) {
+        Map.Entry entry = (Map.Entry) o;
         String key;
         String value;
         try {

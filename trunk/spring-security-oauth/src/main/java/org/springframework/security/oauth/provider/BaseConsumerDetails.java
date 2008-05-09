@@ -17,7 +17,7 @@
 package org.springframework.security.oauth.provider;
 
 import org.springframework.security.oauth.common.signature.SignatureSecret;
-import org.acegisecurity.GrantedAuthority;
+import org.springframework.security.GrantedAuthority;
 
 /**
  * Base implementation for consumer details.
