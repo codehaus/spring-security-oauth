@@ -31,8 +31,8 @@ public class BaseProtectedResourceDetails implements ProtectedResourceDetails {
   private SignatureSecret sharedSecret;
   private String requestTokenURL;
   private String userAuthorizationURL;
-  private String userAuthorizationTokenParameterName = "oauth_token";
-  private String userAuthorizationCallbackParameterName = "oauth_callback";
+  private String userAuthorizationTokenParameterName = "requestToken";
+  private String userAuthorizationCallbackParameterName = "callbackURL";
   private String accessTokenURL;
   private boolean acceptsAuthorizationHeader = true;
   private String authorizationHeaderRealm;

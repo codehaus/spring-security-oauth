@@ -16,10 +16,10 @@
 
 package org.springframework.security.oauth.provider;
 
-import org.acegisecurity.AcegiMessageSource;
-import org.acegisecurity.Authentication;
-import org.acegisecurity.AuthenticationException;
-import org.acegisecurity.context.SecurityContextHolder;
+import org.springframework.security.SpringSecurityMessageSource;
+import org.springframework.security.Authentication;
+import org.springframework.security.AuthenticationException;
+import org.springframework.security.context.SecurityContextHolder;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.InitializingBean;
@@ -33,6 +33,7 @@ import org.springframework.security.oauth.provider.nonce.OAuthNonceServices;
 import org.springframework.security.oauth.provider.token.OAuthProviderToken;
 import org.springframework.security.oauth.provider.token.OAuthProviderTokenServices;
 import org.springframework.util.Assert;
+import org.springframework.core.Ordered;
 
 import javax.servlet.*;
 import javax.servlet.http.HttpServletRequest;
@@ -48,7 +49,7 @@ import java.util.Map;
  *
  * @author Ryan Heaton
  */
-public abstract class OAuthProviderProcessingFilter implements Filter, InitializingBean, MessageSourceAware {
+public abstract class OAuthProviderProcessingFilter implements Filter, InitializingBean, MessageSourceAware, Ordered {
 
   /**
    * Attribute for indicating that OAuth processing has already occurred.
@@ -58,7 +59,7 @@ public abstract class OAuthProviderProcessingFilter implements Filter, Initializ
   private static final Log LOG = LogFactory.getLog(OAuthProviderProcessingFilter.class);
   private final List<String> allowedMethods = new ArrayList<String>(Arrays.asList("GET", "POST"));
   private OAuthProcessingFilterEntryPoint authenticationEntryPoint = new OAuthProcessingFilterEntryPoint();
-  protected MessageSourceAccessor messages = AcegiMessageSource.getAccessor();
+  protected MessageSourceAccessor messages = SpringSecurityMessageSource.getAccessor();
   private String filterProcessesUrl = "/oauth_filter";
   private OAuthProviderSupport providerSupport = new CoreOAuthProviderSupport();
   private OAuthSignatureMethodFactory signatureMethodFactory = new CoreOAuthSignatureMethodFactory();
@@ -276,7 +277,7 @@ public abstract class OAuthProviderProcessingFilter implements Filter, Initializ
   /**
    * Logic to be performed on a new timestamp.  The default behavior expects that the timestamp should not be new.
    *
-   * @throws org.acegisecurity.AuthenticationException
+   * @throws org.springframework.security.AuthenticationException
    *          If the timestamp shouldn't be new.
    */
   protected void onNewTimestamp() throws AuthenticationException {
@@ -317,7 +318,7 @@ public abstract class OAuthProviderProcessingFilter implements Filter, Initializ
    * @return Whether this filter is configured to process the specified request.
    */
   protected boolean requiresAuthentication(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) {
-    //copied from org.acegisecurity.ui.AbstractProcessingFilter.requiresAuthentication
+    //copied from org.springframework.security.ui.AbstractProcessingFilter.requiresAuthentication
     String uri = request.getRequestURI();
     int pathParamIndex = uri.indexOf(';');
 

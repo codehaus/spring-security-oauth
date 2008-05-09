@@ -16,14 +16,15 @@
 
 package org.springframework.security.oauth.consumer;
 
-import org.acegisecurity.*;
-import org.acegisecurity.context.SecurityContextHolder;
-import org.acegisecurity.intercept.web.FilterInvocation;
-import org.acegisecurity.intercept.web.FilterInvocationDefinitionSource;
-import org.acegisecurity.ui.AuthenticationEntryPoint;
-import org.acegisecurity.ui.savedrequest.SavedRequest;
-import org.acegisecurity.util.PortResolver;
-import org.acegisecurity.util.PortResolverImpl;
+import org.springframework.security.*;
+import org.springframework.security.context.SecurityContextHolder;
+import org.springframework.security.intercept.web.FilterInvocation;
+import org.springframework.security.intercept.web.FilterInvocationDefinitionSource;
+import org.springframework.security.ui.AuthenticationEntryPoint;
+import org.springframework.security.ui.FilterChainOrder;
+import org.springframework.security.ui.savedrequest.SavedRequest;
+import org.springframework.security.util.PortResolver;
+import org.springframework.security.util.PortResolverImpl;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.InitializingBean;
@@ -36,6 +37,7 @@ import org.springframework.security.oauth.consumer.token.OAuthConsumerToken;
 import org.springframework.security.oauth.consumer.token.OAuthConsumerTokenServices;
 import org.springframework.security.oauth.consumer.token.OAuthConsumerTokenServicesFactory;
 import org.springframework.util.Assert;
+import org.springframework.core.Ordered;
 
 import javax.servlet.*;
 import javax.servlet.http.HttpServletRequest;
@@ -53,14 +55,16 @@ import java.util.*;
  *
  * @author Ryan Heaton
  */
-public class OAuthConsumerProcessingFilter implements Filter, InitializingBean, MessageSourceAware {
+public class OAuthConsumerProcessingFilter implements Filter, InitializingBean, MessageSourceAware, Ordered {
+
+  public static final int FILTER_CHAIN_ORDER = FilterChainOrder.FILTER_SECURITY_INTERCEPTOR + 15;
 
   public static final String ACCESS_TOKENS_DEFAULT_ATTRIBUTE = "OAUTH_ACCESS_TOKENS";
   public static final String OAUTH_FAILURE_KEY = "OAUTH_FAILURE_KEY";
   private static final Log LOG = LogFactory.getLog(OAuthConsumerProcessingFilter.class);
 
   private AuthenticationEntryPoint OAuthFailureEntryPoint;
-  protected MessageSourceAccessor messages = AcegiMessageSource.getAccessor();
+  protected MessageSourceAccessor messages = SpringSecurityMessageSource.getAccessor();
   private FilterInvocationDefinitionSource objectDefinitionSource;
   private OAuthConsumerSupport consumerSupport;
   private boolean requireAuthenticated = true;
@@ -219,15 +223,23 @@ public class OAuthConsumerProcessingFilter implements Filter, InitializingBean, 
       FilterInvocation invocation = new FilterInvocation(request, response, filterChain);
       ConfigAttributeDefinition attributeDefinition = getObjectDefinitionSource().getAttributes(invocation);
       if (attributeDefinition != null) {
-        Iterator attributes = attributeDefinition.getConfigAttributes();
-        while (attributes.hasNext()) {
-          ConfigAttribute attribute = (ConfigAttribute) attributes.next();
+        Collection attributes = attributeDefinition.getConfigAttributes();
+        for (Object att : attributes) {
+          ConfigAttribute attribute = (ConfigAttribute) att;
           deps.add(attribute.getAttribute());
         }
       }
     }
 
     return deps;
+  }
+
+  /**
+   * The consumer processing filter comes after the
+   * @return
+   */
+  public int getOrder() {
+    return OAuthConsumerProcessingFilter.FILTER_CHAIN_ORDER;
   }
 
   /**

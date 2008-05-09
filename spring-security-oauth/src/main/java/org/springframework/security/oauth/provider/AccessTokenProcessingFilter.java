@@ -16,8 +16,7 @@
 
 package org.springframework.security.oauth.provider;
 
-import org.acegisecurity.AuthenticationException;
-import org.acegisecurity.BadCredentialsException;
+import org.springframework.security.AuthenticationException;
 import org.springframework.security.oauth.common.OAuthConsumerParameter;
 import org.springframework.security.oauth.provider.token.OAuthProviderToken;
 
@@ -29,6 +28,8 @@ import java.util.Map;
  * @author Ryan Heaton
  */
 public class AccessTokenProcessingFilter extends UnauthenticatedRequestTokenProcessingFilter {
+
+  public static final int FILTER_CHAIN_ORDER = UserAuthorizationProcessingFilter.FILTER_CHAIN_ORDER + 1;
 
   public AccessTokenProcessingFilter() {
     setFilterProcessesUrl("/oauth_access_token");
@@ -52,5 +53,15 @@ public class AccessTokenProcessingFilter extends UnauthenticatedRequestTokenProc
   @Override
   protected void onNewTimestamp() throws AuthenticationException {
     throw new InvalidOAuthParametersException(messages.getMessage("AccessTokenProcessingFilter.timestampNotNew", "A new timestamp should not be used in a request for an access token."));
+  }
+
+  /**
+   * The access token filter comes after the user authorization filter.
+   *
+   * @return The access token filter comes after the user authorization filter.
+   */
+  @Override
+  public int getOrder() {
+    return AccessTokenProcessingFilter.FILTER_CHAIN_ORDER;
   }
 }

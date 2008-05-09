@@ -17,8 +17,8 @@
 package org.springframework.security.oauth.provider;
 
 import junit.framework.TestCase;
-import org.acegisecurity.Authentication;
-import org.acegisecurity.context.SecurityContextHolder;
+import org.springframework.security.Authentication;
+import org.springframework.security.context.SecurityContextHolder;
 import static org.easymock.EasyMock.*;
 import org.springframework.security.oauth.provider.token.OAuthAccessProviderToken;
 import org.springframework.security.oauth.provider.token.OAuthProviderTokenServices;

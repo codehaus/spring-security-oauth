@@ -29,7 +29,7 @@ import org.springframework.security.oauth.common.signature.OAuthSignatureMethod;
 import static org.springframework.security.oauth.common.OAuthCodec.oauthEncode;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.util.Assert;
-import org.acegisecurity.util.StringSplitUtils;
+import org.springframework.security.util.StringSplitUtils;
 import org.apache.commons.codec.DecoderException;
 
 import java.net.*;

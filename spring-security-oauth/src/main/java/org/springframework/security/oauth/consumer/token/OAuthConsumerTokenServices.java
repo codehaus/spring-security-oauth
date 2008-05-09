@@ -16,7 +16,7 @@
 
 package org.springframework.security.oauth.consumer.token;
 
-import org.acegisecurity.AuthenticationException;
+import org.springframework.security.AuthenticationException;
 
 /**
  * Token services for an OAuth consumer.
