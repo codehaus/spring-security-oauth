@@ -20,6 +20,7 @@ import junit.framework.TestCase;
 import org.springframework.security.Authentication;
 import org.springframework.security.AuthenticationException;
 import org.springframework.security.BadCredentialsException;
+import org.springframework.security.GrantedAuthority;
 import org.springframework.security.context.SecurityContextHolder;
 import static org.easymock.EasyMock.*;
 import org.springframework.security.oauth.common.OAuthConsumerParameter;
@@ -91,6 +92,10 @@ public class TestOAuthProcessingFilter extends TestCase {
       protected boolean skipProcessing(HttpServletRequest request) {
         return false;
       }
+
+      public int getOrder() {
+        return 0;
+      }
     };
 
     OAuthProviderSupport providerSupport = createMock(OAuthProviderSupport.class);
@@ -140,6 +145,7 @@ public class TestOAuthProcessingFilter extends TestCase {
     requestParams.put(OAuthConsumerParameter.oauth_consumer_key.toString(), "consumerKey");
     expect(providerSupport.parseParameters(request)).andReturn(requestParams);
     ConsumerDetails consumerDetails = createMock(ConsumerDetails.class);
+    expect(consumerDetails.getAuthorities()).andReturn(new GrantedAuthority[0]);
     expect(consumerDetailsService.loadConsumerByConsumerKey("consumerKey")).andReturn(consumerDetails);
     requestParams.put(OAuthConsumerParameter.oauth_token.toString(), "tokenvalue");
     requestParams.put(OAuthConsumerParameter.oauth_signature_method.toString(), "methodvalue");
@@ -171,6 +177,10 @@ public class TestOAuthProcessingFilter extends TestCase {
   public void testValidateParams() throws Exception {
     OAuthProviderProcessingFilter filter = new OAuthProviderProcessingFilter() {
       protected void onValidSignature(HttpServletRequest request, HttpServletResponse response, FilterChain chain) throws IOException, ServletException {
+      }
+
+      public int getOrder() {
+        return 0;
       }
     };
 
@@ -304,6 +314,10 @@ public class TestOAuthProcessingFilter extends TestCase {
     OAuthProviderProcessingFilter filter = new OAuthProviderProcessingFilter() {
       protected void onValidSignature(HttpServletRequest request, HttpServletResponse response, FilterChain chain) throws IOException, ServletException {
       }
+
+      public int getOrder() {
+        return 0;
+      }
     };
 
     ConsumerDetails details = createMock(ConsumerDetails.class);
@@ -314,7 +328,7 @@ public class TestOAuthProcessingFilter extends TestCase {
     OAuthSignatureMethod sigMethod = createMock(OAuthSignatureMethod.class);
 
     ConsumerCredentials credentials = new ConsumerCredentials("id", "sig", "method", "base", "token");
-    ConsumerAuthentication authentication = new ConsumerAuthentication(details, credentials);
+    expect(details.getAuthorities()).andReturn(new GrantedAuthority[0]);
     expect(details.getSignatureSecret()).andReturn(secret);
     filter.setTokenServices(tokenServices);
     expect(tokenServices.getToken("token")).andReturn(token);
@@ -324,6 +338,7 @@ public class TestOAuthProcessingFilter extends TestCase {
     sigMethod.verify("base", "sig");
 
     replay(details, secret, tokenServices, token,  sigFactory, sigMethod);
+    ConsumerAuthentication authentication = new ConsumerAuthentication(details, credentials);
     filter.validateSignature(authentication);
     verify(details, secret, tokenServices, token,  sigFactory, sigMethod);
     reset(details, secret, tokenServices, token,  sigFactory, sigMethod);

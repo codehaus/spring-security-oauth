@@ -7,7 +7,7 @@
     <layout class="org.apache.log4j.SimpleLayout"/>
   </appender>
 
-  <logger name="org.springframework.security">
+  <logger name="org.springframework.security.oauth">
     <level value="debug"/>
   </logger>
 

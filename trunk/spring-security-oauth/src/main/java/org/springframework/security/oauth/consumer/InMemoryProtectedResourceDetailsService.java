@@ -26,17 +26,17 @@ import java.util.HashMap;
  */
 public class InMemoryProtectedResourceDetailsService implements ProtectedResourceDetailsService {
 
-  private Map<String, ProtectedResourceDetails> resourceDetailsStore = new HashMap<String, ProtectedResourceDetails>();
+  private Map<String, ? extends ProtectedResourceDetails> resourceDetailsStore = new HashMap<String, ProtectedResourceDetails>();
 
   public ProtectedResourceDetails loadProtectedResourceDetailsById(String id) throws IllegalArgumentException {
     return getResourceDetailsStore().get(id);
   }
 
-  public Map<String, ProtectedResourceDetails> getResourceDetailsStore() {
+  public Map<String, ? extends ProtectedResourceDetails> getResourceDetailsStore() {
     return resourceDetailsStore;
   }
 
-  public void setResourceDetailsStore(Map<String, ProtectedResourceDetails> resourceDetailsStore) {
+  public void setResourceDetailsStore(Map<String, ? extends ProtectedResourceDetails> resourceDetailsStore) {
     this.resourceDetailsStore = resourceDetailsStore;
   }
 }

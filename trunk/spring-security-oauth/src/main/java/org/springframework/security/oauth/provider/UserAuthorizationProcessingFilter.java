@@ -20,9 +20,8 @@ import org.springframework.security.Authentication;
 import org.springframework.security.AuthenticationException;
 import org.springframework.security.InsufficientAuthenticationException;
 import org.springframework.security.context.SecurityContextHolder;
-import org.springframework.security.ui.AbstractProcessingFilter;
-import org.springframework.security.ui.FilterChainOrder;
 import org.springframework.security.oauth.provider.token.OAuthProviderTokenServices;
+import org.springframework.security.ui.AbstractProcessingFilter;
 import org.springframework.util.Assert;
 
 import javax.servlet.http.HttpServletRequest;

@@ -1,4 +1,4 @@
-<%@ taglib prefix="authz" uri="http://acegisecurity.org/authz" %>
+<%@ taglib prefix="authz" uri="http://www.springframework.org/security/tags" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jstl/core" %>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
@@ -33,8 +33,8 @@
     <authz:authorize ifNotGranted="ROLE_USER">
       <div class="header1">Login</div>
       <form action="<c:url value="/login.do"/>" method="POST">
-        <p class="formtext">Username: <input type='text' name='j_username'></p>
-        <p class="formtext">Password: <input type='password' name='j_password'></p>
+        <p class="formtext">Username: <input type='text' name='j_username' value="marissa"></p>
+        <p class="formtext">Password: <input type='text' name='j_password' value="koala"></p>
         <p class="formtext"><input name="login" value="login" type="submit"></p>
       </form>
     </authz:authorize>
