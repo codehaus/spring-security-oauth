@@ -52,7 +52,7 @@ public class TestOAuthUserAuthorizationProcessingFilter extends TestCase {
     }
 
     expect(authentication.isAuthenticated()).andReturn(true);
-    expect(request.getParameter("oauth_token")).andReturn("tok");
+    expect(request.getParameter("requestToken")).andReturn("tok");
     tokenServices.authorizeRequestToken("tok", authentication);
     filter.setTokenServices(tokenServices);
     replay(authentication, request, tokenServices);
@@ -70,15 +70,15 @@ public class TestOAuthUserAuthorizationProcessingFilter extends TestCase {
     UserAuthorizationProcessingFilter filter = new UserAuthorizationProcessingFilter();
     HttpServletRequest request = createMock(HttpServletRequest.class);
 
-    expect(request.getParameter("oauth_callback")).andReturn("http://my.host.com/my/context");
-    expect(request.getParameter("oauth_token")).andReturn("mytok");
+    expect(request.getParameter("callbackURL")).andReturn("http://my.host.com/my/context");
+    expect(request.getParameter("requestToken")).andReturn("mytok");
     replay(request);
     assertEquals("http://my.host.com/my/context?oauth_token=mytok", filter.determineTargetUrl(request));
     verify(request);
     reset(request);
 
-    expect(request.getParameter("oauth_callback")).andReturn("http://my.host.com/my/context?with=some&query=parameter");
-    expect(request.getParameter("oauth_token")).andReturn("mytok");
+    expect(request.getParameter("callbackURL")).andReturn("http://my.host.com/my/context?with=some&query=parameter");
+    expect(request.getParameter("requestToken")).andReturn("mytok");
     replay(request);
     assertEquals("http://my.host.com/my/context?with=some&query=parameter&oauth_token=mytok", filter.determineTargetUrl(request));
     verify(request);

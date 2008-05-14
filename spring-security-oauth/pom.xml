@@ -24,6 +24,28 @@
           <downloadJavadocs>true</downloadJavadocs>
         </configuration>
       </plugin>
+      <plugin>
+        <artifactId>maven-antrun-plugin</artifactId>
+        <executions>
+          <execution>
+            <phase>site</phase>
+            <configuration>
+              <tasks>
+                <mkdir dir="${project.reporting.outputDirectory}/schema"/>
+                <copy todir="${project.reporting.outputDirectory}/schema">
+                  <fileset dir="src/main/resources">
+                    <include name="**/*.xsd"/>
+                  </fileset>
+                  <mapper type="flatten"/>
+                </copy>
+              </tasks>
+            </configuration>
+            <goals>
+              <goal>run</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
     </plugins>
   </build>
 
@@ -63,7 +85,6 @@
       <version>2.2</version>
       <scope>test</scope>
     </dependency>
-
   </dependencies>
 
   <distributionManagement>

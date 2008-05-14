@@ -1,6 +1,6 @@
-<%@ page import="org.acegisecurity.ui.AbstractProcessingFilter" %>
-<%@ page import="org.acegisecurity.AuthenticationException" %>
-<%@ taglib prefix="authz" uri="http://acegisecurity.org/authz" %>
+<%@ page import="org.springframework.security.ui.AbstractProcessingFilter" %>
+<%@ page import="org.springframework.security.AuthenticationException" %>
+<%@ taglib prefix="authz" uri="http://www.springframework.org/security/tags" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jstl/core" %>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
@@ -17,17 +17,17 @@
   </div>
   <div id="mainbody">
 
-    <c:if test="${!empty sessionScope.ACEGI_SECURITY_LAST_EXCEPTION}">
+    <c:if test="${!empty sessionScope.SPRING_SECURITY_LAST_EXCEPTION}">
       <div class="errorHeader">Woops!</div>
 
-      <p class="bodytext"><font color="red">Access could not be granted. (<%= ((AuthenticationException) session.getAttribute(AbstractProcessingFilter.ACEGI_SECURITY_LAST_EXCEPTION_KEY)).getMessage() %>)</font></p>
+      <p class="bodytext"><font color="red">Access could not be granted. (<%= ((AuthenticationException) session.getAttribute(AbstractProcessingFilter.SPRING_SECURITY_LAST_EXCEPTION_KEY)).getMessage() %>)</font></p>
     </c:if>
-    <c:remove scope="session" var="ACEGI_SECURITY_LAST_EXCEPTION"/>
+    <c:remove scope="session" var="SPRING_SECURITY_LAST_EXCEPTION"/>
 
     <authz:authorize ifAllGranted="ROLE_USER">
       <div class="header1">Please Confirm</div>
 
-      <p class="bodytext">You hereby authorize "<c:out value="${consumer.displayName}"/>" to access the following resource:</p>
+      <p class="bodytext">You hereby authorize "<c:out value="${consumer.consumerName}"/>" to access the following resource:</p>
 
       <div class="bodytext"><b><c:out value="${consumer.resourceName}"/></b></div>
 

@@ -28,7 +28,7 @@ import java.util.Map;
  */
 public class InMemoryConsumerDetailsService implements ConsumerDetailsService {
 
-  private Map<String, ConsumerDetails> consumerDetailsStore = new HashMap<String, ConsumerDetails>();
+  private Map<String, ? extends ConsumerDetails> consumerDetailsStore = new HashMap<String, ConsumerDetails>();
 
   public ConsumerDetails loadConsumerByConsumerKey(String consumerKey) throws OAuthException {
     ConsumerDetails details = consumerDetailsStore.get(consumerKey);
@@ -38,11 +38,11 @@ public class InMemoryConsumerDetailsService implements ConsumerDetailsService {
     return details;
   }
 
-  public Map<String, ConsumerDetails> getConsumerDetailsStore() {
+  public Map<String, ? extends ConsumerDetails> getConsumerDetailsStore() {
     return consumerDetailsStore;
   }
 
-  public void setConsumerDetailsStore(Map<String, ConsumerDetails> consumerDetailsStore) {
+  public void setConsumerDetailsStore(Map<String, ? extends ConsumerDetails> consumerDetailsStore) {
     this.consumerDetailsStore = consumerDetailsStore;
   }
 }

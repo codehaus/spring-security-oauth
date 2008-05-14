@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.springframework.security.oauth;
+package org.springframework.security.oauth.config;
 
 import org.springframework.beans.factory.xml.NamespaceHandlerSupport;
 
@@ -24,7 +24,10 @@ import org.springframework.beans.factory.xml.NamespaceHandlerSupport;
 public class OAuthSecurityNamespaceHandler extends NamespaceHandlerSupport {
 
   public void init() {
-    registerBeanDefinitionParser("", );
-    
+    registerBeanDefinitionParser("provider", new OAuthProviderBeanDefinitionParser());
+    registerBeanDefinitionParser("consumer-details-service", new ConsumerServiceBeanDefinitionParser());
+    registerBeanDefinitionParser("token-services", new TokenServiceBeanDefinitionParser());
+    registerBeanDefinitionParser("consumer", new OAuthConsumerBeanDefinitionParser());
+    registerBeanDefinitionParser("resource-details-service", new ProtectedResourceDetailsBeanDefinitionParser());
   }
 }

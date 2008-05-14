@@ -19,6 +19,7 @@ package org.springframework.security.oauth.provider;
 import static org.easymock.EasyMock.*;
 import org.springframework.security.oauth.provider.token.OAuthProviderTokenServices;
 import org.springframework.security.oauth.provider.token.OAuthAccessProviderToken;
+import org.springframework.security.GrantedAuthority;
 
 import junit.framework.TestCase;
 
@@ -33,7 +34,7 @@ public class TestAccessTokenProcessingFilter extends TestCase {
   public void testCreateOAuthToken() throws Exception {
     ConsumerDetails consumerDetails = createMock(ConsumerDetails.class);
     ConsumerCredentials creds = new ConsumerCredentials("key", "sig", "meth", "base", "tok");
-    ConsumerAuthentication authentication = new ConsumerAuthentication(consumerDetails, creds);
+    expect(consumerDetails.getAuthorities()).andReturn(new GrantedAuthority[0]);
     OAuthProviderTokenServices tokenServices = createMock(OAuthProviderTokenServices.class);
     OAuthAccessProviderToken token = createMock(OAuthAccessProviderToken.class);
 
@@ -42,6 +43,7 @@ public class TestAccessTokenProcessingFilter extends TestCase {
 
     expect(tokenServices.createAccessToken("tok")).andReturn(token);
     replay(consumerDetails, tokenServices, token);
+    ConsumerAuthentication authentication = new ConsumerAuthentication(consumerDetails, creds);
     assertSame(token, filter.createOAuthToken(authentication));
     verify(consumerDetails, tokenServices, token);
     reset(consumerDetails, tokenServices, token);

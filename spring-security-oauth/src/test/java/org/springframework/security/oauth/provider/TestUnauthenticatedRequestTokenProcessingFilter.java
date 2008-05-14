@@ -21,6 +21,7 @@ import org.springframework.security.oauth.provider.token.OAuthProviderToken;
 import org.springframework.security.oauth.provider.token.OAuthProviderTokenServices;
 import org.springframework.security.oauth.provider.token.OAuthAccessProviderToken;
 import org.springframework.security.context.SecurityContextHolder;
+import org.springframework.security.GrantedAuthority;
 
 import junit.framework.TestCase;
 
@@ -51,19 +52,20 @@ public class TestUnauthenticatedRequestTokenProcessingFilter extends TestCase {
     FilterChain filterChain = createMock(FilterChain.class);
     ConsumerCredentials creds = new ConsumerCredentials("key", "sig", "meth", "base", "tok");
     ConsumerDetails consumerDetails = createMock(ConsumerDetails.class);
-    ConsumerAuthentication authentication = new ConsumerAuthentication(consumerDetails, creds);
-    authentication.setAuthenticated(true);
-    SecurityContextHolder.getContext().setAuthentication(authentication);
 
     expect(authToken.getConsumerKey()).andReturn("chi");
     expect(authToken.getValue()).andReturn("tokvalue");
     expect(authToken.getSecret()).andReturn("shhhhhh");
+    expect(consumerDetails.getAuthorities()).andReturn(new GrantedAuthority[0]);    
     expect(consumerDetails.getConsumerKey()).andReturn("chi");
     response.setContentType("text/plain;charset=utf-8");
     StringWriter writer = new StringWriter();
     expect(response.getWriter()).andReturn(new PrintWriter(writer));
     response.flushBuffer();
     replay(request, response, filterChain, authToken, consumerDetails);
+    ConsumerAuthentication authentication = new ConsumerAuthentication(consumerDetails, creds);
+    authentication.setAuthenticated(true);
+    SecurityContextHolder.getContext().setAuthentication(authentication);
     filter.onValidSignature(request, response, filterChain);
     assertEquals("oauth_token=tokvalue&oauth_token_secret=shhhhhh", writer.toString());
     verify(request, response, filterChain, authToken, consumerDetails);
@@ -78,7 +80,6 @@ public class TestUnauthenticatedRequestTokenProcessingFilter extends TestCase {
   public void testCreateOAuthToken() throws Exception {
     ConsumerDetails consumerDetails = createMock(ConsumerDetails.class);
     ConsumerCredentials creds = new ConsumerCredentials("key", "sig", "meth", "base", "tok");
-    ConsumerAuthentication authentication = new ConsumerAuthentication(consumerDetails, creds);
     OAuthProviderTokenServices tokenServices = createMock(OAuthProviderTokenServices.class);
     OAuthAccessProviderToken token = createMock(OAuthAccessProviderToken.class);
 
@@ -86,8 +87,10 @@ public class TestUnauthenticatedRequestTokenProcessingFilter extends TestCase {
     filter.setTokenServices(tokenServices);
 
     expect(consumerDetails.getConsumerKey()).andReturn("chi");
+    expect(consumerDetails.getAuthorities()).andReturn(new GrantedAuthority[0]);
     expect(tokenServices.createUnauthorizedRequestToken("chi")).andReturn(token);
     replay(consumerDetails, tokenServices, token);
+    ConsumerAuthentication authentication = new ConsumerAuthentication(consumerDetails, creds);
     assertSame(token, filter.createOAuthToken(authentication));
     verify(consumerDetails, tokenServices, token);
     reset(consumerDetails, tokenServices, token);

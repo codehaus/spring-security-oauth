@@ -6,6 +6,8 @@
            elementFormDefault="qualified"
            attributeFormDefault="unqualified">
 
+  <xs:import namespace="http://www.springframework.org/schema/beans"/>
+
   <xs:element name="provider">
     <xs:annotation>
       <xs:documentation>
@@ -20,7 +22,7 @@
           </xs:documentation>
         </xs:annotation>
       </xs:attribute>
-      <xs:attribute name="token-services-ref" type="xs:string" use="required">
+      <xs:attribute name="token-services-ref" type="xs:string">
         <xs:annotation>
           <xs:documentation>
             The reference to the bean that defines the token services.
@@ -101,7 +103,7 @@
     </xs:complexType>
   </xs:element>
 
-  <xs:element name="consumer-service">
+  <xs:element name="consumer-details-service">
     <xs:annotation>
       <xs:documentation>
         Default element that contains the definition of the consumers that are allowed to access this service.
@@ -170,7 +172,7 @@
     </xs:complexType>
   </xs:element>
 
-  <xs:element name="provider-token-service">
+  <xs:element name="token-services">
     <xs:annotation>
       <xs:documentation>
         Element for declaring and configuring an in-memory implementation of the provider token service.
@@ -216,6 +218,13 @@
                 </xs:documentation>
               </xs:annotation>
             </xs:attribute>
+            <xs:attribute name="httpMethod" type="xs:string">
+              <xs:annotation>
+                <xs:documentation>
+                  The HTTP method.
+                </xs:documentation>
+              </xs:annotation>
+            </xs:attribute>
           </xs:complexType>
         </xs:element>
       </xs:choice>
@@ -227,6 +236,15 @@
           </xs:documentation>
         </xs:annotation>
       </xs:attribute>
+      <xs:attribute name="oauth-failure-page" type="xs:string">
+        <xs:annotation>
+          <xs:documentation>
+            The page where the user should be redirected on OAuth failure.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:attribute>
+
+      <!--the following attributes are less used-->
       <xs:attribute name="entry-point-ref" type="xs:string">
         <xs:annotation>
           <xs:documentation>
@@ -234,8 +252,6 @@
           </xs:documentation>
         </xs:annotation>
       </xs:attribute>
-
-      <!--the following attributes are less used-->
       <xs:attribute name="path-type">
         <xs:annotation>
           <xs:documentation>
@@ -273,17 +289,10 @@
           </xs:documentation>
         </xs:annotation>
       </xs:attribute>
-      <xs:attribute name="nonce-factory-ref" type="xs:string">
-        <xs:annotation>
-          <xs:documentation>
-            Allows a customized nonce factory to be used.
-          </xs:documentation>
-        </xs:annotation>
-      </xs:attribute>
     </xs:complexType>
   </xs:element>
 
-  <xs:element name="protected-resources-service">
+  <xs:element name="resource-details-service">
     <xs:annotation>
       <xs:documentation>
         Element for declaring and configuring an in-memory implementation of the consumer protected resources service.

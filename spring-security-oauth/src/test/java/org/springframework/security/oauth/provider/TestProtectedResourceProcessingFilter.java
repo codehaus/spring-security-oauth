@@ -41,7 +41,7 @@ public class TestProtectedResourceProcessingFilter extends TestCase {
     HttpServletResponse response = createMock(HttpServletResponse.class);
     FilterChain chain = createMock(FilterChain.class);
     ConsumerCredentials creds = new ConsumerCredentials("key", "sig", "meth", "base", "tok");
-    ConsumerAuthentication authentication = new ConsumerAuthentication(null, creds);
+    ConsumerAuthentication authentication = new ConsumerAuthentication(createNiceMock(ConsumerDetails.class), creds);
     authentication.setAuthenticated(true);
     SecurityContextHolder.getContext().setAuthentication(authentication);
     OAuthProviderTokenServices tokenServices = createMock(OAuthProviderTokenServices.class);
