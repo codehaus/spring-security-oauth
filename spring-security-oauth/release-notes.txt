@@ -3,5 +3,4 @@
 3. mvn clean
 4. mvn site:site
 5. rsync -av target/site/ /home/heatonra/mnt/spring-security-oauth/web
-6. cp 
-7. svn ci
+6. svn ci
