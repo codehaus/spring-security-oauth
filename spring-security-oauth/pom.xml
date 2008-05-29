@@ -4,7 +4,7 @@
   <groupId>org.codehaus.spring-security-oauth</groupId>
   <artifactId>spring-security-oauth</artifactId>
   <packaging>jar</packaging>
-  <version>2.0</version>
+  <version>2.1</version>
 
   <build>
     <plugins>
@@ -64,6 +64,15 @@
       <artifactId>servlet-api</artifactId>
       <version>2.3</version>
       <scope>provided</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>org.springframework</groupId>
+      <artifactId>spring-beans</artifactId>
+      <version>2.5.4</version>
+
+      <!--we're just using spring-beans v. 2.5 for the annotations support.-->
+      <optional>true</optional>
     </dependency>
 
     <dependency>

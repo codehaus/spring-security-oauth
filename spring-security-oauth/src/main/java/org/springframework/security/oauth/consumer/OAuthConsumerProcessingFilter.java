@@ -28,6 +28,7 @@ import org.springframework.security.util.PortResolverImpl;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.InitializingBean;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.MessageSource;
 import org.springframework.context.MessageSourceAware;
 import org.springframework.context.support.MessageSourceAccessor;
@@ -235,8 +236,9 @@ public class OAuthConsumerProcessingFilter implements Filter, InitializingBean, 
   }
 
   /**
-   * The consumer processing filter comes after the
-   * @return
+   * The consumer processing filter comes after the filter security interceptor.
+   *
+   * @return The order.
    */
   public int getOrder() {
     return OAuthConsumerProcessingFilter.FILTER_CHAIN_ORDER;
@@ -257,6 +259,7 @@ public class OAuthConsumerProcessingFilter implements Filter, InitializingBean, 
    * @param protectedResourceDetailsService
    *         The protected resource details service.
    */
+  @Autowired
   public void setProtectedResourceDetailsService(ProtectedResourceDetailsService protectedResourceDetailsService) {
     this.protectedResourceDetailsService = protectedResourceDetailsService;
   }
@@ -293,6 +296,7 @@ public class OAuthConsumerProcessingFilter implements Filter, InitializingBean, 
    *
    * @param tokenServicesFactory The OAuth token services factory.
    */
+  @Autowired
   public void setTokenServicesFactory(OAuthConsumerTokenServicesFactory tokenServicesFactory) {
     this.tokenServicesFactory = tokenServicesFactory;
   }
@@ -338,6 +342,7 @@ public class OAuthConsumerProcessingFilter implements Filter, InitializingBean, 
    *
    * @param consumerSupport The OAuth consumer support.
    */
+  @Autowired
   public void setConsumerSupport(OAuthConsumerSupport consumerSupport) {
     this.consumerSupport = consumerSupport;
   }
@@ -392,6 +397,7 @@ public class OAuthConsumerProcessingFilter implements Filter, InitializingBean, 
    *
    * @param portResolver The port resolver.
    */
+  @Autowired
   public void setPortResolver(PortResolver portResolver) {
     this.portResolver = portResolver;
   }

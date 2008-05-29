@@ -23,6 +23,7 @@ import org.springframework.security.context.SecurityContextHolder;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.InitializingBean;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.MessageSource;
 import org.springframework.context.MessageSourceAware;
 import org.springframework.context.support.MessageSourceAccessor;
@@ -32,6 +33,7 @@ import org.springframework.security.oauth.provider.nonce.ExpiringTimestampNonceS
 import org.springframework.security.oauth.provider.nonce.OAuthNonceServices;
 import org.springframework.security.oauth.provider.token.OAuthProviderToken;
 import org.springframework.security.oauth.provider.token.OAuthProviderTokenServices;
+import org.springframework.security.oauth.provider.token.InMemoryProviderTokenServices;
 import org.springframework.util.Assert;
 import org.springframework.core.Ordered;
 
@@ -65,13 +67,12 @@ public abstract class OAuthProviderProcessingFilter implements Filter, Initializ
   private OAuthSignatureMethodFactory signatureMethodFactory = new CoreOAuthSignatureMethodFactory();
   private OAuthNonceServices nonceServices = new ExpiringTimestampNonceServices();
   private boolean ignoreMissingCredentials = false;
+  private OAuthProviderTokenServices tokenServices = new InMemoryProviderTokenServices();
 
-  private OAuthProviderTokenServices tokenServices;
   private ConsumerDetailsService consumerDetailsService;
 
   public void afterPropertiesSet() throws Exception {
     Assert.notNull(consumerDetailsService, "A consumer details service is required.");
-    Assert.notNull(tokenServices, "OAuth token services are required.");
   }
 
   public void init(FilterConfig ignored) throws ServletException {
@@ -358,6 +359,7 @@ public abstract class OAuthProviderProcessingFilter implements Filter, Initializ
    *
    * @param authenticationEntryPoint The authentication entry point.
    */
+  @Autowired
   public void setAuthenticationEntryPoint(OAuthProcessingFilterEntryPoint authenticationEntryPoint) {
     this.authenticationEntryPoint = authenticationEntryPoint;
   }
@@ -376,6 +378,7 @@ public abstract class OAuthProviderProcessingFilter implements Filter, Initializ
    *
    * @param consumerDetailsService The consumer details service.
    */
+  @Autowired
   public void setConsumerDetailsService(ConsumerDetailsService consumerDetailsService) {
     this.consumerDetailsService = consumerDetailsService;
   }
@@ -394,6 +397,7 @@ public abstract class OAuthProviderProcessingFilter implements Filter, Initializ
    *
    * @param nonceServices The nonce services.
    */
+  @Autowired
   public void setNonceServices(OAuthNonceServices nonceServices) {
     this.nonceServices = nonceServices;
   }
@@ -412,6 +416,7 @@ public abstract class OAuthProviderProcessingFilter implements Filter, Initializ
    *
    * @param tokenServices The OAuth token services.
    */
+  @Autowired
   public void setTokenServices(OAuthProviderTokenServices tokenServices) {
     this.tokenServices = tokenServices;
   }
@@ -457,6 +462,7 @@ public abstract class OAuthProviderProcessingFilter implements Filter, Initializ
    *
    * @param providerSupport The OAuth provider support.
    */
+  @Autowired
   public void setProviderSupport(OAuthProviderSupport providerSupport) {
     this.providerSupport = providerSupport;
   }
@@ -475,6 +481,7 @@ public abstract class OAuthProviderProcessingFilter implements Filter, Initializ
    *
    * @param signatureMethodFactory The OAuth signature method factory.
    */
+  @Autowired
   public void setSignatureMethodFactory(OAuthSignatureMethodFactory signatureMethodFactory) {
     this.signatureMethodFactory = signatureMethodFactory;
   }
