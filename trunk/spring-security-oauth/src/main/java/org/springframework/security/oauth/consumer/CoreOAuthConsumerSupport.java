@@ -28,6 +28,7 @@ import org.springframework.security.oauth.common.signature.CoreOAuthSignatureMet
 import org.springframework.security.oauth.common.signature.OAuthSignatureMethod;
 import static org.springframework.security.oauth.common.OAuthCodec.oauthEncode;
 import org.springframework.beans.factory.InitializingBean;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.Assert;
 import org.springframework.security.util.StringSplitUtils;
 import org.apache.commons.codec.DecoderException;
@@ -531,6 +532,7 @@ public class CoreOAuthConsumerSupport implements OAuthConsumerSupport, Initializ
    * @param protectedResourceDetailsService
    *         The protected resource details service.
    */
+  @Autowired
   public void setProtectedResourceDetailsService(ProtectedResourceDetailsService protectedResourceDetailsService) {
     this.protectedResourceDetailsService = protectedResourceDetailsService;
   }
@@ -549,6 +551,7 @@ public class CoreOAuthConsumerSupport implements OAuthConsumerSupport, Initializ
    *
    * @param streamHandlerFactory The URL stream handler factory for connections to an OAuth resource.
    */
+  @Autowired
   public void setStreamHandlerFactory(OAuthURLStreamHandlerFactory streamHandlerFactory) {
     this.streamHandlerFactory = streamHandlerFactory;
   }
@@ -567,6 +570,7 @@ public class CoreOAuthConsumerSupport implements OAuthConsumerSupport, Initializ
    *
    * @param nonceFactory The nonce factory.
    */
+  @Autowired
   public void setNonceFactory(NonceFactory nonceFactory) {
     this.nonceFactory = nonceFactory;
   }
@@ -585,6 +589,7 @@ public class CoreOAuthConsumerSupport implements OAuthConsumerSupport, Initializ
    *
    * @param signatureFactory The signature factory to use.
    */
+  @Autowired
   public void setSignatureFactory(OAuthSignatureMethodFactory signatureFactory) {
     this.signatureFactory = signatureFactory;
   }
@@ -603,6 +608,7 @@ public class CoreOAuthConsumerSupport implements OAuthConsumerSupport, Initializ
    *
    * @param proxySelector The proxy selector to use.
    */
+  @Autowired
   public void setProxySelector(ProxySelector proxySelector) {
     this.proxySelector = proxySelector;
   }

@@ -47,13 +47,12 @@ import java.util.List;
 public class OAuthConsumerBeanDefinitionParser implements BeanDefinitionParser {
 
   public BeanDefinition parse(Element element, ParserContext parserContext) {
-    String resourceDetailsRef = element.getAttribute("resource-details-service-ref");
-    if (!StringUtils.hasText(resourceDetailsRef)) {
-      parserContext.getReaderContext().error("A reference to the resource details must be provided.", element);
-    }
+    BeanDefinitionBuilder consumerFilterBean = BeanDefinitionBuilder.rootBeanDefinition(OAuthConsumerProcessingFilter.class);
 
-    BeanDefinitionBuilder consumerFilterBean = BeanDefinitionBuilder.rootBeanDefinition(OAuthConsumerProcessingFilter.class)
-      .addPropertyReference("protectedResourceDetailsService", resourceDetailsRef);
+    String resourceDetailsRef = element.getAttribute("resource-details-service-ref");
+    if (StringUtils.hasText(resourceDetailsRef)) {
+      consumerFilterBean.addPropertyReference("protectedResourceDetailsService", resourceDetailsRef);
+    }
 
     String entryPointRef = element.getAttribute("entry-point-ref");
     if (StringUtils.hasText(entryPointRef)) {
@@ -70,8 +69,11 @@ public class OAuthConsumerBeanDefinitionParser implements BeanDefinitionParser {
 
     String supportRef = element.getAttribute("support-ref");
     if (!StringUtils.hasText(supportRef)) {
-      BeanDefinitionBuilder consumerSupportBean = BeanDefinitionBuilder.rootBeanDefinition(CoreOAuthConsumerSupport.class)
-        .addPropertyReference("protectedResourceDetailsService", resourceDetailsRef);
+      BeanDefinitionBuilder consumerSupportBean = BeanDefinitionBuilder.rootBeanDefinition(CoreOAuthConsumerSupport.class);
+
+      if (StringUtils.hasText(resourceDetailsRef)) {
+        consumerSupportBean.addPropertyReference("protectedResourceDetailsService", resourceDetailsRef);
+      }
       parserContext.getRegistry().registerBeanDefinition("oauthConsumerSupport", consumerSupportBean.getBeanDefinition());
       supportRef = "oauthConsumerSupport";
     }

@@ -2,5 +2,6 @@
 2. mvn -Dssoauth.repo.url=file:///home/heatonra/mnt/spring-security-oauth/m2 deploy
 3. mvn clean
 4. mvn site:site
-5. rsync -av --delete target/site/ /home/heatonra/mnt/spring-security-oauth/web
-6. svn ci
+5. rsync -av target/site/ /home/heatonra/mnt/spring-security-oauth/web
+6. cp 
+7. svn ci

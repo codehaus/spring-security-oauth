@@ -23,6 +23,7 @@ import org.springframework.security.context.SecurityContextHolder;
 import org.springframework.security.oauth.provider.token.OAuthProviderTokenServices;
 import org.springframework.security.ui.AbstractProcessingFilter;
 import org.springframework.util.Assert;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -156,6 +157,7 @@ public class UserAuthorizationProcessingFilter extends AbstractProcessingFilter 
    *
    * @param tokenServices The OAuth token services.
    */
+  @Autowired
   public void setTokenServices(OAuthProviderTokenServices tokenServices) {
     this.tokenServices = tokenServices;
   }

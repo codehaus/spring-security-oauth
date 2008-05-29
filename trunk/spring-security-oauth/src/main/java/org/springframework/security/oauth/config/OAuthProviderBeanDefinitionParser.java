@@ -26,7 +26,6 @@ import org.springframework.security.oauth.provider.AccessTokenProcessingFilter;
 import org.springframework.security.oauth.provider.ProtectedResourceProcessingFilter;
 import org.springframework.security.oauth.provider.UnauthenticatedRequestTokenProcessingFilter;
 import org.springframework.security.oauth.provider.UserAuthorizationProcessingFilter;
-import org.springframework.security.oauth.provider.token.InMemoryProviderTokenServices;
 import org.springframework.util.StringUtils;
 import org.w3c.dom.Element;
 
@@ -39,27 +38,24 @@ public class OAuthProviderBeanDefinitionParser implements BeanDefinitionParser {
 
   public BeanDefinition parse(Element element, ParserContext parserContext) {
     String consumerDetailsRef = element.getAttribute("consumer-details-service-ref");
-    if (!StringUtils.hasText(consumerDetailsRef)) {
-      parserContext.getReaderContext().error("A reference to a consumer details service must be provided.", element);
-    }
-
     String tokenServicesRef = element.getAttribute("token-services-ref");
-    if (!StringUtils.hasText(tokenServicesRef)) {
-      parserContext.getRegistry().registerBeanDefinition("oauthProviderTokenServices", BeanDefinitionBuilder.rootBeanDefinition(InMemoryProviderTokenServices.class).getBeanDefinition());
-      tokenServicesRef = "oauthProviderTokenServices";
+
+    BeanDefinitionBuilder requestTokenFilterBean = BeanDefinitionBuilder.rootBeanDefinition(UnauthenticatedRequestTokenProcessingFilter.class);
+    if (StringUtils.hasText(consumerDetailsRef)) {
+      requestTokenFilterBean.addPropertyReference("consumerDetailsService", consumerDetailsRef);
     }
-
-    BeanDefinitionBuilder requestTokenFilterBean = BeanDefinitionBuilder.rootBeanDefinition(UnauthenticatedRequestTokenProcessingFilter.class)
-      .addPropertyReference("consumerDetailsService", consumerDetailsRef)
-      .addPropertyReference("tokenServices", tokenServicesRef);
-
+    if (StringUtils.hasText(tokenServicesRef)) {
+      requestTokenFilterBean.addPropertyReference("tokenServices", tokenServicesRef);
+    }
     String requestTokenURL = element.getAttribute("request-token-url");
     if (StringUtils.hasText(requestTokenURL)) {
       requestTokenFilterBean.addPropertyValue("filterProcessesUrl", requestTokenURL);
     }
 
-    BeanDefinitionBuilder authenticateTokenFilterBean = BeanDefinitionBuilder.rootBeanDefinition(UserAuthorizationProcessingFilter.class)
-      .addPropertyReference("tokenServices", tokenServicesRef);
+    BeanDefinitionBuilder authenticateTokenFilterBean = BeanDefinitionBuilder.rootBeanDefinition(UserAuthorizationProcessingFilter.class);
+    if (StringUtils.hasText(tokenServicesRef)) {
+      authenticateTokenFilterBean.addPropertyReference("tokenServices", tokenServicesRef);
+    }
 
     String authenticateTokenURL = element.getAttribute("authenticate-token-url");
     if (StringUtils.hasText(authenticateTokenURL)) {
@@ -86,18 +82,27 @@ public class OAuthProviderBeanDefinitionParser implements BeanDefinitionParser {
       authenticateTokenFilterBean.addPropertyValue("callbackParameterName", callbackUrlParam);
     }
 
-    BeanDefinitionBuilder accessTokenFilterBean = BeanDefinitionBuilder.rootBeanDefinition(AccessTokenProcessingFilter.class)
-      .addPropertyReference("consumerDetailsService", consumerDetailsRef)
-      .addPropertyReference("tokenServices", tokenServicesRef);
+    BeanDefinitionBuilder accessTokenFilterBean = BeanDefinitionBuilder.rootBeanDefinition(AccessTokenProcessingFilter.class);
+
+    if (StringUtils.hasText(consumerDetailsRef)) {
+      accessTokenFilterBean.addPropertyReference("consumerDetailsService", consumerDetailsRef);
+    }
+    if (StringUtils.hasText(tokenServicesRef)) {
+      accessTokenFilterBean.addPropertyReference("tokenServices", tokenServicesRef);
+    }
 
     String accessTokenURL = element.getAttribute("access-token-url");
     if (StringUtils.hasText(accessTokenURL)) {
       accessTokenFilterBean.addPropertyValue("filterProcessesUrl", accessTokenURL);
     }
 
-    BeanDefinitionBuilder protectedResourceFilterBean = BeanDefinitionBuilder.rootBeanDefinition(ProtectedResourceProcessingFilter.class)
-      .addPropertyReference("consumerDetailsService", consumerDetailsRef)
-      .addPropertyReference("tokenServices", tokenServicesRef);
+    BeanDefinitionBuilder protectedResourceFilterBean = BeanDefinitionBuilder.rootBeanDefinition(ProtectedResourceProcessingFilter.class);
+    if (StringUtils.hasText(consumerDetailsRef)) {
+      protectedResourceFilterBean.addPropertyReference("consumerDetailsService", consumerDetailsRef);
+    }
+    if (StringUtils.hasText(tokenServicesRef)) {
+      protectedResourceFilterBean.addPropertyReference("tokenServices", tokenServicesRef);
+    }
 
     String nonceServicesRef = element.getAttribute("nonce-services-ref");
     if (StringUtils.hasText(nonceServicesRef)) {

@@ -15,7 +15,7 @@
       </xs:documentation>
     </xs:annotation>
     <xs:complexType>
-      <xs:attribute name="consumer-details-service-ref" type="xs:string" use="required">
+      <xs:attribute name="consumer-details-service-ref" type="xs:string">
         <xs:annotation>
           <xs:documentation>
             The reference to the bean that defines the consumer details service.
@@ -229,7 +229,7 @@
         </xs:element>
       </xs:choice>
 
-      <xs:attribute name="resource-details-service-ref" type="xs:string" use="required">
+      <xs:attribute name="resource-details-service-ref" type="xs:string">
         <xs:annotation>
           <xs:documentation>
             The reference to the bean that defines the protected resource details service.
