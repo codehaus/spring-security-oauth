@@ -551,7 +551,7 @@ public class CoreOAuthConsumerSupport implements OAuthConsumerSupport, Initializ
    *
    * @param streamHandlerFactory The URL stream handler factory for connections to an OAuth resource.
    */
-  @Autowired
+  @Autowired (required = false)
   public void setStreamHandlerFactory(OAuthURLStreamHandlerFactory streamHandlerFactory) {
     this.streamHandlerFactory = streamHandlerFactory;
   }
@@ -570,7 +570,7 @@ public class CoreOAuthConsumerSupport implements OAuthConsumerSupport, Initializ
    *
    * @param nonceFactory The nonce factory.
    */
-  @Autowired
+  @Autowired (required = false)
   public void setNonceFactory(NonceFactory nonceFactory) {
     this.nonceFactory = nonceFactory;
   }
@@ -589,7 +589,7 @@ public class CoreOAuthConsumerSupport implements OAuthConsumerSupport, Initializ
    *
    * @param signatureFactory The signature factory to use.
    */
-  @Autowired
+  @Autowired (required = false)
   public void setSignatureFactory(OAuthSignatureMethodFactory signatureFactory) {
     this.signatureFactory = signatureFactory;
   }
@@ -608,7 +608,7 @@ public class CoreOAuthConsumerSupport implements OAuthConsumerSupport, Initializ
    *
    * @param proxySelector The proxy selector to use.
    */
-  @Autowired
+  @Autowired (required = false)
   public void setProxySelector(ProxySelector proxySelector) {
     this.proxySelector = proxySelector;
   }

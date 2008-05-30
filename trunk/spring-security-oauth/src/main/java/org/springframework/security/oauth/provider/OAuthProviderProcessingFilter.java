@@ -359,7 +359,7 @@ public abstract class OAuthProviderProcessingFilter implements Filter, Initializ
    *
    * @param authenticationEntryPoint The authentication entry point.
    */
-  @Autowired
+  @Autowired (required = false)
   public void setAuthenticationEntryPoint(OAuthProcessingFilterEntryPoint authenticationEntryPoint) {
     this.authenticationEntryPoint = authenticationEntryPoint;
   }
@@ -397,7 +397,7 @@ public abstract class OAuthProviderProcessingFilter implements Filter, Initializ
    *
    * @param nonceServices The nonce services.
    */
-  @Autowired
+  @Autowired (required = false)
   public void setNonceServices(OAuthNonceServices nonceServices) {
     this.nonceServices = nonceServices;
   }
@@ -416,7 +416,7 @@ public abstract class OAuthProviderProcessingFilter implements Filter, Initializ
    *
    * @param tokenServices The OAuth token services.
    */
-  @Autowired
+  @Autowired (required = false)
   public void setTokenServices(OAuthProviderTokenServices tokenServices) {
     this.tokenServices = tokenServices;
   }
@@ -462,7 +462,7 @@ public abstract class OAuthProviderProcessingFilter implements Filter, Initializ
    *
    * @param providerSupport The OAuth provider support.
    */
-  @Autowired
+  @Autowired (required = false)
   public void setProviderSupport(OAuthProviderSupport providerSupport) {
     this.providerSupport = providerSupport;
   }
@@ -481,7 +481,7 @@ public abstract class OAuthProviderProcessingFilter implements Filter, Initializ
    *
    * @param signatureMethodFactory The OAuth signature method factory.
    */
-  @Autowired
+  @Autowired (required = false)
   public void setSignatureMethodFactory(OAuthSignatureMethodFactory signatureMethodFactory) {
     this.signatureMethodFactory = signatureMethodFactory;
   }

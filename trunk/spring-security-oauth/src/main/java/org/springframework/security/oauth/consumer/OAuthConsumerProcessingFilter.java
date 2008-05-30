@@ -296,7 +296,7 @@ public class OAuthConsumerProcessingFilter implements Filter, InitializingBean, 
    *
    * @param tokenServicesFactory The OAuth token services factory.
    */
-  @Autowired
+  @Autowired (required = false)
   public void setTokenServicesFactory(OAuthConsumerTokenServicesFactory tokenServicesFactory) {
     this.tokenServicesFactory = tokenServicesFactory;
   }
@@ -397,7 +397,7 @@ public class OAuthConsumerProcessingFilter implements Filter, InitializingBean, 
    *
    * @param portResolver The port resolver.
    */
-  @Autowired
+  @Autowired (required = false)
   public void setPortResolver(PortResolver portResolver) {
     this.portResolver = portResolver;
   }
