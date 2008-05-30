@@ -67,12 +67,13 @@ public abstract class OAuthProviderProcessingFilter implements Filter, Initializ
   private OAuthSignatureMethodFactory signatureMethodFactory = new CoreOAuthSignatureMethodFactory();
   private OAuthNonceServices nonceServices = new ExpiringTimestampNonceServices();
   private boolean ignoreMissingCredentials = false;
-  private OAuthProviderTokenServices tokenServices = new InMemoryProviderTokenServices();
+  private OAuthProviderTokenServices tokenServices;
 
   private ConsumerDetailsService consumerDetailsService;
 
   public void afterPropertiesSet() throws Exception {
     Assert.notNull(consumerDetailsService, "A consumer details service is required.");
+    Assert.notNull(tokenServices, "Token services are required.");
   }
 
   public void init(FilterConfig ignored) throws ServletException {
@@ -416,7 +417,7 @@ public abstract class OAuthProviderProcessingFilter implements Filter, Initializ
    *
    * @param tokenServices The OAuth token services.
    */
-  @Autowired (required = false)
+  @Autowired
   public void setTokenServices(OAuthProviderTokenServices tokenServices) {
     this.tokenServices = tokenServices;
   }
