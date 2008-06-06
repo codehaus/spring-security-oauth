@@ -33,7 +33,6 @@ import org.springframework.security.oauth.provider.nonce.ExpiringTimestampNonceS
 import org.springframework.security.oauth.provider.nonce.OAuthNonceServices;
 import org.springframework.security.oauth.provider.token.OAuthProviderToken;
 import org.springframework.security.oauth.provider.token.OAuthProviderTokenServices;
-import org.springframework.security.oauth.provider.token.InMemoryProviderTokenServices;
 import org.springframework.util.Assert;
 import org.springframework.core.Ordered;
 
@@ -58,7 +57,7 @@ public abstract class OAuthProviderProcessingFilter implements Filter, Initializ
    */
   public static final String OAUTH_PROCESSING_HANDLED = "org.springframework.security.oauth.provider.OAuthProviderProcessingFilter#SKIP_PROCESSING";
 
-  private static final Log LOG = LogFactory.getLog(OAuthProviderProcessingFilter.class);
+  private final Log log = LogFactory.getLog(getClass());
   private final List<String> allowedMethods = new ArrayList<String>(Arrays.asList("GET", "POST"));
   private OAuthProcessingFilterEntryPoint authenticationEntryPoint = new OAuthProcessingFilterEntryPoint();
   protected MessageSourceAccessor messages = SpringSecurityMessageSource.getAccessor();
@@ -86,80 +85,119 @@ public abstract class OAuthProviderProcessingFilter implements Filter, Initializ
     HttpServletRequest request = (HttpServletRequest) servletRequest;
     HttpServletResponse response = (HttpServletResponse) servletResponse;
 
-    if (!skipProcessing(request) && requiresAuthentication(request, response, chain)) {
-      if (!allowMethod(request.getMethod().toUpperCase())) {
-        response.sendError(HttpServletResponse.SC_METHOD_NOT_ALLOWED);
-        return;
-      }
-
-      try {
-        Map<String, String> oauthParams = getProviderSupport().parseParameters(request);
-
-        if (!oauthParams.isEmpty()) {
-          String consumerKey = oauthParams.get(OAuthConsumerParameter.oauth_consumer_key.toString());
-          if (consumerKey == null) {
-            throw new InvalidOAuthParametersException(messages.getMessage("OAuthProcessingFilter.missingConsumerKey", "Missing consumer key."));
+    if (!skipProcessing(request)) {
+      if (requiresAuthentication(request, response, chain)) {
+        if (!allowMethod(request.getMethod().toUpperCase())) {
+          if (log.isDebugEnabled()) {
+            log.debug("Method " + request.getMethod() + " not supported.");
           }
 
-          //load the consumer details.
-          ConsumerDetails consumerDetails = getConsumerDetailsService().loadConsumerByConsumerKey(consumerKey);
+          response.sendError(HttpServletResponse.SC_METHOD_NOT_ALLOWED);
+          return;
+        }
 
-          //validate the parameters for the consumer.
-          validateOAuthParams(consumerDetails, oauthParams);
+        try {
+          Map<String, String> oauthParams = getProviderSupport().parseParameters(request);
 
-          //extract the credentials.
-          String token = oauthParams.get(OAuthConsumerParameter.oauth_token.toString());
-          String signatureMethod = oauthParams.get(OAuthConsumerParameter.oauth_signature_method.toString());
-          String signature = oauthParams.get(OAuthConsumerParameter.oauth_signature.toString());
-          String signatureBaseString = getProviderSupport().getSignatureBaseString(request);
-          ConsumerCredentials credentials = new ConsumerCredentials(consumerKey, signature, signatureMethod, signatureBaseString, token);
+          if (!oauthParams.isEmpty()) {
 
-          //create an authentication request.
-          ConsumerAuthentication authentication = new ConsumerAuthentication(consumerDetails, credentials);
-          authentication.setDetails(createDetails(request, consumerDetails));
+            if (log.isDebugEnabled()) {
+              StringBuilder builder = new StringBuilder("OAuth parameters parsed: ");
+              for (String param : oauthParams.keySet()) {
+                builder.append(param).append('=').append(oauthParams.get(param)).append(' ');
+              }
+              log.debug(builder.toString());
+            }
+            
+            String consumerKey = oauthParams.get(OAuthConsumerParameter.oauth_consumer_key.toString());
+            if (consumerKey == null) {
+              throw new InvalidOAuthParametersException(messages.getMessage("OAuthProcessingFilter.missingConsumerKey", "Missing consumer key."));
+            }
 
-          Authentication previousAuthentication = SecurityContextHolder.getContext().getAuthentication();
-          try {
-            //set the authentication request (unauthenticated) into the context.
-            SecurityContextHolder.getContext().setAuthentication(authentication);
+            //load the consumer details.
+            ConsumerDetails consumerDetails = getConsumerDetailsService().loadConsumerByConsumerKey(consumerKey);
+            if (log.isDebugEnabled()) {
+              log.debug("Consumer details loaded for" + consumerKey + ": " + consumerDetails);
+            }
 
-            //validate the signature.
-            validateSignature(authentication);
+            //validate the parameters for the consumer.
+            validateOAuthParams(consumerDetails, oauthParams);
+            if (log.isDebugEnabled()) {
+              log.debug("Parameters validated.");
+            }
 
-            //mark the authentication request as validated.
-            authentication.setSignatureValidated(true);
+            //extract the credentials.
+            String token = oauthParams.get(OAuthConsumerParameter.oauth_token.toString());
+            String signatureMethod = oauthParams.get(OAuthConsumerParameter.oauth_signature_method.toString());
+            String signature = oauthParams.get(OAuthConsumerParameter.oauth_signature.toString());
+            String signatureBaseString = getProviderSupport().getSignatureBaseString(request);
+            ConsumerCredentials credentials = new ConsumerCredentials(consumerKey, signature, signatureMethod, signatureBaseString, token);
 
-            //mark that processing has been handled.
-            request.setAttribute(OAUTH_PROCESSING_HANDLED, Boolean.TRUE);
+            //create an authentication request.
+            ConsumerAuthentication authentication = new ConsumerAuthentication(consumerDetails, credentials);
+            authentication.setDetails(createDetails(request, consumerDetails));
 
-            //go.
-            onValidSignature(request, response, chain);
+            Authentication previousAuthentication = SecurityContextHolder.getContext().getAuthentication();
+            try {
+              //set the authentication request (unauthenticated) into the context.
+              SecurityContextHolder.getContext().setAuthentication(authentication);
+
+              //validate the signature.
+              validateSignature(authentication);
+
+              //mark the authentication request as validated.
+              authentication.setSignatureValidated(true);
+
+              //mark that processing has been handled.
+              request.setAttribute(OAUTH_PROCESSING_HANDLED, Boolean.TRUE);
+
+              if (log.isDebugEnabled()) {
+                log.debug("Signature validated.");
+              }
+
+              //go.
+              onValidSignature(request, response, chain);
+            }
+            finally {
+              //clear out the consumer authentication to make sure it doesn't get cached.
+              resetPreviousAuthentication(previousAuthentication);
+            }
           }
-          finally {
-            //clear out the consumer authentication to make sure it doesn't get cached.
-            resetPreviousAuthentication(previousAuthentication);
+          else if (!isIgnoreMissingCredentials()) {
+            throw new InvalidOAuthParametersException(messages.getMessage("OAuthProcessingFilter.missingCredentials", "Missing OAuth consumer credentials."));
+          }
+          else {
+            if (log.isDebugEnabled()) {
+              log.debug("No OAuth parameters supplied. Ignoring.");
+            }
+            chain.doFilter(request, response);
           }
         }
-        else if (!isIgnoreMissingCredentials()) {
-          throw new InvalidOAuthParametersException(messages.getMessage("OAuthProcessingFilter.missingCredentials", "Missing OAuth consumer credentials."));
+        catch (AuthenticationException ae) {
+          fail(request, response, ae);
         }
-        else {
-          chain.doFilter(request, response);
+        catch (ServletException e) {
+          if (e.getRootCause() instanceof AuthenticationException) {
+            fail(request, response, (AuthenticationException) e.getRootCause());
+          }
+          else {
+            throw e;
+          }
         }
       }
-      catch (AuthenticationException ae) {
-        fail(request, response, ae);
-      }
-      catch (ServletException e) {
-        if (e.getRootCause() instanceof AuthenticationException) {
-          fail(request, response, (AuthenticationException) e.getRootCause());
+      else {
+        if (log.isDebugEnabled()) {
+          log.debug("Request does not require authentication.  OAuth processing skipped.");
         }
-        else {
-          throw e;
-        }
+
+        chain.doFilter(servletRequest, servletResponse);
       }
     }
     else {
+      if (log.isDebugEnabled()) {
+        log.debug("Processing explicitly skipped.");
+      }
+
       chain.doFilter(servletRequest, servletResponse);
     }
   }
@@ -296,8 +334,8 @@ public abstract class OAuthProviderProcessingFilter implements Filter, Initializ
   protected void fail(HttpServletRequest request, HttpServletResponse response, AuthenticationException failure) throws IOException, ServletException {
     SecurityContextHolder.getContext().setAuthentication(null);
 
-    if (LOG.isDebugEnabled()) {
-      LOG.debug(failure);
+    if (log.isDebugEnabled()) {
+      log.debug(failure);
     }
 
     if (failure instanceof InvalidOAuthParametersException) {
@@ -333,7 +371,11 @@ public abstract class OAuthProviderProcessingFilter implements Filter, Initializ
       return uri.endsWith(filterProcessesUrl);
     }
 
-    return uri.endsWith(request.getContextPath() + filterProcessesUrl);
+    boolean match = uri.endsWith(request.getContextPath() + filterProcessesUrl);
+    if (log.isDebugEnabled()) {
+      log.debug(uri + (match ? " matches " : " does not match ") + filterProcessesUrl);
+    }
+    return match;
   }
 
   /**

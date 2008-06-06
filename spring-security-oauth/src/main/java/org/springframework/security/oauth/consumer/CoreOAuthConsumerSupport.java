@@ -508,13 +508,13 @@ public class CoreOAuthConsumerSupport implements OAuthConsumerSupport, Initializ
       }
     }
 
-    StringBuilder url = new StringBuilder(requestURL.getProtocol().toLowerCase()).append("://").append(requestURL.getHost().toLowerCase());
+    StringBuilder url = new StringBuilder(requestURL.getProtocol()).append("://").append(requestURL.getHost());
     if ((requestURL.getPort() >= 0) && (requestURL.getPort() != requestURL.getDefaultPort())) {
       url.append(":").append(requestURL.getPort());
     }
     url.append(requestURL.getPath());
 
-    return new StringBuilder(httpMethod.toUpperCase()).append('&').append(oauthEncode(url.toString())).append('&').append(oauthEncode(queryString.toString())).toString();
+    return new StringBuilder(httpMethod.toUpperCase()).append('&').append(oauthEncode(url.toString().toLowerCase())).append('&').append(oauthEncode(queryString.toString())).toString();
   }
 
   /**
