@@ -105,24 +105,53 @@ public class OAuthConsumerProcessingFilter implements Filter, InitializingBean, 
         for (String dependency : accessTokenDeps) {
           OAuthConsumerToken token = tokenServices.getToken(dependency);
           if (token == null) {
+            if (LOG.isDebugEnabled()) {
+              LOG.debug("Obtaining request token for dependency: " + dependency);
+            }
+            
             //obtain authorization.
             OAuthConsumerToken requestToken = getConsumerSupport().getUnauthorizedRequestToken(dependency);
+
+            if (LOG.isDebugEnabled()) {
+              LOG.debug("Request token obtained for dependency " + dependency + ": " + requestToken);
+            }
             tokenServices.storeToken(dependency, requestToken);
             String callbackURL = response.encodeRedirectURL(getCallbackURL(request));
             String redirect = getUserAuthorizationRedirectURL(requestToken, callbackURL);
+
+            if (LOG.isDebugEnabled()) {
+              LOG.debug("Redirecting request to " + redirect + " for user authorization of the request token for dependency " + dependency + ".");
+            }
             response.sendRedirect(redirect);
             return;
           }
           else {
             if (!token.isAccessToken()) {
+
+              if (LOG.isDebugEnabled()) {
+                LOG.debug("Obtaining access token for dependency: " + dependency);
+              }
+              
               //authorize the request token and store it.
               token = getConsumerSupport().getAccessToken(token);
+
+              if (LOG.isDebugEnabled()) {
+                LOG.debug("Access token " + token + " obtained for dependency " + dependency + ". Now storing and using.");
+              }
+
               tokenServices.storeToken(dependency, token);
+            }
+            else if (LOG.isDebugEnabled()) {
+              LOG.debug("Authorized access token " + token + " loaded for dependency " + dependency + ".");
             }
 
             //token already authorized.
             tokens.add(token);
           }
+        }
+
+        if (LOG.isDebugEnabled()) {
+          LOG.debug("Storing access tokens in request attribute '" + getAccessTokensRequestAttribute() + "'.");
         }
 
         request.setAttribute(getAccessTokensRequestAttribute(), tokens);
@@ -141,6 +170,9 @@ public class OAuthConsumerProcessingFilter implements Filter, InitializingBean, 
       }
     }
     else {
+      if (LOG.isDebugEnabled()) {
+        LOG.debug("No access token dependencies for request.");
+      }
       chain.doFilter(servletRequest, servletResponse);
     }
   }
