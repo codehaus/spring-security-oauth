@@ -200,10 +200,10 @@ public class OAuthConsumerProcessingFilter implements Filter, InitializingBean, 
       String baseURL = details.getUserAuthorizationURL();
       StringBuilder builder = new StringBuilder(baseURL);
       char appendChar = baseURL.indexOf('?') < 0 ? '?' : '&';
-      builder.append(appendChar).append(details.getUserAuthorizationTokenParameterName());
-      builder.append('=').append(URLEncoder.encode(requestToken.getValue(), "UTF-8"));
-      builder.append('&').append(details.getUserAuthorizationCallbackParameterName());
-      builder.append('=').append(URLEncoder.encode(callbackURL, "UTF-8"));
+      builder.append(appendChar).append("oauth_token=");
+      builder.append(URLEncoder.encode(requestToken.getValue(), "UTF-8"));
+      builder.append('&').append("oauth_callback=");
+      builder.append(URLEncoder.encode(callbackURL, "UTF-8"));
       return builder.toString();
     }
     catch (UnsupportedEncodingException e) {
