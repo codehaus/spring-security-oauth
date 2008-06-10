@@ -99,7 +99,7 @@ public abstract class OAuthProviderProcessingFilter implements Filter, Initializ
         try {
           Map<String, String> oauthParams = getProviderSupport().parseParameters(request);
 
-          if (!oauthParams.isEmpty()) {
+          if (parametersAreAdequate(oauthParams)) {
 
             if (log.isDebugEnabled()) {
               StringBuilder builder = new StringBuilder("OAuth parameters parsed: ");
@@ -117,7 +117,7 @@ public abstract class OAuthProviderProcessingFilter implements Filter, Initializ
             //load the consumer details.
             ConsumerDetails consumerDetails = getConsumerDetailsService().loadConsumerByConsumerKey(consumerKey);
             if (log.isDebugEnabled()) {
-              log.debug("Consumer details loaded for" + consumerKey + ": " + consumerDetails);
+              log.debug("Consumer details loaded for " + consumerKey + ": " + consumerDetails);
             }
 
             //validate the parameters for the consumer.
@@ -163,12 +163,12 @@ public abstract class OAuthProviderProcessingFilter implements Filter, Initializ
               resetPreviousAuthentication(previousAuthentication);
             }
           }
-          else if (!isIgnoreMissingCredentials()) {
-            throw new InvalidOAuthParametersException(messages.getMessage("OAuthProcessingFilter.missingCredentials", "Missing OAuth consumer credentials."));
+          else if (!isIgnoreInadequateCredentials()) {
+            throw new InvalidOAuthParametersException(messages.getMessage("OAuthProcessingFilter.missingCredentials", "Inadequate OAuth consumer credentials."));
           }
           else {
             if (log.isDebugEnabled()) {
-              log.debug("No OAuth parameters supplied. Ignoring.");
+              log.debug("Supplied OAuth parameters are inadequate. Ignoring.");
             }
             chain.doFilter(request, response);
           }
@@ -200,6 +200,16 @@ public abstract class OAuthProviderProcessingFilter implements Filter, Initializ
 
       chain.doFilter(servletRequest, servletResponse);
     }
+  }
+
+  /**
+   * By default, OAuth parameters are adequate if a consumer key is present.
+   *
+   * @param oauthParams The oauth params.
+   * @return Whether the parsed parameters are adequate.
+   */
+  protected boolean parametersAreAdequate(Map<String, String> oauthParams) {
+    return oauthParams.containsKey(OAuthConsumerParameter.oauth_consumer_key.toString());
   }
 
   protected void resetPreviousAuthentication(Authentication previousAuthentication) {
@@ -534,7 +544,7 @@ public abstract class OAuthProviderProcessingFilter implements Filter, Initializ
    *
    * @return Whether to ignore missing OAuth credentials.
    */
-  public boolean isIgnoreMissingCredentials() {
+  public boolean isIgnoreInadequateCredentials() {
     return ignoreMissingCredentials;
   }
 

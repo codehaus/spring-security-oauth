@@ -96,16 +96,6 @@ public class ProtectedResourceDetailsBeanDefinitionParser extends AbstractSingle
         parserContext.getReaderContext().error("A user authorization URL must be supplied with the definition of a resource.", consumerElement);
       }
 
-      String tokenParam = consumerElement.getAttribute("user-authorization-token-param");
-      if (StringUtils.hasText(tokenParam)) {
-        resource.setUserAuthorizationTokenParameterName(tokenParam);
-      }
-
-      String callbackParam = consumerElement.getAttribute("user-authorization-callback-param");
-      if (StringUtils.hasText(callbackParam)) {
-        resource.setUserAuthorizationCallbackParameterName(callbackParam);
-      }
-
       String sigMethod = consumerElement.getAttribute("signature-method");
       if (!StringUtils.hasText(sigMethod)) {
         sigMethod = HMAC_SHA1SignatureMethod.SIGNATURE_NAME;
