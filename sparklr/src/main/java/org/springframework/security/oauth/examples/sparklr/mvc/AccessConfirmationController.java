@@ -23,15 +23,15 @@ public class AccessConfirmationController extends AbstractController {
   private ConsumerDetailsService consumerDetailsService;
 
   protected ModelAndView handleRequestInternal(HttpServletRequest request, HttpServletResponse response) throws Exception {
-    String token = request.getParameter("requestToken");
+    String token = request.getParameter("oauth_token");
     if (token == null) {
-      throw new IllegalArgumentException("An access token must be provided.");
+      throw new IllegalArgumentException("A request token to authorize must be provided.");
     }
 
     OAuthProviderToken providerToken = getTokenServices().getToken(token);
     ConsumerDetails consumer = getConsumerDetailsService().loadConsumerByConsumerKey(providerToken.getConsumerKey());
 
-    String callback = request.getParameter("callbackURL");
+    String callback = request.getParameter("oauth_callback");
     TreeMap<String, Object> model = new TreeMap<String, Object>();
     model.put("oauth_token", token);
     if (callback != null) {
