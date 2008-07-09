@@ -18,6 +18,8 @@ package org.springframework.security.oauth.provider;
 
 import org.springframework.security.providers.AbstractAuthenticationToken;
 
+import java.util.Map;
+
 /**
  * Authentication for an OAuth consumer.
  * 
@@ -27,12 +29,21 @@ public class ConsumerAuthentication extends AbstractAuthenticationToken {
 
   private final ConsumerDetails consumerDetails;
   private final ConsumerCredentials consumerCredentials;
+  private final Map<String, String> oauthParameters;
   private boolean signatureValidated = false;
 
   public ConsumerAuthentication(ConsumerDetails consumerDetails, ConsumerCredentials consumerCredentials) {
     super(consumerDetails.getAuthorities());
     this.consumerDetails = consumerDetails;
     this.consumerCredentials = consumerCredentials;
+    this.oauthParameters = null;
+  }
+
+  public ConsumerAuthentication(ConsumerDetails consumerDetails, ConsumerCredentials consumerCredentials, Map<String, String> oauthParams) {
+    super(consumerDetails.getAuthorities());
+    this.consumerDetails = consumerDetails;
+    this.consumerCredentials = consumerCredentials;
+    this.oauthParameters = oauthParams;
   }
 
   /**
@@ -71,6 +82,15 @@ public class ConsumerAuthentication extends AbstractAuthenticationToken {
    */
   public ConsumerDetails getConsumerDetails() {
     return consumerDetails;
+  }
+
+  /**
+   * Get the oauth parameters supplied in the request.
+   *
+   * @return The oauth parameters.
+   */
+  public Map<String, String> getOAuthParameters() {
+    return oauthParameters;
   }
 
   /**

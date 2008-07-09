@@ -134,7 +134,7 @@ public abstract class OAuthProviderProcessingFilter implements Filter, Initializ
             ConsumerCredentials credentials = new ConsumerCredentials(consumerKey, signature, signatureMethod, signatureBaseString, token);
 
             //create an authentication request.
-            ConsumerAuthentication authentication = new ConsumerAuthentication(consumerDetails, credentials);
+            ConsumerAuthentication authentication = new ConsumerAuthentication(consumerDetails, credentials, oauthParams);
             authentication.setDetails(createDetails(request, consumerDetails));
 
             Authentication previousAuthentication = SecurityContextHolder.getContext().getAuthentication();
