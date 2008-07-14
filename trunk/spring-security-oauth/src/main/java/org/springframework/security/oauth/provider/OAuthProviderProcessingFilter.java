@@ -320,8 +320,16 @@ public abstract class OAuthProviderProcessingFilter implements Filter, Initializ
       throw new InvalidOAuthParametersException(messages.getMessage("OAuthProcessingFilter.invalidTimestamp", new Object[]{timestamp}, "Timestamp must be a positive integer. Invalid value: {0}"));
     }
 
-    //todo: validate no unsupported parameters?
-    //todo: validate no duplicate parameters?
+    validateAdditionalParameters(consumerDetails, oauthParams);
+  }
+
+  /**
+   * Do any additional validation checks for the specified oauth params.  Default implementation is a no-op.
+   *
+   * @param consumerDetails The consumer details.
+   * @param oauthParams The params.
+   */
+  protected void validateAdditionalParameters(ConsumerDetails consumerDetails, Map<String, String> oauthParams) {
   }
 
   /**
