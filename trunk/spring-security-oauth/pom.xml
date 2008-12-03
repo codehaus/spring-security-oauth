@@ -58,6 +58,13 @@
     </plugins>
   </reporting>
 
+  <repositories>
+    <repository>
+      <id>oauth.googlecode.net</id>
+      <url>http://oauth.googlecode.com/svn/code/maven/</url>
+    </repository>
+  </repositories>
+
   <dependencies>
     <dependency>
       <groupId>javax.servlet</groupId>
@@ -111,6 +118,13 @@
       <groupId>org.easymock</groupId>
       <artifactId>easymock</artifactId>
       <version>2.2</version>
+      <scope>test</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>net.oauth</groupId>
+      <artifactId>oauth-core</artifactId>
+      <version>20081126</version>
       <scope>test</scope>
     </dependency>
   </dependencies>

@@ -16,10 +16,7 @@
 
 package org.springframework.security.oauth.common.signature;
 
-import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.binary.Base64;
-import static org.springframework.security.oauth.common.OAuthCodec.oauthDecode;
-import static org.springframework.security.oauth.common.OAuthCodec.oauthEncode;
 
 import java.io.UnsupportedEncodingException;
 import java.security.*;
@@ -103,8 +100,7 @@ public class RSA_SHA1SignatureMethod implements OAuthSignatureMethod {
       signer.update(signatureBaseString.getBytes("UTF-8"));
       byte[] signatureBytes = signer.sign();
       signatureBytes = Base64.encodeBase64(signatureBytes);
-      String signature = new String(signatureBytes, "UTF-8");
-      return oauthEncode(signature);
+      return new String(signatureBytes, "UTF-8");
     }
     catch (NoSuchAlgorithmException e) {
       throw new IllegalStateException(e);
@@ -137,7 +133,6 @@ public class RSA_SHA1SignatureMethod implements OAuthSignatureMethod {
     }
 
     try {
-      signature = oauthDecode(signature);
       byte[] signatureBytes = Base64.decodeBase64(signature.getBytes("UTF-8"));
       Signature verifier = Signature.getInstance("SHA1withRSA");
       verifier.initVerify(publicKey);
@@ -145,9 +140,6 @@ public class RSA_SHA1SignatureMethod implements OAuthSignatureMethod {
       if (!verifier.verify(signatureBytes)) {
         throw new InvalidSignatureException("Invalid signature for signature method " + getName());
       }
-    }
-    catch (DecoderException e) {
-      throw new InvalidSignatureException("Invalid signature.", e);
     }
     catch (UnsupportedEncodingException e) {
       throw new RuntimeException(e);

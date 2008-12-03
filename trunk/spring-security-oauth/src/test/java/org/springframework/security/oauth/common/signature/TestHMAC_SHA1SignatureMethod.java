@@ -47,4 +47,17 @@ public class TestHMAC_SHA1SignatureMethod extends TestCase {
     signatureMethod.verify(baseString, signature);
   }
 
+  /**
+   * Test sign and verify.
+   */
+  public void testSignAndVerify3() throws Exception {
+    SecretKeySpec spec = new SecretKeySpec("xxxxxx&".getBytes("UTF-8"), HMAC_SHA1SignatureMethod.MAC_NAME);
+    HMAC_SHA1SignatureMethod signatureMethod = new HMAC_SHA1SignatureMethod(spec);
+    String baseString = "GET&http%3A%2F%2Flocalhost%3A8080%2Fgrailscrowd%2Foauth%2Frequest_token&oauth_consumer_key%3Dtonrconsumerkey%26oauth_nonce%3D1227967049787975000%26oauth_signature_method%3DHMAC-SHA1%26oauth_timestamp%3D1227967049%26oauth_version%3D1.0";
+    String signature = "4KaVKEnW6e1a+vwJTpz0VFqIaGU=";
+    String otherSignature = signatureMethod.sign(baseString);
+    assertEquals(signature, otherSignature);
+    signatureMethod.verify(baseString, otherSignature);
+  }
+
 }
