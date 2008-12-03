@@ -16,12 +16,9 @@
 
 package org.springframework.security.oauth.common.signature;
 
-import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import static org.springframework.security.oauth.common.OAuthCodec.oauthDecode;
-import static org.springframework.security.oauth.common.OAuthCodec.oauthEncode;
 
 import javax.crypto.Mac;
 import javax.crypto.SecretKey;
@@ -83,7 +80,7 @@ public class HMAC_SHA1SignatureMethod implements OAuthSignatureMethod {
       byte[] text = signatureBaseString.getBytes("UTF-8");
       byte[] signatureBytes = mac.doFinal(text);
       signatureBytes = Base64.encodeBase64(signatureBytes);
-      String signature = oauthEncode(new String(signatureBytes, "UTF-8"));
+      String signature = new String(signatureBytes, "UTF-8");
 
       if (LOG.isDebugEnabled()) {
         LOG.debug("signature base: " + signatureBaseString);
@@ -119,7 +116,6 @@ public class HMAC_SHA1SignatureMethod implements OAuthSignatureMethod {
         LOG.debug("signature: " + signature);
       }
 
-      signature = oauthDecode(signature);
       byte[] signatureBytes = Base64.decodeBase64(signature.getBytes("UTF-8"));
 
       Mac mac = Mac.getInstance(MAC_NAME);
@@ -129,9 +125,6 @@ public class HMAC_SHA1SignatureMethod implements OAuthSignatureMethod {
       if (!Arrays.equals(calculatedBytes, signatureBytes)) {
         throw new InvalidSignatureException("Invalid signature for signature method " + getName());
       }
-    }
-    catch (DecoderException e) {
-      throw new InvalidSignatureException("Unable to decode signature.", e);
     }
     catch (NoSuchAlgorithmException e) {
       throw new IllegalStateException(e);
