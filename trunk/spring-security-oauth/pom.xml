@@ -1,12 +1,11 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.codehaus.spring-security-oauth</groupId>
   <artifactId>spring-security-oauth</artifactId>
   <name>OAuth for Spring Security</name>
   <description>Module for providing OAuth support to Spring Security</description>
   <packaging>jar</packaging>
-  <version>2.5-SNAPSHOT</version>
+  <version>2.5</version>
 
   <build>
     <plugins>
@@ -53,12 +52,12 @@
             <phase>site</phase>
             <configuration>
               <tasks>
-                <mkdir dir="${project.reporting.outputDirectory}/schema"/>
+                <mkdir dir="${project.reporting.outputDirectory}/schema" />
                 <copy todir="${project.reporting.outputDirectory}/schema">
                   <fileset dir="src/main/resources">
-                    <include name="**/*.xsd"/>
+                    <include name="**/*.xsd" />
                   </fileset>
-                  <mapper type="flatten"/>
+                  <mapper type="flatten" />
                 </copy>
               </tasks>
             </configuration>
@@ -106,9 +105,9 @@
   </reporting>
 
   <scm>
-    <connection>scm:svn:http://svn.codehaus.org/spring-security-oauth/trunk/spring-security-oauth//</connection>
-    <developerConnection>scm:svn:https://svn.codehaus.org/spring-security-oauth/trunk/spring-security-oauth/</developerConnection>
-    <url>http://svn.codehaus.org/spring-security-oauth/trunk/spring-security-oauth/</url>
+    <connection>scm:svn:http://svn.codehaus.org/spring-security-oauth/tags/spring-security-oauth-2.5</connection>
+    <developerConnection>scm:svn:https://svn.codehaus.org/spring-security-oauth/tags/spring-security-oauth-2.5</developerConnection>
+    <url>http://svn.codehaus.org/spring-security-oauth/tags/spring-security-oauth-2.5</url>
   </scm>
 
   <repositories>
