@@ -3,6 +3,8 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.codehaus.spring-security-oauth</groupId>
   <artifactId>spring-security-oauth</artifactId>
+  <name>OAuth for Spring Security</name>
+  <description>Module for providing OAuth support to Spring Security</description>
   <packaging>jar</packaging>
   <version>2.5-SNAPSHOT</version>
 
