@@ -18,39 +18,38 @@
     </script>
   </authz:authorize>
 </head>
-
 <body>
-<div id="container">
-  <div id="header">
-    <div id="headertitle">Sparklr</div>
-  </div>
-  <div id="mainbody">
-    <div class="header1">Home</div>
 
-    <p class="bodytext">This is a great site to store and view your photos. Unfortunately, we don't have any services
+  <h1>Sparklr</h1>
+
+  <div id="content">
+    <h2>Home</h2>
+
+    <p>This is a great site to store and view your photos. Unfortunately, we don't have any services
     for printing your photos.  For that, you'll have to go to <a href="#">Tonr.com</a>.</p>
 
     <authz:authorize ifNotGranted="ROLE_USER">
-      <div class="header1">Login</div>
+      <h2>Login</h2>
       <form action="<c:url value="/login.do"/>" method="POST">
-        <p class="formtext">Username: <input type='text' name='j_username' value="marissa"></p>
-        <p class="formtext">Password: <input type='text' name='j_password' value="koala"></p>
-        <p class="formtext"><input name="login" value="login" type="submit"></p>
+        <label>Username: <input type='text' name='j_username' value="marissa"></label><br/>
+        <label>Password: <input type='text' name='j_password' value="koala"></label><br/>
+        
+        <p><input name="login" value="login" type="submit"></p>
       </form>
     </authz:authorize>
     <authz:authorize ifAllGranted="ROLE_USER">
-      <div align="center"><form action="<c:url value="/logout.do"/>"><input type="submit" value="logout"></form></div>
-      <div class="header1">Your Photos</div>
+      <div style="text-align: center"><form action="<c:url value="/logout.do"/>"><input type="submit" value="logout"></form></div>
+      
+      <h2>Your Photos</h2>
 
-      <p class="bodytext">
-        <script type='text/javascript' src='json/photos?callback=pictureDisplay'>
-        </script>
+      <p>
+        <script type='text/javascript' src='json/photos?callback=pictureDisplay'></script>
       </p>
     </authz:authorize>
   </div>
 
   <div id="footer">Design by <a href="http://www.pyserwebdesigns.com" target="_blank">Pyser Web Designs</a></div>
 
-</div>
+
 </body>
 </html>

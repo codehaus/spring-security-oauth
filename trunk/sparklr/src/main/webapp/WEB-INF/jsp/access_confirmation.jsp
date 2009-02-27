@@ -11,40 +11,41 @@
 </head>
 
 <body>
-<div id="container">
-  <div id="header">
-    <div id="headertitle">Sparklr</div>
-  </div>
-  <div id="mainbody">
+
+  <h1>Sparklr</h1>
+
+  <div id="content">
 
     <c:if test="${!empty sessionScope.SPRING_SECURITY_LAST_EXCEPTION}">
-      <div class="errorHeader">Woops!</div>
+      <div class="error">
+        <h2>Woops!</h2>
 
-      <p class="bodytext"><font color="red">Access could not be granted. (<%= ((AuthenticationException) session.getAttribute(AbstractProcessingFilter.SPRING_SECURITY_LAST_EXCEPTION_KEY)).getMessage() %>)</font></p>
+        <p>Access could not be granted. (<%= ((AuthenticationException) session.getAttribute(AbstractProcessingFilter.SPRING_SECURITY_LAST_EXCEPTION_KEY)).getMessage() %>)</p>
+      </div>
     </c:if>
     <c:remove scope="session" var="SPRING_SECURITY_LAST_EXCEPTION"/>
 
     <authz:authorize ifAllGranted="ROLE_USER">
-      <div class="header1">Please Confirm</div>
+      <h2>Please Confirm</h2>
 
-      <p class="bodytext">You hereby authorize "<c:out value="${consumer.consumerName}"/>" to access the following resource:</p>
+      <p>You hereby authorize "<c:out value="${consumer.consumerName}"/>" to access the following resource:</p>
 
-      <div class="bodytext"><b><c:out value="${consumer.resourceName}"/></b></div>
-
-      <p class="bodytext"><c:out value="${consumer.resourceDescription}"/></p>
+      <ul>
+          <li><c:out value="${consumer.resourceName}"/> – <c:out value="${consumer.resourceDescription}"/></li>
+      </ul>
 
       <form action="<c:url value="/oauth/authorize"/>" method="POST">
         <input name="requestToken" value="<c:out value="${oauth_token}"/>" type="hidden"/>
         <c:if test="${!empty oauth_callback}">
         <input name="callbackURL" value="<c:out value="${oauth_callback}"/>" type="hidden"/>
         </c:if>
-        <p class="formtext"><input name="authorize" value="authorize" type="submit"></p>
+        <label><input name="authorize" value="authorize" type="submit"></label>
       </form>
     </authz:authorize>
   </div>
 
   <div id="footer">Design by <a href="http://www.pyserwebdesigns.com" target="_blank">Pyser Web Designs</a></div>
 
-</div>
+
 </body>
 </html>

@@ -9,18 +9,17 @@
 </head>
 
 <body>
-<div id="container">
-  <div id="header">
-    <div id="headertitle">Sparklr</div>
-  </div>
-  <div id="mainbody">
-    <div class="header1">Home</div>
 
-    <p class="bodytext">You have successfully authorized the request for a protected resource.</p>
+  <h1>Sparklr</h1>
+
+  <div id="content">
+    <h2>Home</h2>
+
+    <p>You have successfully authorized the request for a protected resource.</p>
   </div>
 
   <div id="footer">Design by <a href="http://www.pyserwebdesigns.com" target="_blank">Pyser Web Designs</a></div>
 
-</div>
+
 </body>
 </html>
