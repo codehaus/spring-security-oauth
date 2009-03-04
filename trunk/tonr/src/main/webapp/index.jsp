@@ -8,18 +8,19 @@
 </head>
 <body>
 <div id="container">
-  <div id="navdiv">
-    <ul class="mainlinks">
+
+    <ul id="mainlinks">
       <li><a href="<c:url value="/index.jsp"/>" class="selected">home</a></li>
       <authz:authorize ifNotGranted="ROLE_USER">
         <li><a href="<c:url value="/login.jsp"/>">login</a></li>
       </authz:authorize>
       <li><a href="<c:url value="/sparklr/photos.jsp"/>">sparklr pics</a></li>
     </ul>
-  </div>
+
   <div id="content">
     <h1>Welcome to Tonr.com!</h1>
-    <p>This is a website that will allow you to print your photos that you've uploaded to <a href="#">sparklr.com</a>!
+    
+    <p>This is a website that will allow you to print your photos that you've uploaded to <a href="http://localhost:8080/sparklr/">sparklr.com</a>!
       And since this site uses <a href="http://oauth.net">OAuth</a> to access your photos, we will never ask you
       for your Sparklr credentials.</p>
 
@@ -32,7 +33,7 @@
       <p><a href="<c:url value="/sparklr/photos.jsp"/>">View my Sparklr photos</a></p>
     </authz:authorize>
 
-    <p class="main">Courtesy <a href="http://www.openwebdesign.org">Open Web Design</a> Thanks to <a href="http://www.dubaiapartments.biz/">Dubai Hotels</a></p>
+    <p class="footer">Courtesy <a href="http://www.openwebdesign.org">Open Web Design</a> Thanks to <a href="http://www.dubaiapartments.biz/">Dubai Hotels</a></p>
   </div>
 </div>
 </body>

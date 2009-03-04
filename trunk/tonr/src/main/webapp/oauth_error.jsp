@@ -10,24 +10,24 @@
 </head>
 <body>
 <div id="container">
-  <div id="navdiv">
-    <ul class="mainlinks">
+
+    <ul id="mainlinks">
       <li><a href="<c:url value="/index.jsp"/>">home</a></li>
       <authz:authorize ifNotGranted="ROLE_USER">
         <li><a href="<c:url value="/login.jsp"/>">login</a></li>
       </authz:authorize>
       <li><a href="<c:url value="/sparklr/photos.jsp"/>">sparklr pics</a></li>
     </ul>
-  </div>
+
   <div id="content">
     <c:if test="${!empty sessionScope.OAUTH_FAILURE_KEY}">
       <h1>Woops!</h1>
 
-      <p><font color="red">It appears that the OAuth mechanism failed. (<%= ((AuthenticationException) session.getAttribute(OAuthConsumerProcessingFilter.OAUTH_FAILURE_KEY)).getMessage() %>)</font></p>
+      <p class="error">It appears that the OAuth mechanism failed. (<%= ((AuthenticationException) session.getAttribute(OAuthConsumerProcessingFilter.OAUTH_FAILURE_KEY)).getMessage() %>)</p>
     </c:if>
     <c:remove scope="session" var="OAUTH_FAILURE_KEY"/>
 
-    <p class="main">Courtesy <a href="http://www.openwebdesign.org">Open Web Design</a> Thanks to <a href="http://www.dubaiapartments.biz/">Dubai Hotels</a></p>
+    <p class="footer">Courtesy <a href="http://www.openwebdesign.org">Open Web Design</a> Thanks to <a href="http://www.dubaiapartments.biz/">Dubai Hotels</a></p>
   </div>
 </div>
 </body>

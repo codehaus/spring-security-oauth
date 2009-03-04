@@ -8,17 +8,18 @@
 </head>
 <body>
 <div id="container">
-  <div id="navdiv">
-    <ul class="mainlinks">
+
+    <ul id="mainlinks">
       <li><a href="<c:url value="/index.jsp"/>">home</a></li>
       <authz:authorize ifNotGranted="ROLE_USER">
         <li><a href="<c:url value="/login.jsp"/>">login</a></li>
       </authz:authorize>
       <li><a href="<c:url value="/sparklr/photos.jsp"/>" class="selected">sparklr pics</a></li>
     </ul>
-  </div>
+
   <div id="content">
     <h1>Your Sparklr Photos</h1>
+    
     <ul id="picturelist">
       <c:forEach var="sparklrPhotoId" items="${photoIds}">
         <li><img src="<c:url value="/sparklr/photo/${sparklrPhotoId}"/>"/></li>
