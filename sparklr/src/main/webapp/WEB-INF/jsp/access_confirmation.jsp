@@ -31,7 +31,7 @@
       <p>You hereby authorize "<c:out value="${consumer.consumerName}"/>" to access the following resource:</p>
 
       <ul>
-          <li><c:out value="${consumer.resourceName}"/> – <c:out value="${consumer.resourceDescription}"/></li>
+          <li><c:out value="${consumer.resourceName}"/> &mdash; <c:out value="${consumer.resourceDescription}"/></li>
       </ul>
 
       <form action="<c:url value="/oauth/authorize"/>" method="POST">
@@ -39,7 +39,7 @@
         <c:if test="${!empty oauth_callback}">
         <input name="callbackURL" value="<c:out value="${oauth_callback}"/>" type="hidden"/>
         </c:if>
-        <label><input name="authorize" value="authorize" type="submit"></label>
+        <label><input name="authorize" value="Authorize" type="submit"></label>
       </form>
     </authz:authorize>
   </div>

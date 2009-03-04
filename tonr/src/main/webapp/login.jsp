@@ -13,18 +13,18 @@
 </head>
 <body>
 <div id="container">
-  <div id="navdiv">
-    <ul class="mainlinks">
+
+    <ul id="mainlinks">
       <li><a href="<c:url value="/index.jsp"/>">home</a></li>
-      <li><a href="<c:url value="/login.jsp"/>"  class="selected">login</a></li>
+      <li><a href="<c:url value="/login.jsp"/>" class="selected">login</a></li>
       <li><a href="<c:url value="/sparklr/photos.jsp"/>">sparklr pics</a></li>
     </ul>
-  </div>
+
   <div id="content">
     <c:if test="${!empty sessionScope.SPRING_SECURITY_LAST_EXCEPTION}">
       <h1>Woops!</h1>
 
-      <p><font color="red">Your login attempt was not successful. (<%= ((AuthenticationException) session.getAttribute(AbstractProcessingFilter.SPRING_SECURITY_LAST_EXCEPTION_KEY)).getMessage() %>)</font></p>
+      <p class="error">Your login attempt was not successful. (<%= ((AuthenticationException) session.getAttribute(AbstractProcessingFilter.SPRING_SECURITY_LAST_EXCEPTION_KEY)).getMessage() %>)</p>
     </c:if>
     <c:remove scope="session" var="SPRING_SECURITY_LAST_EXCEPTION"/>
 
@@ -34,13 +34,14 @@
       <p>Tonr.com has only two users: "marissa" and "sam".  The password for "marissa" is password is "wombat" and for "sam" is password is "kangaroo".</p>
 
       <form action="<c:url value="/login.do"/>" method="POST">
-        <p class="formtext">Username: <input type='text' name='j_username' value="marissa"></p>
-        <p class="formtext">Password: <input type='text' name='j_password' value="wombat"></p>
-        <p class="formtext"><input name="login" value="login" type="submit"></p>
+        <p><label>Username: <input type='text' name='j_username' value="marissa"></label></p>
+        <p><label>Password: <input type='text' name='j_password' value="wombat"></label></p>
+        
+        <p><input name="login" value="Login" type="submit"></p>
       </form>
     </authz:authorize>
 
-    <p class="main">Courtesy <a href="http://www.openwebdesign.org">Open Web Design</a> Thanks to <a href="http://www.dubaiapartments.biz/">Dubai Hotels</a></p>
+    <p class="footer">Courtesy <a href="http://www.openwebdesign.org">Open Web Design</a> Thanks to <a href="http://www.dubaiapartments.biz/">Dubai Hotels</a></p>
   </div>
 </div>
 </body>
