@@ -17,12 +17,11 @@
 package org.springframework.security.oauth.provider;
 
 import junit.framework.TestCase;
+import static org.easymock.EasyMock.*;
 import org.springframework.security.Authentication;
 import org.springframework.security.AuthenticationException;
-import org.springframework.security.BadCredentialsException;
 import org.springframework.security.GrantedAuthority;
 import org.springframework.security.context.SecurityContextHolder;
-import static org.easymock.EasyMock.*;
 import org.springframework.security.oauth.common.OAuthConsumerParameter;
 import org.springframework.security.oauth.common.signature.OAuthSignatureMethod;
 import org.springframework.security.oauth.common.signature.OAuthSignatureMethodFactory;
@@ -283,24 +282,7 @@ public class TestOAuthProcessingFilter extends TestCase {
     params.put(OAuthConsumerParameter.oauth_signature.toString(), "value");
     params.put(OAuthConsumerParameter.oauth_timestamp.toString(), "1111111");
     params.put(OAuthConsumerParameter.oauth_nonce.toString(), "value");
-    expect(nonceServices.validateNonce(consumerDetails, 1111111L, "value")).andReturn(true);
-    replay(consumerDetails, nonceServices);
-    try {
-      filter.validateOAuthParams(consumerDetails, params);
-      fail("should have thrown a bad credentials for new timestamp.");
-    }
-    catch (InvalidOAuthParametersException e) {
-      verify(consumerDetails, nonceServices);
-      reset(consumerDetails, nonceServices);
-    }
-
-    filter.setNonceServices(nonceServices);
-    params.remove("realm");
-    params.put(OAuthConsumerParameter.oauth_signature_method.toString(), "sigmethod");
-    params.put(OAuthConsumerParameter.oauth_signature.toString(), "value");
-    params.put(OAuthConsumerParameter.oauth_timestamp.toString(), "1111111");
-    params.put(OAuthConsumerParameter.oauth_nonce.toString(), "value");
-    expect(nonceServices.validateNonce(consumerDetails, 1111111L, "value")).andReturn(false);
+    nonceServices.validateNonce(consumerDetails, 1111111L, "value");
     replay(consumerDetails, nonceServices);
     filter.validateOAuthParams(consumerDetails, params);
     verify(consumerDetails, nonceServices);

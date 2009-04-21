@@ -40,7 +40,7 @@ public class InMemoryNonceServices extends ExpiringTimestampNonceServices {
   protected static final ConcurrentMap<String, LinkedList<TimestampEntry>> TIMESTAMP_ENTRIES = new ConcurrentHashMap<String, LinkedList<TimestampEntry>>();
 
   @Override
-  public boolean validateNonce(ConsumerDetails consumerDetails, long timestamp, String nonce) throws AuthenticationException {
+  public void validateNonce(ConsumerDetails consumerDetails, long timestamp, String nonce) throws AuthenticationException {
     final long cutoff = (System.currentTimeMillis() / 1000) - getValidityWindowSeconds();
     super.validateNonce(consumerDetails, timestamp, nonce);
 
@@ -54,7 +54,6 @@ public class InMemoryNonceServices extends ExpiringTimestampNonceServices {
     synchronized (entries) {
       if (entries.isEmpty()) {
         entries.add(new TimestampEntry(timestamp, nonce));
-        return true;
       }
       else {
         boolean isNew = entries.getLast().getTimestamp() < timestamp;
@@ -68,25 +67,21 @@ public class InMemoryNonceServices extends ExpiringTimestampNonceServices {
           else if (isNew) {
             //optimize for a new, latest timestamp
             entries.addLast(new TimestampEntry(timestamp, nonce));
-            return true;
           }
           else if (entry.getTimestamp() == timestamp) {
             if (!entry.addNonce(nonce)) {
               throw new NonceAlreadyUsedException("Nonce already used: " + nonce);
             }
-            return false;
           }
           else if (entry.getTimestamp() > timestamp) {
             //insert a new entry just before this one.
             entries.add(listIterator.previousIndex(), new TimestampEntry(timestamp, nonce));
-            return true;
           }
         }
 
         //got through the whole list; assume it's just a new one.
         //this shouldn't happen because of the optimization above.
         entries.addLast(new TimestampEntry(timestamp, nonce));
-        return true;
       }
     }
   }

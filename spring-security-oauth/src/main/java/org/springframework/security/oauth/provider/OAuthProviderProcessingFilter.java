@@ -312,9 +312,7 @@ public abstract class OAuthProviderProcessingFilter implements Filter, Initializ
     }
 
     try {
-      if (getNonceServices().validateNonce(consumerDetails, Long.parseLong(timestamp), nonce)) {
-        onNewTimestamp();
-      }
+      getNonceServices().validateNonce(consumerDetails, Long.parseLong(timestamp), nonce);
     }
     catch (NumberFormatException e) {
       throw new InvalidOAuthParametersException(messages.getMessage("OAuthProcessingFilter.invalidTimestamp", new Object[]{timestamp}, "Timestamp must be a positive integer. Invalid value: {0}"));
