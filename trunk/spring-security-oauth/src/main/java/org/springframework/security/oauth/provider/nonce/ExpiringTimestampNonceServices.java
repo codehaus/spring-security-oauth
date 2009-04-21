@@ -42,14 +42,11 @@ public class ExpiringTimestampNonceServices implements OAuthNonceServices, Initi
     Assert.notNull(consumerDetailsService, "A consumer details service must be supplied to validate the consumer key.");
   }
 
-  public boolean validateNonce(ConsumerDetails consumerDetails, long timestamp, String nonce) throws AuthenticationException {
+  public void validateNonce(ConsumerDetails consumerDetails, long timestamp, String nonce) throws AuthenticationException {
     long nowSeconds = (System.currentTimeMillis() / 1000);
     if ((nowSeconds - timestamp) > getValidityWindowSeconds()) {
       throw new CredentialsExpiredException("Expired timestamp.");
     }
-
-    //just assume it's not a new timestamp.
-    return false;
   }
 
   /**

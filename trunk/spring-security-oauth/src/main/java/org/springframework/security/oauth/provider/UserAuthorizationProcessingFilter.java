@@ -57,7 +57,6 @@ public class UserAuthorizationProcessingFilter extends AbstractProcessingFilter 
 
   @Override
   public void afterPropertiesSet() throws Exception {
-    Assert.hasLength(getAuthenticationFailureUrl(), "authenticationFailureUrl must be provided.");
     Assert.notNull(getRememberMeServices());
     Assert.notNull(getTokenServices(), "A token services must be provided.");
   }

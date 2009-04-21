@@ -35,6 +35,6 @@ public interface OAuthNonceServices {
    * @return Whether the timestamp is a new timestamp.  This gives the authentication processor the chance to enforce that all peer requests have the same timestamp, per the OAuth spec.
    * @throws org.springframework.security.AuthenticationException If the nonce failed to validate.
    */
-  boolean validateNonce(ConsumerDetails consumerDetails, long timestamp, String nonce) throws AuthenticationException;
+  void validateNonce(ConsumerDetails consumerDetails, long timestamp, String nonce) throws AuthenticationException;
   
 }
