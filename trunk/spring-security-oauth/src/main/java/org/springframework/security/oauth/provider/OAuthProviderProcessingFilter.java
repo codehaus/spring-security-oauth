@@ -246,7 +246,7 @@ public abstract class OAuthProviderProcessingFilter implements Filter, Initializ
     SignatureSecret secret = authentication.getConsumerDetails().getSignatureSecret();
     String token = authentication.getConsumerCredentials().getToken();
     OAuthProviderToken authToken = null;
-    if (token != null) {
+    if (token != null && !"".equals(token)) {
       authToken = getTokenServices().getToken(token);
     }
 
