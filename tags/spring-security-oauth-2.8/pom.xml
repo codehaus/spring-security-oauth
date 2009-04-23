@@ -1,0 +1,200 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>org.codehaus.spring-security-oauth</groupId>
+  <artifactId>spring-security-oauth</artifactId>
+  <name>OAuth for Spring Security</name>
+  <description>Module for providing OAuth support to Spring Security</description>
+  <packaging>jar</packaging>
+  <version>2.8</version>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <configuration>
+          <source>1.5</source>
+          <target>1.5</target>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-source-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>attach-sources</id>
+            <phase>package</phase>
+            <goals>
+              <goal>jar</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-release-plugin</artifactId>
+        <configuration>
+          <tagBase>https://svn.codehaus.org/spring-security-oauth/tags/</tagBase>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-idea-plugin</artifactId>
+        <configuration>
+          <downloadSources>true</downloadSources>
+          <downloadJavadocs>true</downloadJavadocs>
+        </configuration>
+      </plugin>
+      <plugin>
+        <artifactId>maven-antrun-plugin</artifactId>
+        <executions>
+          <execution>
+            <phase>site</phase>
+            <configuration>
+              <tasks>
+                <mkdir dir="${project.reporting.outputDirectory}/schema" />
+                <copy todir="${project.reporting.outputDirectory}/schema">
+                  <fileset dir="src/main/resources">
+                    <include name="**/*.xsd" />
+                  </fileset>
+                  <mapper type="flatten" />
+                </copy>
+              </tasks>
+            </configuration>
+            <goals>
+              <goal>run</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-enforcer-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>enforce-java-5</id>
+            <phase>validate</phase>
+            <goals>
+              <goal>enforce</goal>
+            </goals>
+            <configuration>
+              <rules>
+                <requireJavaVersion>
+                  <version>(,1.6)</version>
+                  <message>
+                    Although S.S.OAuth is fully compatible with Java 1.6 and above,
+                    we want to make sure it is built with compatibility for
+                    Java 5. Please use Java 5 to build.
+                  </message>
+                </requireJavaVersion>
+              </rules>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
+
+  <reporting>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-javadoc-plugin</artifactId>
+      </plugin>
+    </plugins>
+  </reporting>
+
+  <scm>
+    <connection>scm:svn:http://svn.codehaus.org/spring-security-oauth/tags/spring-security-oauth-2.8</connection>
+    <developerConnection>scm:svn:https://svn.codehaus.org/spring-security-oauth/tags/spring-security-oauth-2.8</developerConnection>
+    <url>http://svn.codehaus.org/spring-security-oauth/tags/spring-security-oauth-2.8</url>
+  </scm>
+
+  <repositories>
+    <repository>
+      <id>oauth.googlecode.net</id>
+      <url>http://oauth.googlecode.com/svn/code/maven/</url>
+    </repository>
+  </repositories>
+
+  <dependencies>
+    <dependency>
+      <groupId>javax.servlet</groupId>
+      <artifactId>servlet-api</artifactId>
+      <version>2.3</version>
+      <scope>provided</scope>
+    </dependency>
+
+    <dependency>
+      <!--for the annotations.-->
+      <groupId>org.springframework</groupId>
+      <artifactId>spring-beans</artifactId>
+      <version>2.5.4</version>
+    </dependency>
+
+    <dependency>
+      <!--for the annotations.-->
+      <groupId>org.springframework</groupId>
+      <artifactId>spring-core</artifactId>
+      <version>2.5.4</version>
+    </dependency>
+
+    <dependency>
+      <!--for the annotations.-->
+      <groupId>org.springframework</groupId>
+      <artifactId>spring-context</artifactId>
+      <version>2.5.4</version>
+    </dependency>
+
+    <dependency>
+      <!--for the annotations.-->
+      <groupId>org.springframework</groupId>
+      <artifactId>spring-aop</artifactId>
+      <version>2.5.4</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.springframework.security</groupId>
+      <artifactId>spring-security-core-tiger</artifactId>
+      <version>2.0.3</version>
+    </dependency>
+
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <version>3.8.1</version>
+      <scope>test</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>org.easymock</groupId>
+      <artifactId>easymock</artifactId>
+      <version>2.2</version>
+      <scope>test</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>net.oauth</groupId>
+      <artifactId>oauth-core</artifactId>
+      <version>20081126</version>
+      <scope>test</scope>
+    </dependency>
+  </dependencies>
+
+  <distributionManagement>
+
+    <repository>
+      <id>codehaus.org</id>
+      <name>SSOAuth Central Repository</name>
+      <url>dav:https://dav.codehaus.org/repository/spring-security-oauth/</url>
+    </repository>
+
+    <snapshotRepository>
+      <id>codehaus.org</id>
+      <name>SSOAuth Central Development Repository</name>
+      <url>dav:https://dav.codehaus.org/snapshots.repository/spring-security-oauth/</url>
+    </snapshotRepository>
+
+  </distributionManagement>
+
+</project>
