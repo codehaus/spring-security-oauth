@@ -27,7 +27,7 @@ import java.util.*;
  * Expands on the {@link org.springframework.security.oauth.provider.nonce.ExpiringTimestampNonceServices} to
  * include validation of the nonce for replay protection.<br/><br/>
  *
- * To validate of the nonce, the InMemoryNonceService first validates the consumer key and timestamp as does the
+ * To validate the nonce, the InMemoryNonceService first validates the consumer key and timestamp as does the
  * {@link org.springframework.security.oauth.provider.nonce.ExpiringTimestampNonceServices}.  Assuming the consumer
  * and timestamp are valid, the InMemoryNonceServices further ensures that the specified nonce was not used with the
  * specified timestamp within the specified validity window.  The list of nonces used within the validity window
@@ -67,15 +67,18 @@ public class InMemoryNonceServices extends ExpiringTimestampNonceServices {
           else if (isNew) {
             //optimize for a new, latest timestamp
             entries.addLast(new TimestampEntry(timestamp, nonce));
+            return;
           }
           else if (entry.getTimestamp() == timestamp) {
             if (!entry.addNonce(nonce)) {
               throw new NonceAlreadyUsedException("Nonce already used: " + nonce);
             }
+            return;
           }
           else if (entry.getTimestamp() > timestamp) {
             //insert a new entry just before this one.
             entries.add(listIterator.previousIndex(), new TimestampEntry(timestamp, nonce));
+            return;
           }
         }
 
