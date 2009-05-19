@@ -60,7 +60,10 @@ public class ProtectedResourceProcessingFilter extends OAuthProviderProcessingFi
   protected void onValidSignature(HttpServletRequest request, HttpServletResponse response, FilterChain chain) throws IOException, ServletException {
     ConsumerAuthentication authentication = (ConsumerAuthentication) SecurityContextHolder.getContext().getAuthentication();
     OAuthProviderToken authToken = getTokenServices().getToken(authentication.getConsumerCredentials().getToken());
-    if (!authToken.isAccessToken()) {
+    if (authToken == null) {
+      throw new AccessDeniedException("Invalid access token.");
+    }
+    else if (!authToken.isAccessToken()) {
       throw new AccessDeniedException("Token should be an access token.");
     }
     else {
