@@ -57,7 +57,7 @@ public class ConsumerServiceBeanDefinitionParser extends AbstractSingleBeanDefin
       }
 
       String secret = consumerElement.getAttribute("secret");
-      if (StringUtils.hasText(secret)) {
+      if (secret != null) {
         consumer.setSignatureSecret(new SharedConsumerSecret(secret));
       }
       else {

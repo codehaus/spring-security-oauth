@@ -24,6 +24,8 @@ import org.springframework.security.util.StringSplitUtils;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.*;
+import java.net.URL;
+import java.net.MalformedURLException;
 
 /**
  * Utility for common logic for supporting an OAuth provider.
@@ -127,23 +129,45 @@ public class CoreOAuthProviderSupport implements OAuthProviderSupport {
       if (parameterValue == null) {
         parameterValue = "";
       }
-      
+
       queryString.append(sortedParameter.getKey()).append('=').append(parameterValue);
       if (i + 1 < sortedParameters.length) {
         queryString.append('&');
       }
     }
 
-    String url = getBaseUrl();
+    String url = getBaseUrl(request);
     if (url == null) {
       //if no URL is configured, then we'll attempt to reconstruct the URL.  This may be inaccurate.
       url = request.getRequestURL().toString();
     }
-    url = url.toLowerCase();
+    url = normalizeUrl(url);
     url = oauthEncode(url);
 
     String method = request.getMethod().toUpperCase();
     return new StringBuilder(method).append('&').append(url).append('&').append(oauthEncode(queryString.toString())).toString();
+  }
+
+  /**
+   * Normalize the URL for use in the signature. The OAuth spec says the URL protocol and host are to be lower-case,
+   * and the query and fragments are to be stripped.
+   *
+   * @param url The URL.
+   * @return The URL normalized for use in the signature.
+   */
+  protected String normalizeUrl(String url) {
+    try {
+      URL requestURL = new URL(url);
+      StringBuilder normalized = new StringBuilder(requestURL.getProtocol().toLowerCase()).append("://").append(requestURL.getHost().toLowerCase());
+      if ((requestURL.getPort() >= 0) && (requestURL.getPort() != requestURL.getDefaultPort())) {
+        normalized.append(":").append(requestURL.getPort());
+      }
+      normalized.append(requestURL.getPath());
+      return normalized.toString();
+    }
+    catch (MalformedURLException e) {
+      throw new IllegalStateException("Illegal URL for calculating the OAuth signature.", e);
+    }
   }
 
   /**
@@ -189,6 +213,16 @@ public class CoreOAuthProviderSupport implements OAuthProviderSupport {
     //remove the oauth signature parameter value.
     significantParameters.remove(OAuthConsumerParameter.oauth_signature.toString());
     return significantParameters;
+  }
+
+  /**
+   * The configured base URL for this OAuth provider for the given HttpServletRequest. Default implementation return getBaseUrl().
+   *
+   * @param request The HttpServletRequest currently processed
+   * @returnThe configured base URL for this OAuth provider with respect to the supplied HttpServletRequest.
+   */
+  protected String getBaseUrl(HttpServletRequest request) {
+    return getBaseUrl();
   }
 
   /**
