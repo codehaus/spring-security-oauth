@@ -14,32 +14,15 @@
  * limitations under the License.
  */
 
-package org.springframework.security.oauth.common;
+package org.springframework.security.oauth.provider.verifier;
+
+import org.springframework.security.oauth.common.OAuthException;
 
 /**
- * Parameters that can be used by the provider.
- *
  * @author Ryan Heaton
  */
-public enum OAuthProviderParameter {
-
-  /**
-   * The oauth token.
-   */
-  oauth_token,
-
-  /**
-   * The oauth token secret.
-   */
-  oauth_token_secret,
-
-  /**
-   * Confirmation of the OAuth callback.
-   */
-  oauth_callback_confirmed,
-
-  /**
-   * Verifier
-   */
-  oauth_verifier
+public class VerificationFailedException extends OAuthException {
+  public VerificationFailedException(String msg) {
+    super(msg);
+  }
 }

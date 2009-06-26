@@ -58,4 +58,14 @@ public enum OAuthConsumerParameter {
    */
   oauth_version,
 
+  /**
+   * Parameter for the callback.
+   */
+  oauth_callback,
+
+  /**
+   * Parameter for the verifier.
+   */
+  oauth_verifier
+
 }

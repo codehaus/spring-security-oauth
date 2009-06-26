@@ -70,7 +70,7 @@ public class CoreOAuthConsumerSupport implements OAuthConsumerSupport, Initializ
   }
 
   // Inherited.
-  public OAuthConsumerToken getUnauthorizedRequestToken(String resourceId) throws OAuthRequestFailedException {
+  public OAuthConsumerToken getUnauthorizedRequestToken(String resourceId, String callback) throws OAuthRequestFailedException {
     ProtectedResourceDetails details = getProtectedResourceDetailsService().loadProtectedResourceDetailsById(resourceId);
 
     URL requestTokenURL;
@@ -81,11 +81,15 @@ public class CoreOAuthConsumerSupport implements OAuthConsumerSupport, Initializ
       throw new IllegalStateException("Malformed URL for obtaining a request token.", e);
     }
 
-    return getTokenFromProvider(details, requestTokenURL, null);
+    Map<String, String> additionalParameters = new TreeMap<String, String>();
+    if (details.isUse10a()) {
+      additionalParameters.put(OAuthConsumerParameter.oauth_callback.toString(), callback);
+    }
+    return getTokenFromProvider(details, requestTokenURL, null, additionalParameters);
   }
 
   // Inherited.
-  public OAuthConsumerToken getAccessToken(OAuthConsumerToken requestToken) throws OAuthRequestFailedException {
+  public OAuthConsumerToken getAccessToken(OAuthConsumerToken requestToken, String verifier) throws OAuthRequestFailedException {
     ProtectedResourceDetails details = getProtectedResourceDetailsService().loadProtectedResourceDetailsById(requestToken.getResourceId());
 
     URL accessTokenURL;
@@ -96,7 +100,11 @@ public class CoreOAuthConsumerSupport implements OAuthConsumerSupport, Initializ
       throw new IllegalStateException("Malformed URL for obtaining an access token.", e);
     }
 
-    return getTokenFromProvider(details, accessTokenURL, requestToken);
+    Map<String, String> additionalParameters = new TreeMap<String, String>();
+    if (details.isUse10a()) {
+      additionalParameters.put(OAuthConsumerParameter.oauth_verifier.toString(), verifier);
+    }
+    return getTokenFromProvider(details, accessTokenURL, requestToken, additionalParameters);
   }
 
   // Inherited.
@@ -111,7 +119,7 @@ public class CoreOAuthConsumerSupport implements OAuthConsumerSupport, Initializ
         httpMethod + " because the OAuth provider doesn't accept the OAuth Authorization header.");
     }
     
-    return readResource(resourceDetails, url, accessToken, httpMethod);
+    return readResource(resourceDetails, url, accessToken, httpMethod, null);
   }
 
   /**
@@ -121,10 +129,11 @@ public class CoreOAuthConsumerSupport implements OAuthConsumerSupport, Initializ
    * @param url The URL of the resource.
    * @param token The token.
    * @param httpMethod The http method.
+   * @param additionalParameters Any additional request parameters.
    * @return The resource.
    */
-  protected InputStream readResource(ProtectedResourceDetails details, URL url, OAuthConsumerToken token, String httpMethod) {
-    url = configureURLForProtectedAccess(url, token, details, httpMethod);
+  protected InputStream readResource(ProtectedResourceDetails details, URL url, OAuthConsumerToken token, String httpMethod, Map<String, String> additionalParameters) {
+    url = configureURLForProtectedAccess(url, token, details, httpMethod, additionalParameters);
     String realm = details.getAuthorizationHeaderRealm();
     boolean sendOAuthParamsInRequestBody = !details.isAcceptsAuthorizationHeader() && (("POST".equalsIgnoreCase(httpMethod) || "PUT".equalsIgnoreCase(httpMethod)));
     HttpURLConnection connection = openConnection(url);
@@ -142,7 +151,7 @@ public class CoreOAuthConsumerSupport implements OAuthConsumerSupport, Initializ
       connection.setDoOutput(sendOAuthParamsInRequestBody);
       connection.connect();
       if (sendOAuthParamsInRequestBody) {
-        String queryString = getOAuthQueryString(details, token, url, httpMethod);
+        String queryString = getOAuthQueryString(details, token, url, httpMethod, additionalParameters);
         OutputStream out = connection.getOutputStream();
         out.write(queryString.getBytes("UTF-8"));
         out.flush();
@@ -194,10 +203,11 @@ public class CoreOAuthConsumerSupport implements OAuthConsumerSupport, Initializ
    * @param url         The base URL.
    * @param accessToken The access token.
    * @param httpMethod The HTTP method.
+   * @param additionalParameters Any additional request parameters.
    * @return The configured URL.
    */
-  public URL configureURLForProtectedAccess(URL url, OAuthConsumerToken accessToken, String httpMethod) throws OAuthRequestFailedException {
-    return configureURLForProtectedAccess(url, accessToken, getProtectedResourceDetailsService().loadProtectedResourceDetailsById(accessToken.getResourceId()), httpMethod);
+  public URL configureURLForProtectedAccess(URL url, OAuthConsumerToken accessToken, String httpMethod, Map<String, String> additionalParameters) throws OAuthRequestFailedException {
+    return configureURLForProtectedAccess(url, accessToken, getProtectedResourceDetailsService().loadProtectedResourceDetailsById(accessToken.getResourceId()), httpMethod, additionalParameters);
   }
 
   /**
@@ -207,22 +217,23 @@ public class CoreOAuthConsumerSupport implements OAuthConsumerSupport, Initializ
    * @param requestToken The request token.
    * @param details      The details.
    * @param httpMethod   The http method.
+   * @param additionalParameters Any additional request parameters.
    * @return The configured URL.
    */
-  protected URL configureURLForProtectedAccess(URL url, OAuthConsumerToken requestToken, ProtectedResourceDetails details, String httpMethod) {
+  protected URL configureURLForProtectedAccess(URL url, OAuthConsumerToken requestToken, ProtectedResourceDetails details, String httpMethod, Map<String, String> additionalParameters) {
     StringBuilder file = new StringBuilder(url.getPath());
     if (!"POST".equalsIgnoreCase(httpMethod) && !"PUT".equalsIgnoreCase(httpMethod)) {
-      String queryString = getOAuthQueryString(details, requestToken, url, httpMethod);
+      String queryString = getOAuthQueryString(details, requestToken, url, httpMethod, additionalParameters);
       file.append('?').append(queryString);
     }
 
     try {
       if ("http".equalsIgnoreCase(url.getProtocol())) {
-        URLStreamHandler streamHandler = getStreamHandlerFactory().getHttpStreamHandler(details, requestToken, this, httpMethod);
+        URLStreamHandler streamHandler = getStreamHandlerFactory().getHttpStreamHandler(details, requestToken, this, httpMethod, additionalParameters);
         return new URL(url.getProtocol(), url.getHost(), url.getPort(), file.toString(), streamHandler);
       }
       else if ("https".equalsIgnoreCase(url.getProtocol())) {
-        URLStreamHandler streamHandler = getStreamHandlerFactory().getHttpsStreamHandler(details, requestToken, this, httpMethod);
+        URLStreamHandler streamHandler = getStreamHandlerFactory().getHttpsStreamHandler(details, requestToken, this, httpMethod, additionalParameters);
         return new URL(url.getProtocol(), url.getHost(), url.getPort(), file.toString(), streamHandler);
       }
       else {
@@ -235,12 +246,12 @@ public class CoreOAuthConsumerSupport implements OAuthConsumerSupport, Initializ
   }
 
   // Inherited.
-  public String getAuthorizationHeader(ProtectedResourceDetails details, OAuthConsumerToken accessToken, URL url, String httpMethod) {
+  public String getAuthorizationHeader(ProtectedResourceDetails details, OAuthConsumerToken accessToken, URL url, String httpMethod, Map<String, String> additionalParameters) {
     if (!details.isAcceptsAuthorizationHeader()) {
       return null;
     }
     else {
-      Map<String, String> oauthParams = loadOAuthParameters(details, url, accessToken, httpMethod);
+      Map<String, String> oauthParams = loadOAuthParameters(details, url, accessToken, httpMethod, additionalParameters);
       String realm = details.getAuthorizationHeaderRealm();
 
       StringBuilder builder = new StringBuilder("OAuth ");
@@ -251,12 +262,10 @@ public class CoreOAuthConsumerSupport implements OAuthConsumerSupport, Initializ
       }
 
       OAuthConsumerParameter[] parameters = OAuthConsumerParameter.values();
-      for (int i = 0; i < parameters.length; i++) {
-        OAuthConsumerParameter parameter = parameters[i];
+      for (OAuthConsumerParameter parameter : parameters) {
         String paramValue = oauthParams.get(parameter.toString());
         if (paramValue != null) { //token is optional.
           if (writeComma) {
-            writeComma = false;
             builder.append(", ");
           }
 
@@ -270,8 +279,8 @@ public class CoreOAuthConsumerSupport implements OAuthConsumerSupport, Initializ
   }
 
   // Inherited.
-  public String getOAuthQueryString(ProtectedResourceDetails details, OAuthConsumerToken accessToken, URL url, String httpMethod) {
-    Map<String, String> oauthParams = loadOAuthParameters(details, url, accessToken, httpMethod);
+  public String getOAuthQueryString(ProtectedResourceDetails details, OAuthConsumerToken accessToken, URL url, String httpMethod, Map<String, String> additionalParameters) {
+    Map<String, String> oauthParams = loadOAuthParameters(details, url, accessToken, httpMethod, additionalParameters);
 
     StringBuilder queryString = new StringBuilder();
     if (details.isAcceptsAuthorizationHeader()) {
@@ -309,9 +318,11 @@ public class CoreOAuthConsumerSupport implements OAuthConsumerSupport, Initializ
    * @param details      The resource details.
    * @param tokenURL     The token URL.
    * @param requestToken The request token, or null if none.
+   * @param additionalParameters The additional request parameter.
    * @return The token.
    */
-  protected OAuthConsumerToken getTokenFromProvider(ProtectedResourceDetails details, URL tokenURL, OAuthConsumerToken requestToken) {
+  protected OAuthConsumerToken getTokenFromProvider(ProtectedResourceDetails details, URL tokenURL,
+                                                    OAuthConsumerToken requestToken, Map<String, String> additionalParameters) {
     boolean isAccessToken = requestToken != null;
     if (!isAccessToken) {
       //create an empty token to make a request for a new unauthorized request token.
@@ -319,7 +330,7 @@ public class CoreOAuthConsumerSupport implements OAuthConsumerSupport, Initializ
       requestToken.setNonce(getNonceFactory().generateNonce());
     }
 
-    InputStream inputStream = readResource(details, tokenURL, requestToken, "POST");
+    InputStream inputStream = readResource(details, tokenURL, requestToken, "POST", additionalParameters);
     String tokenInfo;
     try {
       ByteArrayOutputStream out = new ByteArrayOutputStream();
@@ -384,10 +395,14 @@ public class CoreOAuthConsumerSupport implements OAuthConsumerSupport, Initializ
    * @param requestURL   The request URL.
    * @param requestToken The request token.
    * @param httpMethod   The http method.
+   * @param additionalParameters Additional parameters.
    * @return The parameters.
    */
-  protected Map<String, String> loadOAuthParameters(ProtectedResourceDetails details, URL requestURL, OAuthConsumerToken requestToken, String httpMethod) {
+  protected Map<String, String> loadOAuthParameters(ProtectedResourceDetails details, URL requestURL, OAuthConsumerToken requestToken, String httpMethod, Map<String, String> additionalParameters) {
     Map<String, String> oauthParams = new TreeMap<String, String>();
+    if (additionalParameters != null) {
+      oauthParams.putAll(additionalParameters);
+    }
     String query = requestURL.getQuery();
     if (query != null) {
       StringTokenizer queryTokenizer = new StringTokenizer(query, "&");

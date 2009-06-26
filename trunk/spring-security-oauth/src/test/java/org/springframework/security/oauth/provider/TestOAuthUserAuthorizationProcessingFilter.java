@@ -22,6 +22,7 @@ import org.springframework.security.InsufficientAuthenticationException;
 import org.springframework.security.context.SecurityContextHolder;
 import static org.easymock.EasyMock.*;
 import org.springframework.security.oauth.provider.token.OAuthProviderTokenServices;
+import org.springframework.security.oauth.provider.verifier.OAuthVerifierServices;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -68,21 +69,25 @@ public class TestOAuthUserAuthorizationProcessingFilter extends TestCase {
    */
   public void testDetermineTargetUrl() throws Exception {
     UserAuthorizationProcessingFilter filter = new UserAuthorizationProcessingFilter();
+    OAuthVerifierServices vs = createMock(OAuthVerifierServices.class);
+    filter.setVerifierServices(vs);
     HttpServletRequest request = createMock(HttpServletRequest.class);
 
-    expect(request.getParameter("callbackURL")).andReturn("http://my.host.com/my/context");
+    expect(vs.createVerifier("mytok")).andReturn("myver");
+    expect(request.getAttribute(UserAuthorizationProcessingFilter.CALLBACK_ATTRIBUTE)).andReturn("http://my.host.com/my/context");
     expect(request.getParameter("requestToken")).andReturn("mytok");
-    replay(request);
-    assertEquals("http://my.host.com/my/context?oauth_token=mytok", filter.determineTargetUrl(request));
-    verify(request);
-    reset(request);
+    replay(request, vs);
+    assertEquals("http://my.host.com/my/context?oauth_token=mytok&oauth_verifier=myver", filter.determineTargetUrl(request));
+    verify(request, vs);
+    reset(request, vs);
 
-    expect(request.getParameter("callbackURL")).andReturn("http://my.host.com/my/context?with=some&query=parameter");
+    expect(vs.createVerifier("mytok")).andReturn("myver");
+    expect(request.getAttribute(UserAuthorizationProcessingFilter.CALLBACK_ATTRIBUTE)).andReturn("http://my.host.com/my/context?with=some&query=parameter");
     expect(request.getParameter("requestToken")).andReturn("mytok");
-    replay(request);
-    assertEquals("http://my.host.com/my/context?with=some&query=parameter&oauth_token=mytok", filter.determineTargetUrl(request));
-    verify(request);
-    reset(request);
+    replay(request, vs);
+    assertEquals("http://my.host.com/my/context?with=some&query=parameter&oauth_token=mytok&oauth_verifier=myver", filter.determineTargetUrl(request));
+    verify(request, vs);
+    reset(request, vs);
   }
 
 }

@@ -16,17 +16,22 @@
 
 package org.springframework.security.oauth.provider;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.AuthenticationException;
-import org.springframework.security.ui.FilterChainOrder;
 import org.springframework.security.context.SecurityContextHolder;
 import org.springframework.security.oauth.common.OAuthCodec;
+import org.springframework.security.oauth.common.OAuthConsumerParameter;
 import org.springframework.security.oauth.common.OAuthProviderParameter;
+import org.springframework.security.oauth.provider.callback.OAuthCallbackServices;
 import org.springframework.security.oauth.provider.token.OAuthProviderToken;
+import org.springframework.security.ui.FilterChainOrder;
+import org.springframework.util.Assert;
 
 import javax.servlet.FilterChain;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.util.Map;
 
 /**
  * Processing filter for handling a request for an OAuth token. The default implementation assumes a request for a new
@@ -43,8 +48,26 @@ public class UnauthenticatedRequestTokenProcessingFilter extends OAuthProviderPr
   // something is specified, we'll assume that it's just "text/plain".
   private String responseContentType = "text/plain;charset=utf-8";
 
+  private OAuthCallbackServices callbackServices;
+
   public UnauthenticatedRequestTokenProcessingFilter() {
     setFilterProcessesUrl("/oauth_request_token");
+  }
+
+  @Override
+  public void afterPropertiesSet() throws Exception {
+    super.afterPropertiesSet();
+    Assert.notNull(getCallbackServices(), "Callback services are required.");
+  }
+
+  @Override
+  protected void validateOAuthParams(ConsumerDetails consumerDetails, Map<String, String> oauthParams) throws InvalidOAuthParametersException {
+    super.validateOAuthParams(consumerDetails, oauthParams);
+
+    String token = oauthParams.get(OAuthConsumerParameter.oauth_callback.toString());
+    if (token == null) {
+      throw new InvalidOAuthParametersException(messages.getMessage("AccessTokenProcessingFilter.missingCallback", "Missing callback."));
+    }
   }
 
   protected void onValidSignature(HttpServletRequest request, HttpServletResponse response, FilterChain chain) throws IOException {
@@ -55,13 +78,20 @@ public class UnauthenticatedRequestTokenProcessingFilter extends OAuthProviderPr
       throw new IllegalStateException("The consumer key associated with the created auth token is not valid for the authenticated consumer.");
     }
 
+    //store the callback url.
+    String tokenValue = authToken.getValue();
+    getCallbackServices().storeCallback(authentication.getOAuthParameters().get(OAuthConsumerParameter.oauth_callback.toString()), tokenValue);
+
     StringBuilder responseValue = new StringBuilder(OAuthProviderParameter.oauth_token.toString())
       .append('=')
-      .append(OAuthCodec.oauthEncode(authToken.getValue()))
+      .append(OAuthCodec.oauthEncode(tokenValue))
       .append('&')
       .append(OAuthProviderParameter.oauth_token_secret.toString())
       .append('=')
-      .append(OAuthCodec.oauthEncode(authToken.getSecret()));
+      .append(OAuthCodec.oauthEncode(authToken.getSecret()))
+      .append('&')
+      .append(OAuthProviderParameter.oauth_callback_confirmed.toString())
+      .append("=true");
     response.setContentType(getResponseContentType());
     response.getWriter().print(responseValue.toString());
     response.flushBuffer();
@@ -107,5 +137,24 @@ public class UnauthenticatedRequestTokenProcessingFilter extends OAuthProviderPr
    */
   public void setResponseContentType(String responseContentType) {
     this.responseContentType = responseContentType;
+  }
+
+  /**
+   * The callback services to use.
+   *
+   * @return The callback services to use.
+   */
+  public OAuthCallbackServices getCallbackServices() {
+    return callbackServices;
+  }
+
+  /**
+   * The callback services to use.
+   *
+   * @param callbackServices The callback services to use.
+   */
+  @Autowired
+  public void setCallbackServices(OAuthCallbackServices callbackServices) {
+    this.callbackServices = callbackServices;
   }
 }

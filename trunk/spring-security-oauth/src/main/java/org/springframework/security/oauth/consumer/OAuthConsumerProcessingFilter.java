@@ -33,6 +33,7 @@ import org.springframework.context.MessageSource;
 import org.springframework.context.MessageSourceAware;
 import org.springframework.context.support.MessageSourceAccessor;
 import org.springframework.security.oauth.common.OAuthException;
+import org.springframework.security.oauth.common.OAuthProviderParameter;
 import org.springframework.security.oauth.consumer.token.HttpSessionBasedTokenServicesFactory;
 import org.springframework.security.oauth.consumer.token.OAuthConsumerToken;
 import org.springframework.security.oauth.consumer.token.OAuthConsumerTokenServices;
@@ -110,13 +111,13 @@ public class OAuthConsumerProcessingFilter implements Filter, InitializingBean, 
             }
             
             //obtain authorization.
-            OAuthConsumerToken requestToken = getConsumerSupport().getUnauthorizedRequestToken(dependency);
+            String callbackURL = response.encodeRedirectURL(getCallbackURL(request));
+            OAuthConsumerToken requestToken = getConsumerSupport().getUnauthorizedRequestToken(dependency, callbackURL);
 
             if (LOG.isDebugEnabled()) {
               LOG.debug("Request token obtained for dependency " + dependency + ": " + requestToken);
             }
             tokenServices.storeToken(dependency, requestToken);
-            String callbackURL = response.encodeRedirectURL(getCallbackURL(request));
             String redirect = getUserAuthorizationRedirectURL(requestToken, callbackURL);
 
             if (LOG.isDebugEnabled()) {
@@ -133,7 +134,7 @@ public class OAuthConsumerProcessingFilter implements Filter, InitializingBean, 
               }
               
               //authorize the request token and store it.
-              token = getConsumerSupport().getAccessToken(token);
+              token = getConsumerSupport().getAccessToken(token, request.getParameter(OAuthProviderParameter.oauth_verifier.toString()));
 
               if (LOG.isDebugEnabled()) {
                 LOG.debug("Access token " + token + " obtained for dependency " + dependency + ". Now storing and using.");
@@ -202,8 +203,10 @@ public class OAuthConsumerProcessingFilter implements Filter, InitializingBean, 
       char appendChar = baseURL.indexOf('?') < 0 ? '?' : '&';
       builder.append(appendChar).append("oauth_token=");
       builder.append(URLEncoder.encode(requestToken.getValue(), "UTF-8"));
-      builder.append('&').append("oauth_callback=");
-      builder.append(URLEncoder.encode(callbackURL, "UTF-8"));
+      if (!details.isUse10a()) {
+        builder.append('&').append("oauth_callback=");
+        builder.append(URLEncoder.encode(callbackURL, "UTF-8"));
+      }
       return builder.toString();
     }
     catch (UnsupportedEncodingException e) {

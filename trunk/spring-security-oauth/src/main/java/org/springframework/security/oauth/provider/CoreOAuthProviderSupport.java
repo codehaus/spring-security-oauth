@@ -188,9 +188,6 @@ public class CoreOAuthProviderSupport implements OAuthProviderSupport {
         parameterValue = "";
       }
 
-      parameterName = oauthEncode(parameterName);
-      parameterValue = oauthEncode(parameterValue);
-
       significantParameters.put(parameterName, parameterValue);
     }
 
@@ -203,9 +200,6 @@ public class CoreOAuthProviderSupport implements OAuthProviderSupport {
       if (parameterValue == null) {
         parameterValue = "";
       }
-
-      parameterName = oauthEncode(parameterName);
-      parameterValue = oauthEncode(parameterValue);
 
       significantParameters.put(parameterName, parameterValue);
     }

@@ -52,9 +52,11 @@ public class InMemoryProviderTokenServices extends RandomValueProviderTokenServi
           Iterator<Map.Entry<String, OAuthProviderTokenImpl>> entriesIt = tokenStore.entrySet().iterator();
           while (entriesIt.hasNext()) {
             Map.Entry<String, OAuthProviderTokenImpl> entry = entriesIt.next();
-            if (isExpired(entry.getValue())) {
+            OAuthProviderTokenImpl tokenImpl = entry.getValue();
+            if (isExpired(tokenImpl)) {
               //there's a race condition here, but we'll live with it for now.
               entriesIt.remove();
+              onTokenRemoved(tokenImpl);
             }
           }
         }
@@ -77,8 +79,8 @@ public class InMemoryProviderTokenServices extends RandomValueProviderTokenServi
     tokenStore.put(tokenValue, token);
   }
 
-  protected void removeToken(String tokenValue) {
-    tokenStore.remove(tokenValue);
+  protected OAuthProviderTokenImpl removeToken(String tokenValue) {
+    return tokenStore.remove(tokenValue);
   }
 
   /**
