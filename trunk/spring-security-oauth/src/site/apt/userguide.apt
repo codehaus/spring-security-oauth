@@ -123,8 +123,8 @@ Contents
   The OAuth spec also recommends that the nonce that is supplied on every OAuth request be checked to ensure it isn't used twice for the
   same timestamp. In order to do this, nonces must be stored and verified on every OAuth request.  The interface that is used
   to validate nonces is <<<{{{./apidocs/org/springframework/security/oauth/provider/nonce/OAuthNonceServices.html}OAuthNonceServices}}>>>.
-  <<The default implementation, <<<{{{./apidocs/org/springframework/security/oauth/provider/nonce/ExpiringTimestampNonceServices.html}ExpiringTimestampNonceServices}}>>>, does
-  not adhere to this recommendation>>, but only validates that the timestamp isn't too old. If further assurance is required, you will need
+  The default implementation, <<<{{{./apidocs/org/springframework/security/oauth/provider/nonce/ExpiringTimestampNonceServices.html}ExpiringTimestampNonceServices}}>>>, does
+  not adhere to this recommendation, but only validates that the timestamp isn't too old. If further assurance is required, you will need
   to supply your own implementation of <<<OAuthNonceServices>>>. Note the existence of an
   <<<{{{./apidocs/org/springframework/security/oauth/provider/nonce/InMemoryNonceServices.html}in-memory implementation}}>>>.
 
