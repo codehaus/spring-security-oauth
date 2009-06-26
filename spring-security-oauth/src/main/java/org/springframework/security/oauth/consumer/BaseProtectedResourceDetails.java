@@ -34,6 +34,7 @@ public class BaseProtectedResourceDetails implements ProtectedResourceDetails {
   private String accessTokenURL;
   private boolean acceptsAuthorizationHeader = true;
   private String authorizationHeaderRealm;
+  private boolean use10a = true;
 
   public String getId() {
     return id;
@@ -105,5 +106,13 @@ public class BaseProtectedResourceDetails implements ProtectedResourceDetails {
 
   public void setAuthorizationHeaderRealm(String authorizationHeaderRealm) {
     this.authorizationHeaderRealm = authorizationHeaderRealm;
+  }
+
+  public boolean isUse10a() {
+    return use10a;
+  }
+
+  public void setUse10a(boolean use10a) {
+    this.use10a = use10a;
   }
 }

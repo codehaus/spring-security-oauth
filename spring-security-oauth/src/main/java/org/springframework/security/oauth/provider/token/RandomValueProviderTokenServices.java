@@ -18,10 +18,10 @@ package org.springframework.security.oauth.provider.token;
 
 import org.springframework.security.*;
 import org.springframework.beans.factory.InitializingBean;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.apache.commons.codec.binary.Base64;
 
-import java.util.Random;
-import java.util.UUID;
+import java.util.*;
 import java.security.SecureRandom;
 
 /**
@@ -34,12 +34,13 @@ import java.security.SecureRandom;
  *
  * @author Ryan Heaton
  */
-public abstract class RandomValueProviderTokenServices implements OAuthProviderTokenServices, InitializingBean {
+public abstract class RandomValueProviderTokenServices implements OAuthProviderTokenServices, InitializingBean, OAuthTokenLifecycleRegistry {
 
   private Random random;
   private int requestTokenValiditySeconds = 60 * 10; //default 10 minutes.
   private int accessTokenValiditySeconds = 60 * 60 * 12; //default 12 hours.
   private int tokenSecretLengthBytes = 80;
+  private final Collection<OAuthTokenLifecycleListener> lifecycleListeners = new HashSet<OAuthTokenLifecycleListener>();
 
   /**
    * Read a token from persistence.
@@ -61,8 +62,9 @@ public abstract class RandomValueProviderTokenServices implements OAuthProviderT
    * Remove a token from persistence.
    *
    * @param tokenValue The token to remove.
+   * @return The token that was removed.
    */
-  protected abstract void removeToken(String tokenValue);
+  protected abstract OAuthProviderTokenImpl removeToken(String tokenValue);
 
   /**
    * Initialze these token services. If no random generator is set, one will be created.
@@ -122,6 +124,7 @@ public abstract class RandomValueProviderTokenServices implements OAuthProviderT
     token.setSecret(secret);
     token.setValue(tokenValue);
     token.setTimestamp(System.currentTimeMillis());
+    onTokenCreated(token);
     storeToken(tokenValue, token);
     return token;
   }
@@ -146,7 +149,10 @@ public abstract class RandomValueProviderTokenServices implements OAuthProviderT
       throw new InvalidOAuthTokenException("Request token has not been authorized.");
     }
 
-    removeToken(requestToken);
+    OAuthProviderTokenImpl requestTokenImpl = removeToken(requestToken);
+    if (requestTokenImpl != null) {
+      onTokenRemoved(requestTokenImpl);
+    }
 
     String tokenValue = UUID.randomUUID().toString();
     byte[] secretBytes = new byte[getTokenSecretLengthBytes()];
@@ -159,8 +165,31 @@ public abstract class RandomValueProviderTokenServices implements OAuthProviderT
     token.setSecret(secret);
     token.setValue(tokenValue);
     token.setTimestamp(System.currentTimeMillis());
+    onTokenCreated(token);
     storeToken(tokenValue, token);
     return token;
+  }
+
+  /**
+   * Logic for handling event firing of a removed token.
+   *
+   * @param token The token that was removed (possibly null).
+   */
+  protected void onTokenRemoved(OAuthProviderTokenImpl token) {
+    for (OAuthTokenLifecycleListener listener : getLifecycleListeners()) {
+      listener.tokenExpired(token);
+    }
+  }
+
+  /**
+   * Logic for handling event firing of a created token.
+   *
+   * @param token The token that was created.
+   */
+  protected void onTokenCreated(OAuthProviderTokenImpl token) {
+    for (OAuthTokenLifecycleListener listener : getLifecycleListeners()) {
+      listener.tokenCreated(token);
+    }
   }
 
   /**
@@ -235,4 +264,24 @@ public abstract class RandomValueProviderTokenServices implements OAuthProviderT
     this.accessTokenValiditySeconds = accessTokenValiditySeconds;
   }
 
+  /**
+   * The collection of lifecycle listeners for these services.
+   *
+   * @return The collection of lifecycle listeners for these services.
+   */
+  public Collection<OAuthTokenLifecycleListener> getLifecycleListeners() {
+    return lifecycleListeners;
+  }
+
+  /**
+   * Register lifecycle listener(s) with these token services.
+   *
+   * @param lifecycleListeners The listeners.
+   */
+  @Autowired ( required = false )
+  public void register(OAuthTokenLifecycleListener... lifecycleListeners) {
+    if (lifecycleListeners != null) {
+      this.lifecycleListeners.addAll(Arrays.asList(lifecycleListeners));
+    }
+  }
 }

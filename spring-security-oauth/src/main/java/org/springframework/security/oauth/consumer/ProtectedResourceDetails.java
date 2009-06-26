@@ -88,4 +88,10 @@ public interface ProtectedResourceDetails {
    */
   String getAuthorizationHeaderRealm();
 
+  /**
+   * Whether to use OAuth Core 1.0a.
+   *
+   * @return Whether to use OAuth Core 1.0a.
+   */
+  boolean isUse10a();
 }

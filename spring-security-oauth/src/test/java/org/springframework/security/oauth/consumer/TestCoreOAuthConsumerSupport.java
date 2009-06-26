@@ -109,7 +109,7 @@ public class TestCoreOAuthConsumerSupport extends TestCase {
 
     CoreOAuthConsumerSupport support = new CoreOAuthConsumerSupport() {
       @Override
-      public URL configureURLForProtectedAccess(URL url, OAuthConsumerToken accessToken, ProtectedResourceDetails details, String httpMethod) throws OAuthRequestFailedException {
+      public URL configureURLForProtectedAccess(URL url, OAuthConsumerToken accessToken, ProtectedResourceDetails details, String httpMethod, Map<String, String> additionalParameters) throws OAuthRequestFailedException {
         try {
           return new URL(url.getProtocol(), url.getHost(), url.getPort(), url.getFile(), new SteamHandlerForTestingPurposes(connectionMock));
         }
@@ -119,7 +119,7 @@ public class TestCoreOAuthConsumerSupport extends TestCase {
       }
 
       @Override
-      public String getOAuthQueryString(ProtectedResourceDetails details, OAuthConsumerToken accessToken, URL url, String httpMethod) {
+      public String getOAuthQueryString(ProtectedResourceDetails details, OAuthConsumerToken accessToken, URL url, String httpMethod, Map<String, String> additionalParameters) {
         return "POSTBODY";
       }
     };
@@ -129,7 +129,7 @@ public class TestCoreOAuthConsumerSupport extends TestCase {
     expect(details.isAcceptsAuthorizationHeader()).andReturn(true);
     replay(details);
     try {
-      support.readResource(details, url, token, "POST");
+      support.readResource(details, url, token, "POST", null);
       fail("shouldn't have been a valid response code.");
     }
     catch (OAuthRequestFailedException e) {
@@ -148,7 +148,7 @@ public class TestCoreOAuthConsumerSupport extends TestCase {
     connectionProps.responseMessage = "Nasty";
     replay(details);
     try {
-      support.readResource(details, url, token, "POST");
+      support.readResource(details, url, token, "POST", null);
       fail("shouldn't have been a valid response code.");
     }
     catch (OAuthRequestFailedException e) {
@@ -168,7 +168,7 @@ public class TestCoreOAuthConsumerSupport extends TestCase {
     connectionProps.headerFields.put("WWW-Authenticate", "realm=\"goodrealm\"");
     replay(details);
     try {
-      support.readResource(details, url, token, "POST");
+      support.readResource(details, url, token, "POST", null);
       fail("shouldn't have been a valid response code.");
     }
     catch (InvalidOAuthRealmException e) {
@@ -186,7 +186,7 @@ public class TestCoreOAuthConsumerSupport extends TestCase {
     connectionProps.responseCode = 200;
     connectionProps.responseMessage = "Congrats";
     replay(details);
-    assertSame(inputStream, support.readResource(details, url, token, "GET"));
+    assertSame(inputStream, support.readResource(details, url, token, "GET", null));
     verify(details);
     reset(details);
     assertFalse(connectionProps.doOutput);
@@ -199,7 +199,7 @@ public class TestCoreOAuthConsumerSupport extends TestCase {
     connectionProps.responseCode = 200;
     connectionProps.responseMessage = "Congrats";
     replay(details);
-    assertSame(inputStream, support.readResource(details, url, token, "POST"));
+    assertSame(inputStream, support.readResource(details, url, token, "POST", null));
     assertEquals("POSTBODY", new String(((ByteArrayOutputStream) connectionProps.outputStream).toByteArray()));
     verify(details);
     reset(details);
@@ -216,7 +216,7 @@ public class TestCoreOAuthConsumerSupport extends TestCase {
     CoreOAuthConsumerSupport support = new CoreOAuthConsumerSupport() {
       // Inherited.
       @Override
-      public String getOAuthQueryString(ProtectedResourceDetails details, OAuthConsumerToken accessToken, URL url, String httpMethod) {
+      public String getOAuthQueryString(ProtectedResourceDetails details, OAuthConsumerToken accessToken, URL url, String httpMethod, Map<String, String> additionalParameters) {
         return "myquerystring";
       }
     };
@@ -226,17 +226,17 @@ public class TestCoreOAuthConsumerSupport extends TestCase {
     URL url = new URL("https://myhost.com/somepath?with=some&query=params&too");
 
     replay(details);
-    assertEquals("https://myhost.com/somepath?myquerystring", support.configureURLForProtectedAccess(url, token, details, "GET").toString());
+    assertEquals("https://myhost.com/somepath?myquerystring", support.configureURLForProtectedAccess(url, token, details, "GET", null).toString());
     verify(details);
     reset(details);
 
     replay(details);
-    assertEquals("https://myhost.com/somepath", support.configureURLForProtectedAccess(url, token, details, "POST").toString());
+    assertEquals("https://myhost.com/somepath", support.configureURLForProtectedAccess(url, token, details, "POST", null).toString());
     verify(details);
     reset(details);
 
     replay(details);
-    assertEquals("https://myhost.com/somepath", support.configureURLForProtectedAccess(url, token, details, "PUT").toString());
+    assertEquals("https://myhost.com/somepath", support.configureURLForProtectedAccess(url, token, details, "PUT", null).toString());
     verify(details);
     reset(details);
   }
@@ -248,7 +248,7 @@ public class TestCoreOAuthConsumerSupport extends TestCase {
     final TreeMap<String, String> params = new TreeMap<String, String>();
     CoreOAuthConsumerSupport support = new CoreOAuthConsumerSupport() {
       @Override
-      protected Map<String, String> loadOAuthParameters(ProtectedResourceDetails details, URL requestURL, OAuthConsumerToken requestToken, String httpMethod) {
+      protected Map<String, String> loadOAuthParameters(ProtectedResourceDetails details, URL requestURL, OAuthConsumerToken requestToken, String httpMethod, Map<String, String> additionalParameters) {
         return params;
       }
     };
@@ -258,7 +258,7 @@ public class TestCoreOAuthConsumerSupport extends TestCase {
 
     expect(details.isAcceptsAuthorizationHeader()).andReturn(false);
     replay(details);
-    assertNull(support.getAuthorizationHeader(details, token, url, "POST"));
+    assertNull(support.getAuthorizationHeader(details, token, url, "POST", null));
     verify(details);
     reset(details);
 
@@ -268,7 +268,7 @@ public class TestCoreOAuthConsumerSupport extends TestCase {
     expect(details.isAcceptsAuthorizationHeader()).andReturn(true);
     expect(details.getAuthorizationHeaderRealm()).andReturn("myrealm");
     replay(details);
-    assertEquals("OAuth realm=\"myrealm\"", support.getAuthorizationHeader(details, token, url, "POST"));
+    assertEquals("OAuth realm=\"myrealm\"", support.getAuthorizationHeader(details, token, url, "POST", null));
     verify(details);
     reset(details);
 
@@ -278,7 +278,7 @@ public class TestCoreOAuthConsumerSupport extends TestCase {
     expect(details.isAcceptsAuthorizationHeader()).andReturn(true);
     expect(details.getAuthorizationHeaderRealm()).andReturn("myrealm");
     replay(details);
-    assertEquals("OAuth realm=\"myrealm\", oauth_consumer_key=\"mykey\", oauth_timestamp=\"myts\", oauth_nonce=\"mynonce\"", support.getAuthorizationHeader(details, token, url, "POST"));
+    assertEquals("OAuth realm=\"myrealm\", oauth_consumer_key=\"mykey\", oauth_timestamp=\"myts\", oauth_nonce=\"mynonce\"", support.getAuthorizationHeader(details, token, url, "POST", null));
     verify(details);
     reset(details);
   }
@@ -290,7 +290,7 @@ public class TestCoreOAuthConsumerSupport extends TestCase {
     final TreeMap<String, String> params = new TreeMap<String, String>();
     CoreOAuthConsumerSupport support = new CoreOAuthConsumerSupport() {
       @Override
-      protected Map<String, String> loadOAuthParameters(ProtectedResourceDetails details, URL requestURL, OAuthConsumerToken requestToken, String httpMethod) {
+      protected Map<String, String> loadOAuthParameters(ProtectedResourceDetails details, URL requestURL, OAuthConsumerToken requestToken, String httpMethod, Map<String, String> additionalParameters) {
         return params;
       }
     };
@@ -307,7 +307,7 @@ public class TestCoreOAuthConsumerSupport extends TestCase {
     params.put(OAuthConsumerParameter.oauth_nonce.toString(), "mynonce");
     params.put(OAuthConsumerParameter.oauth_timestamp.toString(), "myts");
     replay(details);
-    assertEquals("query=params&too&with=some", support.getOAuthQueryString(details, token, url, "POST"));
+    assertEquals("query=params&too&with=some", support.getOAuthQueryString(details, token, url, "POST", null));
     verify(details);
     reset(details);
 
@@ -319,7 +319,7 @@ public class TestCoreOAuthConsumerSupport extends TestCase {
     params.put(OAuthConsumerParameter.oauth_nonce.toString(), "mynonce");
     params.put(OAuthConsumerParameter.oauth_timestamp.toString(), "myts");
     replay(details);
-    assertEquals("oauth_consumer_key=mykey&oauth_nonce=mynonce&oauth_timestamp=myts&query=params&too&with=some", support.getOAuthQueryString(details, token, url, "POST"));
+    assertEquals("oauth_consumer_key=mykey&oauth_nonce=mynonce&oauth_timestamp=myts&query=params&too&with=some", support.getOAuthQueryString(details, token, url, "POST", null));
     verify(details);
     reset(details);
   }
@@ -331,7 +331,7 @@ public class TestCoreOAuthConsumerSupport extends TestCase {
     final ByteArrayInputStream in = new ByteArrayInputStream("oauth_token=mytoken&oauth_token_secret=mytokensecret".getBytes("UTF-8"));
     CoreOAuthConsumerSupport support = new CoreOAuthConsumerSupport() {
       @Override
-      protected InputStream readResource(ProtectedResourceDetails details, URL url, OAuthConsumerToken token, String httpMethod) {
+      protected InputStream readResource(ProtectedResourceDetails details, URL url, OAuthConsumerToken token, String httpMethod, Map<String, String> additionalParameters) {
         return in;
       }
     };
@@ -344,7 +344,7 @@ public class TestCoreOAuthConsumerSupport extends TestCase {
     expect(nonceFactory.generateNonce()).andReturn("mynonce");
     expect(details.getId()).andReturn("resourceId");
     replay(details, nonceFactory);
-    OAuthConsumerToken token = support.getTokenFromProvider(details, url, null);
+    OAuthConsumerToken token = support.getTokenFromProvider(details, url, null, null);
     verify(details, nonceFactory);
     reset(details, nonceFactory);
     assertEquals("mynonce", token.getNonce());
@@ -382,7 +382,7 @@ public class TestCoreOAuthConsumerSupport extends TestCase {
     expect(sigMethod.sign("MYSIGBASESTRING")).andReturn("MYSIGNATURE");
 
     replay(details, sigFactory, sigMethod);
-    Map<String, String> params = support.loadOAuthParameters(details, url, token, "POST");
+    Map<String, String> params = support.loadOAuthParameters(details, url, token, "POST", null);
     verify(details, sigFactory, sigMethod);
     reset(details, sigFactory, sigMethod);
     assertEquals("some", params.remove("with"));

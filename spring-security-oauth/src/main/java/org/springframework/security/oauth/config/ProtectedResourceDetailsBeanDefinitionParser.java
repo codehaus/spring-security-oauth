@@ -112,6 +112,11 @@ public class ProtectedResourceDetailsBeanDefinitionParser extends AbstractSingle
         resource.setAuthorizationHeaderRealm(headerRealm);
       }
 
+      String use10a = consumerElement.getAttribute("use10a");
+      if (StringUtils.hasText(use10a)) {
+        resource.setUse10a("true".equals(use10a));
+      }
+
       resources.put(id, resource);
     }
 

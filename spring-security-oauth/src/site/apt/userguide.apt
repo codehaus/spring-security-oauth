@@ -128,6 +128,23 @@ Contents
   to supply your own implementation of <<<OAuthNonceServices>>>. Note the existence of an
   <<<{{{./apidocs/org/springframework/security/oauth/provider/nonce/InMemoryNonceServices.html}in-memory implementation}}>>>.
 
+*{Managing Callbacks}
+
+  With the 1.0a revision of the OAuth specification, the callback URL is provided at the time the request is made for a request token and will be used when
+  redirecting the user back to the OAuth consumer. Therefore, a means must be provided to persist the callback between requests. The interface that is used
+  to persist callbacks is <<<{{{./apidocs/org/springframework/security/oauth/provider/callback/OAuthCallbackServices.html}OAuthCallbackServices}}>>>. The
+  default implementation, <<<{{{./apidocs/org/springframework/security/oauth/provider/callback/InMemoryCallbackServices.html}InMemoryCallbackServices}}>>>
+  persists the callbacks in-memory. You must supply your own implementation of <<<OAuthCallbackServices>>> if this is inadequate.
+
+*{Managing Verifiers}
+
+  With the 1.0a revision of the OAuth specification, the a verifier is provided to the consumer via the user that must be passed back
+  to the provider when requesting the access token. Therefore, a means must be provided to create and persist the verifier. The interface that is used
+  to this end is <<<{{{./apidocs/org/springframework/security/oauth/provider/verifier/OAuthVerifierServices.html}OAuthVerifierServices}}>>>. The
+  default implementation, <<<{{{./apidocs/org/springframework/security/oauth/provider/verifier/RandomValueInMemoryVerifierServices.html}RandomValueInMemoryVerifierServices}}>>>,
+  creates a small, user-friendly (6 readable ASCII characters by default) verifier and persists the verifier in memory. You must supply your own implementation
+  of <<<OAuthVerifierServices>>> if this is inadequate.
+
 *{Authorization By Consumer}
 
   It is sometimes required to limit access to a resource to a specific consumer or to a consumer that has specific roles. The classes in the
@@ -161,6 +178,10 @@ Contents
 
     *<<nonce-services-ref>>: The reference to the bean that defines the nonce services. Default is to supply an instance of <<<org.springframework.security.oauth.provider.nonce.ExpiringTimestampNonceServices>>>
 
+    *<<callback-services-ref>>: The reference to the bean that defines the callback services. Default is to supply an instance of <<<org.springframework.security.oauth.provider.callback.InMemoryCallbackServices>>>
+
+    *<<verifier-services-ref>>: The reference to the bean that defines the verifier services. Default is to supply an instance of <<<org.springframework.security.oauth.provider.verifier.RandomValueInMemoryVerifierServices>>>
+
     *<<support-ref>>: The reference to the bean that defines the provider support logic. Default is to supply an instance of <<<org.springframework.security.oauth.provider.CoreOAuthProviderSupport>>>
 
     *<<token-id-param>>: The name of the request parameter that specifies to the 'authenticate-token-url' the id of the token that is to be authenticated. Default value: "requestToken".
@@ -188,6 +209,9 @@ Contents
 
   *The <<<token-services>>> element is a simple element that can be used to provide an in-memory implementation of the provider token services.
   It supports an <<id>> attribute (bean id) and a <<cleanupInterval>> attribute that specifies how often the cleanup thread should wake up (in seconds).
+
+  *The <<<verifier-services>>> element is a simple element that can be used to provide an in-memory implementation of the provider verifier services.
+  It supports an <<id>> attribute (bean id) and a <<verifierLengthBytes>> attribute that specifies the length of the verifier.
 
 {OAuth Consumer}
 
@@ -291,5 +315,7 @@ Contents
     *<<accepts-authorization-header>>: Whether the provider accepts the HTTP authorization header. Default: "true"
 
     *<<authorization-header-realm>>: The "realm" for the HTTP authorization header.
+
+    *<<use10a>>: Whether the resource is protected using OAuth 1.0a. Default: "true"
 
     []

@@ -101,12 +101,13 @@ public class TestOAuthConsumerProcessingFilter extends TestCase {
     token2.setAccessToken(false);
     OAuthConsumerToken token2a = new OAuthConsumerToken();
     expect(tokenServices.getToken("dep2")).andReturn(token2);
-    expect(support.getAccessToken(token2)).andReturn(token2a);
+    expect(request.getParameter("oauth_verifier")).andReturn("verifier");
+    expect(support.getAccessToken(token2, "verifier")).andReturn(token2a);
     tokenServices.storeToken("dep2", token2a);
     expect(tokenServices.getToken("dep3")).andReturn(null);
     OAuthConsumerToken token3 = new OAuthConsumerToken();
     token3.setResourceId("dep3");
-    expect(support.getUnauthorizedRequestToken("dep3")).andReturn(token3);
+    expect(support.getUnauthorizedRequestToken("dep3", "urn:callback?query")).andReturn(token3);
     tokenServices.storeToken("dep3", token3);
     expect(response.encodeRedirectURL("urn:callback")).andReturn("urn:callback?query");
     response.sendRedirect("urn:callback?query&dep3");
@@ -165,13 +166,20 @@ public class TestOAuthConsumerProcessingFilter extends TestCase {
     token.setValue("mytoken");
     expect(detailsService.loadProtectedResourceDetailsById("resourceId")).andReturn(details);
     expect(details.getUserAuthorizationURL()).andReturn("http://user-auth/context?with=some&queryParams");
+    expect(details.isUse10a()).andReturn(false);
     replay(detailsService, details);
     assertEquals("http://user-auth/context?with=some&queryParams&oauth_token=mytoken&oauth_callback=urn%3A%2F%2Fcallback%3Fwith%3Dsome%26query%3Dparams",
                  filter.getUserAuthorizationRedirectURL(token, "urn://callback?with=some&query=params"));
     verify(detailsService, details);
     reset(detailsService, details);
+    expect(detailsService.loadProtectedResourceDetailsById("resourceId")).andReturn(details);
+    expect(details.getUserAuthorizationURL()).andReturn("http://user-auth/context?with=some&queryParams");
+    expect(details.isUse10a()).andReturn(true);
+    replay(detailsService, details);
+    assertEquals("http://user-auth/context?with=some&queryParams&oauth_token=mytoken",
+                 filter.getUserAuthorizationRedirectURL(token, "urn://callback?with=some&query=params"));
+    verify(detailsService, details);
+    reset(detailsService, details);
   }
-
-
 
 }

@@ -20,6 +20,7 @@ import static org.easymock.EasyMock.*;
 import org.springframework.security.oauth.provider.token.OAuthProviderToken;
 import org.springframework.security.oauth.provider.token.OAuthProviderTokenServices;
 import org.springframework.security.oauth.provider.token.OAuthAccessProviderToken;
+import org.springframework.security.oauth.provider.callback.OAuthCallbackServices;
 import org.springframework.security.context.SecurityContextHolder;
 import org.springframework.security.GrantedAuthority;
 
@@ -30,6 +31,7 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.FilterChain;
 import java.io.StringWriter;
 import java.io.PrintWriter;
+import java.util.TreeMap;
 
 /**
  * @author Ryan Heaton
@@ -47,6 +49,8 @@ public class TestUnauthenticatedRequestTokenProcessingFilter extends TestCase {
         return authToken;
       }
     };
+    OAuthCallbackServices cs = createMock(OAuthCallbackServices.class);
+    filter.setCallbackServices(cs);
     HttpServletRequest request = createMock(HttpServletRequest.class);
     HttpServletResponse response = createMock(HttpServletResponse.class);
     FilterChain filterChain = createMock(FilterChain.class);
@@ -58,18 +62,20 @@ public class TestUnauthenticatedRequestTokenProcessingFilter extends TestCase {
     expect(authToken.getSecret()).andReturn("shhhhhh");
     expect(consumerDetails.getAuthorities()).andReturn(new GrantedAuthority[0]);    
     expect(consumerDetails.getConsumerKey()).andReturn("chi");
+    cs.storeCallback(null, "tokvalue");
     response.setContentType("text/plain;charset=utf-8");
     StringWriter writer = new StringWriter();
     expect(response.getWriter()).andReturn(new PrintWriter(writer));
     response.flushBuffer();
-    replay(request, response, filterChain, authToken, consumerDetails);
-    ConsumerAuthentication authentication = new ConsumerAuthentication(consumerDetails, creds);
+    replay(request, response, filterChain, authToken, consumerDetails, cs);
+    TreeMap<String, String> params = new TreeMap<String, String>();
+    ConsumerAuthentication authentication = new ConsumerAuthentication(consumerDetails, creds, params);
     authentication.setAuthenticated(true);
     SecurityContextHolder.getContext().setAuthentication(authentication);
     filter.onValidSignature(request, response, filterChain);
-    assertEquals("oauth_token=tokvalue&oauth_token_secret=shhhhhh", writer.toString());
-    verify(request, response, filterChain, authToken, consumerDetails);
-    reset(request, response, filterChain, authToken, consumerDetails);
+    assertEquals("oauth_token=tokvalue&oauth_token_secret=shhhhhh&oauth_callback_confirmed=true", writer.toString());
+    verify(request, response, filterChain, authToken, consumerDetails, cs);
+    reset(request, response, filterChain, authToken, consumerDetails, cs);
 
     SecurityContextHolder.getContext().setAuthentication(null);
   }
