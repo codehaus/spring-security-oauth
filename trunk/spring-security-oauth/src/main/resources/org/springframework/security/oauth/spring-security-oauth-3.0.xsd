@@ -326,6 +326,13 @@
           </xs:documentation>
         </xs:annotation>
       </xs:attribute>
+      <xs:attribute name="requireAuthenticated" type="xs:boolean">
+        <xs:annotation>
+          <xs:documentation>
+            Whether there needs to be an authenticated user in order to access a protected resource.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:attribute>
     </xs:complexType>
   </xs:element>
 

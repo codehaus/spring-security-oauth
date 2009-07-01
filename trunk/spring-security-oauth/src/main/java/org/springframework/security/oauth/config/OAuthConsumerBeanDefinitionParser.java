@@ -84,6 +84,11 @@ public class OAuthConsumerBeanDefinitionParser implements BeanDefinitionParser {
       consumerFilterBean.addPropertyReference("tokenServicesFactory", tokenServicesFactoryRef);
     }
 
+    String requireAuthenticated = element.getAttribute("requireAuthenticated");
+    if (StringUtils.hasText(requireAuthenticated)) {
+      consumerFilterBean.addPropertyValue("requireAuthenticated", requireAuthenticated);
+    }
+
     List filterPatterns = DomUtils.getChildElementsByTagName(element, "url");
     if (filterPatterns.isEmpty()) {
       parserContext.getReaderContext().error("At least one URL that accesses an OAuth protected resource must be provided.", element);
