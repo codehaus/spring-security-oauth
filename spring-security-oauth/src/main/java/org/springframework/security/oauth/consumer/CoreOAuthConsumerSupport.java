@@ -294,17 +294,12 @@ public class CoreOAuthConsumerSupport implements OAuthConsumerSupport, Initializ
     while (parametersIt.hasNext()) {
       String parameter = parametersIt.next();
       String parameterValue = oauthParams.get(parameter);
-      try {
-        queryString.append(URLEncoder.encode(parameter, "UTF-8"));
-        if (parameterValue != null) {
-          queryString.append('=').append(URLEncoder.encode(parameterValue, "UTF-8"));
-        }
-        if (parametersIt.hasNext()) {
-          queryString.append('&');
-        }
+      queryString.append(parameter);
+      if (parameterValue != null) {
+        queryString.append('=').append(parameterValue);
       }
-      catch (UnsupportedEncodingException e) {
-        throw new IllegalStateException(e);
+      if (parametersIt.hasNext()) {
+        queryString.append('&');
       }
     }
 
