@@ -32,6 +32,7 @@ import javax.servlet.http.HttpServletRequest;
 import java.net.URL;
 import java.net.MalformedURLException;
 import java.net.ProtocolException;
+import java.net.URLEncoder;
 import java.io.*;
 import java.util.Map;
 import java.util.TreeMap;
@@ -320,6 +321,19 @@ public class TestCoreOAuthConsumerSupport extends TestCase {
     params.put(OAuthConsumerParameter.oauth_timestamp.toString(), "myts");
     replay(details);
     assertEquals("oauth_consumer_key=mykey&oauth_nonce=mynonce&oauth_timestamp=myts&query=params&too&with=some", support.getOAuthQueryString(details, token, url, "POST", null));
+    verify(details);
+    reset(details);
+
+    expect(details.isAcceptsAuthorizationHeader()).andReturn(false);
+    params.put("with", "some");
+    String encoded_space = URLEncoder.encode(" ", "utf-8");
+    params.put("query", "params" + encoded_space + "spaced");
+    params.put("too", null);
+    params.put(OAuthConsumerParameter.oauth_consumer_key.toString(), "mykey");
+    params.put(OAuthConsumerParameter.oauth_nonce.toString(), "mynonce");
+    params.put(OAuthConsumerParameter.oauth_timestamp.toString(), "myts");
+    replay(details);
+    assertEquals("oauth_consumer_key=mykey&oauth_nonce=mynonce&oauth_timestamp=myts&query=params" + encoded_space + "spaced&too&with=some", support.getOAuthQueryString(details, token, url, "POST", null));
     verify(details);
     reset(details);
   }
