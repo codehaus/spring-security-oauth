@@ -42,37 +42,36 @@ public class TestOAuthUserAuthorizationProcessingFilter extends TestCase {
     HttpServletResponse response = createMock(HttpServletResponse.class);
     Authentication authentication = createMock(Authentication.class);
     OAuthProviderTokenServices tokenServices = createMock(OAuthProviderTokenServices.class);
-    OAuthCallbackServices callback = createMock(OAuthCallbackServices.class);
-    filter.setCallbackServices(callback);
+    OAuthCallbackServices callbackServices = createMock(OAuthCallbackServices.class);
+    filter.setCallbackServices(callbackServices);
 
     SecurityContextHolder.getContext().setAuthentication(authentication);
     expect(authentication.isAuthenticated()).andReturn(false);
     expect(request.getParameter("requestToken")).andReturn("tok");
-    expect(callback.readCallback("tok")).andReturn("http://my.test.com/test?callback=true&token=tok");
-    request.setAttribute(UserAuthorizationProcessingFilter.CALLBACK_ATTRIBUTE, "http://my.test.com/test?callback=true&token=tok");
+    expect(callbackServices.readCallback("tok")).andReturn("callback");
+    request.setAttribute(UserAuthorizationProcessingFilter.CALLBACK_ATTRIBUTE, "callback");
 
-    replay(authentication, request, tokenServices, callback);
+    replay(authentication, request, tokenServices, callbackServices);
 
     try {
       filter.attemptAuthentication(request, response);     
       fail();
     }
     catch (InsufficientAuthenticationException e) {
-      verify(authentication, request, tokenServices, callback);
-      reset(authentication, request, tokenServices, callback);
+      verify(authentication, request, tokenServices, callbackServices);
+      reset(authentication, request, tokenServices, callbackServices);
     }
 
     expect(authentication.isAuthenticated()).andReturn(true);
     expect(request.getParameter("requestToken")).andReturn("tok");
-    expect(callback.readCallback("tok")).andReturn("http://my.test.com/test?callback=true&token=tok");
-    request.setAttribute(UserAuthorizationProcessingFilter.CALLBACK_ATTRIBUTE, "http://my.test.com/test?callback=true&token=tok");
-    
+    expect(callbackServices.readCallback("tok")).andReturn("callback");
+    request.setAttribute(UserAuthorizationProcessingFilter.CALLBACK_ATTRIBUTE, "callback");
     tokenServices.authorizeRequestToken("tok", authentication);
     filter.setTokenServices(tokenServices);
-    replay(authentication, request, tokenServices, callback);
+    replay(authentication, request, tokenServices, callbackServices);
     filter.attemptAuthentication(request, response);
-    verify(authentication, request, tokenServices, callback);
-    reset(authentication, request, tokenServices, callback);
+    verify(authentication, request, tokenServices, callbackServices);
+    reset(authentication, request, tokenServices, callbackServices);
 
     SecurityContextHolder.getContext().setAuthentication(null);
   }

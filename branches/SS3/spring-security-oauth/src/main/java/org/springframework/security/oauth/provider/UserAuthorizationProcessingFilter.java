@@ -25,7 +25,6 @@ import org.springframework.security.oauth.provider.callback.OAuthCallbackExcepti
 import org.springframework.security.oauth.provider.callback.OAuthCallbackServices;
 import org.springframework.security.oauth.provider.token.OAuthProviderTokenServices;
 import org.springframework.security.web.authentication.AbstractAuthenticationProcessingFilter;
-import org.springframework.security.web.FilterChainOrder;
 import org.springframework.util.Assert;
 
 import javax.servlet.http.HttpServletRequest;
@@ -48,8 +47,8 @@ public class UserAuthorizationProcessingFilter extends AbstractAuthenticationPro
 
   private OAuthProviderTokenServices tokenServices;
   private String tokenIdParameterName = "requestToken";
-  private String callbackParameterName = "callbackURL";
   private OAuthCallbackServices callbackServices;
+  private boolean require10a = true;
   
   protected UserAuthorizationProcessingFilter(String s) {
     super(s);
@@ -70,10 +69,13 @@ public class UserAuthorizationProcessingFilter extends AbstractAuthenticationPro
     }
 
     String callbackURL = getCallbackServices().readCallback(requestToken);
-    if (callbackURL == null) {
+    if (isRequire10a() && callbackURL == null) {
       throw new OAuthCallbackException("No callback value has been provided for request token " + requestToken + ".");
     }
-    request.setAttribute(CALLBACK_ATTRIBUTE, callbackURL);
+
+    if (callbackURL != null) {
+      request.setAttribute(CALLBACK_ATTRIBUTE, callbackURL);
+    }
 
     Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
     if (!authentication.isAuthenticated()) {
@@ -115,24 +117,6 @@ public class UserAuthorizationProcessingFilter extends AbstractAuthenticationPro
   }
 
   /**
-   * The name of the request parameter that supplies the callback URL.
-   *
-   * @return The name of the request parameter that supplies the callback URL.
-   */
-  public String getCallbackParameterName() {
-    return callbackParameterName;
-  }
-
-  /**
-   * The name of the request parameter that supplies the callback URL.
-   *
-   * @param callbackParameterName The name of the request parameter that supplies the callback URL.
-   */
-  public void setCallbackParameterName(String callbackParameterName) {
-    this.callbackParameterName = callbackParameterName;
-  }
-
-  /**
    * Get the OAuth token services.
    *
    * @return The OAuth token services.
@@ -168,6 +152,24 @@ public class UserAuthorizationProcessingFilter extends AbstractAuthenticationPro
   @Autowired
   public void setCallbackServices(OAuthCallbackServices callbackServices) {
     this.callbackServices = callbackServices;
+  }
+
+  /**
+   * Whether to require 1.0a support.
+   *
+   * @return Whether to require 1.0a support.
+   */
+  public boolean isRequire10a() {
+    return require10a;
+  }
+
+  /**
+   * Whether to require 1.0a support.
+   *
+   * @param require10a Whether to require 1.0a support.
+   */
+  public void setRequire10a(boolean require10a) {
+    this.require10a = require10a;
   }
 
 }

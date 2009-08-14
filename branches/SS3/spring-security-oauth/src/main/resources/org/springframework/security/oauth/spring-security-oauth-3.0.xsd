@@ -50,6 +50,13 @@
           </xs:documentation>
         </xs:annotation>
       </xs:attribute>
+      <xs:attribute name="require10a" type="xs:boolean">
+        <xs:annotation>
+          <xs:documentation>
+            Whether the provider requires OAuth 1.0a support. Default: true.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:attribute>
 
       <!--the following attributes are less used-->
       <xs:attribute name="access-granted-url" type="xs:string">
