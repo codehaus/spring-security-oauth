@@ -48,6 +48,8 @@ public class UserAuthorizationSuccessfulAuthenticationHandler extends SimpleUrlA
   private OAuthCallbackServices callbackServices;
   private OAuthVerifierServices verifierServices;
   private String tokenIdParameterName = "requestToken";
+  private String callbackParameterName = "callbackURL";
+  private boolean require10a = true;
 
   public UserAuthorizationSuccessfulAuthenticationHandler() {
     super();
@@ -70,7 +72,16 @@ public class UserAuthorizationSuccessfulAuthenticationHandler extends SimpleUrlA
 
     String callbackURL = (String) request.getAttribute(CALLBACK_ATTRIBUTE);
     if (callbackURL == null) {
-      throw new IllegalStateException("Callback URL was not loaded into the request. attemptAuthentication() never called?");
+      if (!isRequire10a()) {
+        callbackURL = request.getParameter(getCallbackParameterName());
+        if (callbackURL == null) {
+          //if we're not requiring 1.0a, then not providing a callback url is the same as stating 'oob'
+          callbackURL = "oob";
+        }
+      }
+      else {
+        throw new IllegalStateException("Callback URL was not loaded into the request. attemptAuthentication() never called?");
+      }
     }
 
     if ("oob".equals(callbackURL)) {
@@ -148,4 +159,42 @@ public class UserAuthorizationSuccessfulAuthenticationHandler extends SimpleUrlA
   public void setVerifierServices(OAuthVerifierServices verifierServices) {
     this.verifierServices = verifierServices;
   }
+
+
+  /**
+   * Whether to require 1.0a support.
+   *
+   * @return Whether to require 1.0a support.
+   */
+  public boolean isRequire10a() {
+    return require10a;
+  }
+
+  /**
+   * Whether to require 1.0a support.
+   *
+   * @param require10a Whether to require 1.0a support.
+   */
+  public void setRequire10a(boolean require10a) {
+    this.require10a = require10a;
+  }
+
+  /**
+   * The name of the request parameter that supplies the callback URL.
+   *
+   * @return The name of the request parameter that supplies the callback URL.
+   */
+  public String getCallbackParameterName() {
+    return callbackParameterName;
+  }
+
+  /**
+   * The name of the request parameter that supplies the callback URL.
+   *
+   * @param callbackParameterName The name of the request parameter that supplies the callback URL.
+   */
+  public void setCallbackParameterName(String callbackParameterName) {
+    this.callbackParameterName = callbackParameterName;
+  }
+
 }

@@ -89,11 +89,6 @@ public class OAuthProviderBeanDefinitionParser implements BeanDefinitionParser {
       authenticateTokenFilterBean.addPropertyValue("tokenIdParameterName", tokenIdParam);
     }
 
-    String callbackUrlParam = element.getAttribute("callback-url-param");
-    if (StringUtils.hasText(callbackUrlParam)) {
-      authenticateTokenFilterBean.addPropertyValue("callbackParameterName", callbackUrlParam);
-    }
-
     BeanDefinitionBuilder accessTokenFilterBean = BeanDefinitionBuilder.rootBeanDefinition(AccessTokenProcessingFilter.class);
 
     if (StringUtils.hasText(consumerDetailsRef)) {
@@ -142,6 +137,18 @@ public class OAuthProviderBeanDefinitionParser implements BeanDefinitionParser {
     BeanDefinitionBuilder successfulAuthenticationHandler = BeanDefinitionBuilder.rootBeanDefinition(UserAuthorizationSuccessfulAuthenticationHandler.class);
     successfulAuthenticationHandler.addConstructorArgValue(accessGrantedURL);
     successfulAuthenticationHandler.addPropertyReference("callbackServices", callbackServicesRef);
+
+    String callbackUrlParam = element.getAttribute("callback-url-param");
+    if (StringUtils.hasText(callbackUrlParam)) {
+      successfulAuthenticationHandler.addPropertyValue("callbackParameterName", callbackUrlParam);
+    }
+
+    String require10a = element.getAttribute("require10a");
+    if (StringUtils.hasText(require10a)) {
+      requestTokenFilterBean.addPropertyValue("require10a", require10a);
+      authenticateTokenFilterBean.addPropertyValue("require10a", require10a);
+      successfulAuthenticationHandler.addPropertyValue("require10a", require10a);
+    }
 
     String verifierServicesRef = element.getAttribute("verifier-services-ref");
     if (!StringUtils.hasText(verifierServicesRef)) {

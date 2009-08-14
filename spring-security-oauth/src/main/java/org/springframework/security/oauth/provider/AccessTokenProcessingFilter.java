@@ -83,7 +83,6 @@ public class AccessTokenProcessingFilter extends OAuthProviderProcessingFilter {
       throw new IllegalStateException("The consumer key associated with the created auth token is not valid for the authenticated consumer.");
     }
 
-    //store the callback url.
     String tokenValue = authToken.getValue();
 
     StringBuilder responseValue = new StringBuilder(OAuthProviderParameter.oauth_token.toString())
