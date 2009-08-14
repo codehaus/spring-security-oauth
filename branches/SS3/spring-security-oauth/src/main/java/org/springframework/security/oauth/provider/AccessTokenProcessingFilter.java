@@ -40,6 +40,8 @@ import java.io.IOException;
  */
 public class AccessTokenProcessingFilter extends OAuthProviderProcessingFilter {
 
+  public static final int FILTER_CHAIN_ORDER = UserAuthorizationProcessingFilter.FILTER_CHAIN_ORDER + 1;
+
   // The OAuth spec doesn't specify a content-type of the response.  However, it's NOT
   // "application/x-www-form-urlencoded" because the response isn't URL-encoded. Until
   // something is specified, we'll assume that it's just "text/plain".
@@ -99,6 +101,15 @@ public class AccessTokenProcessingFilter extends OAuthProviderProcessingFilter {
   @Override
   protected void onNewTimestamp() throws AuthenticationException {
     throw new InvalidOAuthParametersException(messages.getMessage("AccessTokenProcessingFilter.timestampNotNew", "A new timestamp should not be used in a request for an access token."));
+  }
+
+  /**
+   * The access token filter comes after the user authorization filter.
+   *
+   * @return The access token filter comes after the user authorization filter.
+   */
+  public int getOrder() {
+    return AccessTokenProcessingFilter.FILTER_CHAIN_ORDER;
   }
 
   /**

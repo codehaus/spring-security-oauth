@@ -19,27 +19,17 @@ package org.springframework.security.oauth.config;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.beans.factory.config.RuntimeBeanReference;
 import org.springframework.beans.factory.support.BeanDefinitionBuilder;
-import org.springframework.beans.factory.support.RootBeanDefinition;
 import org.springframework.beans.factory.xml.BeanDefinitionParser;
 import org.springframework.beans.factory.xml.ParserContext;
-import org.springframework.beans.BeanMetadataElement;
-import org.springframework.beans.PropertyValue;
+import org.springframework.security.config.BeanIds;
+import org.springframework.security.config.ConfigUtilsBackdoor;
 import org.springframework.security.oauth.provider.*;
+import org.springframework.security.oauth.provider.callback.InMemoryCallbackServices;
 import org.springframework.security.oauth.provider.token.OAuthTokenLifecycleRegistryPostProcessor;
 import org.springframework.security.oauth.provider.verifier.RandomValueInMemoryVerifierServices;
-import org.springframework.security.oauth.provider.callback.InMemoryCallbackServices;
-import org.springframework.security.config.BeanIds;
-import org.springframework.security.web.util.UrlMatcher;
-import org.springframework.security.web.util.AntUrlPathMatcher;
-import org.springframework.security.web.access.ExceptionTranslationFilter;
 import org.springframework.security.web.authentication.SimpleUrlAuthenticationFailureHandler;
 import org.springframework.util.StringUtils;
 import org.w3c.dom.Element;
-import org.apache.commons.logging.LogFactory;
-import org.apache.commons.logging.Log;
-
-import java.util.Map;
-import java.util.List;
 
 /**
  * Parser for the OAuth "provider" element.
@@ -48,8 +38,6 @@ import java.util.List;
  * @author Andrew McCall
  */
 public class OAuthProviderBeanDefinitionParser implements BeanDefinitionParser {
-
-  private static final Log LOG = LogFactory.getLog(OAuthProviderBeanDefinitionParser.class);
 
   public BeanDefinition parse(Element element, ParserContext parserContext) {
     String consumerDetailsRef = element.getAttribute("consumer-details-service-ref");
@@ -172,70 +160,16 @@ public class OAuthProviderBeanDefinitionParser implements BeanDefinitionParser {
     parserContext.getRegistry().registerBeanDefinition("_oauthTokenRegistryPostProcessor",
       BeanDefinitionBuilder.rootBeanDefinition(OAuthTokenLifecycleRegistryPostProcessor.class).getBeanDefinition());
 
-    BeanDefinition filterChainProxy = parserContext.getRegistry().getBeanDefinition(BeanIds.FILTER_CHAIN_PROXY);
-    if (filterChainProxy != null) {
-      PropertyValue propValue = filterChainProxy.getPropertyValues().getPropertyValue("filterChainMap");
-      Map filterChainMap = propValue == null ? null : (Map) propValue.getValue();
-      if (filterChainMap != null) {
-        propValue = filterChainProxy.getPropertyValues().getPropertyValue("matcher");
-        UrlMatcher matcher = propValue == null ? new AntUrlPathMatcher() : (UrlMatcher) propValue.getValue();
-        List<BeanMetadataElement> filterChain = (List<BeanMetadataElement>) filterChainMap.get(matcher.getUniversalMatchPattern());
-
-        if (filterChain != null) {
-          int index = insertIndex(filterChain);
-          parserContext.getRegistry().registerBeanDefinition("oauthRequestTokenFilter", requestTokenFilterBean.getBeanDefinition());
-          filterChain.add(++index, new RuntimeBeanReference("oauthRequestTokenFilter"));
-          parserContext.getRegistry().registerBeanDefinition("oauthAuthenticateTokenFilter", authenticateTokenFilterBean.getBeanDefinition());
-          filterChain.add(++index, new RuntimeBeanReference("oauthAuthenticateTokenFilter"));
-          parserContext.getRegistry().registerBeanDefinition("oauthAccessTokenFilter", accessTokenFilterBean.getBeanDefinition());
-          filterChain.add(++index, new RuntimeBeanReference("oauthAccessTokenFilter"));
-          parserContext.getRegistry().registerBeanDefinition("oauthProtectedResourceFilter", protectedResourceFilterBean.getBeanDefinition());
-          filterChain.add(++index, new RuntimeBeanReference("oauthProtectedResourceFilter"));
-
-          if (LOG.isDebugEnabled()) {
-            StringBuffer buffer = new StringBuffer("FilterChain: ");
-            for (int i = 0; i < filterChain.size(); i ++ ) {
-              buffer.append("Index ");
-              buffer.append(i);
-              buffer.append(" - ");
-              buffer.append(filterChain.get(i));
-            }
-          }
-        }
-        else {
-          LOG.error("Unable to configure OAuth provider: no filter chain found for pattern " + matcher.getUniversalMatchPattern() + ".");
-        }
-      }
-      else {
-        LOG.error("Unable to configure OAuth provider: no filter chain map found in the configuration.");
-      }
-    }
-    else {
-      LOG.error("Unable to configure OAuth provider: no filter chain proxy found in the configuration.");
-    }
+    parserContext.getRegistry().registerBeanDefinition("oauthRequestTokenFilter", requestTokenFilterBean.getBeanDefinition());
+    ConfigUtilsBackdoor.addHttpFilter(parserContext, new RuntimeBeanReference("oauthRequestTokenFilter"));
+    parserContext.getRegistry().registerBeanDefinition("oauthAuthenticateTokenFilter", authenticateTokenFilterBean.getBeanDefinition());
+    ConfigUtilsBackdoor.addHttpFilter(parserContext, new RuntimeBeanReference("oauthAuthenticateTokenFilter"));
+    parserContext.getRegistry().registerBeanDefinition("oauthAccessTokenFilter", accessTokenFilterBean.getBeanDefinition());
+    ConfigUtilsBackdoor.addHttpFilter(parserContext, new RuntimeBeanReference("oauthAccessTokenFilter"));
+    parserContext.getRegistry().registerBeanDefinition("oauthProtectedResourceFilter", protectedResourceFilterBean.getBeanDefinition());
+    ConfigUtilsBackdoor.addHttpFilter(parserContext, new RuntimeBeanReference("oauthProtectedResourceFilter"));
 
     return null;
   }
 
-  /**
-   * Find the index into the filter chain from which to insert the OAuth provider filters.
-   *
-   * @param filterChain The filter chain.
-   * @return The index.
-   */
-  private int insertIndex(List<BeanMetadataElement> filterChain) {
-    if (LOG.isDebugEnabled()) {
-      LOG.debug("Checking " + filterChain.size() + " filters to find insert index.");
-    }
-
-    int i;
-    for (i = 0; i < filterChain.size(); i++) {
-      RootBeanDefinition filter = (RootBeanDefinition) filterChain.get(i);
-      String beanName = filter.getBeanClassName();
-      if (beanName.equals(ExceptionTranslationFilter.class.getName())) {
-         return i + 1;
-      } 
-    }
-    return filterChain.size();
-  }
 }

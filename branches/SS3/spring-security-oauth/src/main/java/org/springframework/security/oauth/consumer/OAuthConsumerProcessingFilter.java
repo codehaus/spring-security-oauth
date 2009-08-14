@@ -19,10 +19,7 @@ package org.springframework.security.oauth.consumer;
 import org.springframework.security.*;
 import org.springframework.security.access.ConfigAttribute;
 import org.springframework.security.web.savedrequest.SavedRequest;
-import org.springframework.security.web.PortResolver;
-import org.springframework.security.web.FilterInvocation;
-import org.springframework.security.web.AuthenticationEntryPoint;
-import org.springframework.security.web.PortResolverImpl;
+import org.springframework.security.web.*;
 import org.springframework.security.web.access.intercept.DefaultFilterInvocationSecurityMetadataSource;
 import org.springframework.security.web.access.intercept.FilterInvocationSecurityMetadataSource;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -62,8 +59,10 @@ import java.util.*;
  * @author Ryan Heaton
  * @author Andrew McCall
  */
-public class OAuthConsumerProcessingFilter implements Filter, InitializingBean, MessageSourceAware {
+public class OAuthConsumerProcessingFilter implements Filter, InitializingBean, MessageSourceAware, Ordered {
 
+  public static final int FILTER_CHAIN_ORDER = FilterChainOrder.FILTER_SECURITY_INTERCEPTOR + 15;
+  
   public static final String ACCESS_TOKENS_DEFAULT_ATTRIBUTE = "OAUTH_ACCESS_TOKENS";
   public static final String OAUTH_FAILURE_KEY = "OAUTH_FAILURE_KEY";
   private static final Log LOG = LogFactory.getLog(OAuthConsumerProcessingFilter.class);
@@ -268,6 +267,15 @@ public class OAuthConsumerProcessingFilter implements Filter, InitializingBean, 
       }
     }
     return deps;
+  }
+
+  /**
+   * The consumer processing filter comes after the filter security interceptor.
+   *
+   * @return The order.
+   */
+  public int getOrder() {
+    return OAuthConsumerProcessingFilter.FILTER_CHAIN_ORDER;
   }
 
   /**

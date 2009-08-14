@@ -50,7 +50,7 @@ import java.util.Map;
  *
  * @author Ryan Heaton
  */
-public abstract class OAuthProviderProcessingFilter implements Filter, InitializingBean, MessageSourceAware {
+public abstract class OAuthProviderProcessingFilter implements Filter, InitializingBean, MessageSourceAware, Ordered {
 
   /**
    * Attribute for indicating that OAuth processing has already occurred.

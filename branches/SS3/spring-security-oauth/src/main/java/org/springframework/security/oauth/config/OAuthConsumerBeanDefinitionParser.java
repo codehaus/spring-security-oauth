@@ -16,17 +16,13 @@
 
 package org.springframework.security.oauth.config;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.springframework.beans.BeanMetadataElement;
-import org.springframework.beans.PropertyValue;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.beans.factory.config.RuntimeBeanReference;
 import org.springframework.beans.factory.support.BeanDefinitionBuilder;
 import org.springframework.beans.factory.xml.BeanDefinitionParser;
 import org.springframework.beans.factory.xml.ParserContext;
 import org.springframework.security.access.ConfigAttributeEditor;
-import org.springframework.security.config.BeanIds;
+import org.springframework.security.config.ConfigUtilsBackdoor;
 import org.springframework.security.oauth.consumer.CoreOAuthConsumerSupport;
 import org.springframework.security.oauth.consumer.OAuthConsumerProcessingFilter;
 import org.springframework.security.web.access.intercept.DefaultFilterInvocationSecurityMetadataSource;
@@ -42,7 +38,6 @@ import org.w3c.dom.Element;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 
 /**
  * Parser for the OAuth "consumer" element.
@@ -51,8 +46,6 @@ import java.util.Map;
  * @author Andrew McCall
  */
 public class OAuthConsumerBeanDefinitionParser implements BeanDefinitionParser {
-
-  private static final Log LOG = LogFactory.getLog(OAuthConsumerBeanDefinitionParser.class);
 
   public BeanDefinition parse(Element element, ParserContext parserContext) {
     BeanDefinitionBuilder consumerFilterBean = BeanDefinitionBuilder.rootBeanDefinition(OAuthConsumerProcessingFilter.class);
@@ -163,27 +156,7 @@ public class OAuthConsumerBeanDefinitionParser implements BeanDefinitionParser {
 
     consumerFilterBean.addPropertyValue("objectDefinitionSource", new DefaultFilterInvocationSecurityMetadataSource(matcher, invocationDefinitionMap));
     parserContext.getRegistry().registerBeanDefinition("oauthConsumerFilter", consumerFilterBean.getBeanDefinition());
-
-    BeanDefinition filterChainProxy = parserContext.getRegistry().getBeanDefinition(BeanIds.FILTER_CHAIN_PROXY);
-    if (filterChainProxy != null) {
-      PropertyValue propValue = filterChainProxy.getPropertyValues().getPropertyValue("filterChainMap");
-      Map filterChainMap = propValue == null ? null : (Map) propValue.getValue();
-      if (filterChainMap != null) {
-        List<BeanMetadataElement> filterChain = (List<BeanMetadataElement>) filterChainMap.get(matcher.getUniversalMatchPattern());
-        if (filterChain != null) {
-          filterChain.add(new RuntimeBeanReference("oauthConsumerFilter"));
-        }
-        else {
-          LOG.error(String.format("Unable to insert consumer filter into the configuration: filter chain defined for pattern %s!", matcher.getUniversalMatchPattern()));
-        }
-      }
-      else {
-        LOG.error("Unable to insert consumer filter into the configuration: no filter chain map defined!");
-      }
-    }
-    else {
-      LOG.error("Unable to insert consumer filter into the configuration: no filter chain proxy defined!");
-    }
+    ConfigUtilsBackdoor.addHttpFilter(parserContext, new RuntimeBeanReference("oauthConsumerFilter"));
 
     return null;
   }
