@@ -20,7 +20,7 @@ import org.apache.commons.codec.DecoderException;
 import static org.springframework.security.oauth.common.OAuthCodec.oauthDecode;
 import static org.springframework.security.oauth.common.OAuthCodec.oauthEncode;
 import org.springframework.security.oauth.common.OAuthConsumerParameter;
-import org.springframework.security.util.StringSplitUtils;
+import org.springframework.security.oauth.common.StringSplitUtils;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.*;

@@ -16,8 +16,8 @@
 
 package org.springframework.security.oauth.provider.token;
 
-import org.springframework.security.Authentication;
-import org.springframework.security.AuthenticationException;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.AuthenticationException;
 
 /**
  * @author Ryan Heaton

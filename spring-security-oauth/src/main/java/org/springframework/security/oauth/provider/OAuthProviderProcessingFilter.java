@@ -16,10 +16,10 @@
 
 package org.springframework.security.oauth.provider;
 
-import org.springframework.security.SpringSecurityMessageSource;
-import org.springframework.security.Authentication;
-import org.springframework.security.AuthenticationException;
-import org.springframework.security.context.SecurityContextHolder;
+import org.springframework.security.core.SpringSecurityMessageSource;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.InitializingBean;
@@ -333,7 +333,7 @@ public abstract class OAuthProviderProcessingFilter implements Filter, Initializ
   /**
    * Logic to be performed on a new timestamp.  The default behavior expects that the timestamp should not be new.
    *
-   * @throws org.springframework.security.AuthenticationException
+   * @throws org.springframework.security.core.AuthenticationException
    *          If the timestamp shouldn't be new.
    */
   protected void onNewTimestamp() throws AuthenticationException {

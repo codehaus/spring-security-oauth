@@ -1,5 +1,5 @@
 /*
- * Copyright 2008 Web Cohesion
+ * Copyright 2008-2009 Web Cohesion
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,6 +23,7 @@ import org.springframework.security.oauth.consumer.net.OAuthURLStreamHandlerFact
 import org.springframework.security.oauth.common.OAuthConsumerParameter;
 import org.springframework.security.oauth.common.OAuthProviderParameter;
 import org.springframework.security.oauth.common.OAuthCodec;
+import org.springframework.security.oauth.common.StringSplitUtils;
 import org.springframework.security.oauth.common.signature.OAuthSignatureMethodFactory;
 import org.springframework.security.oauth.common.signature.CoreOAuthSignatureMethodFactory;
 import org.springframework.security.oauth.common.signature.OAuthSignatureMethod;
@@ -30,7 +31,6 @@ import static org.springframework.security.oauth.common.OAuthCodec.oauthEncode;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.Assert;
-import org.springframework.security.util.StringSplitUtils;
 import org.apache.commons.codec.DecoderException;
 
 import java.net.*;
@@ -43,6 +43,7 @@ import java.io.*;
  * and other connection-related environment variables are already set up.
  *
  * @author Ryan Heaton
+ * @author Andrew McCall
  */
 public class CoreOAuthConsumerSupport implements OAuthConsumerSupport, InitializingBean {
 
@@ -363,12 +364,12 @@ public class CoreOAuthConsumerSupport implements OAuthConsumerSupport, Initializ
       }
     }
 
-    String tokenValue = tokenPropertyValues.get(OAuthProviderParameter.oauth_token.toString());
+    String tokenValue = tokenPropertyValues.remove(OAuthProviderParameter.oauth_token.toString());
     if (tokenValue == null) {
       throw new OAuthRequestFailedException("OAuth provider failed to return a token.");
     }
 
-    String tokenSecret = tokenPropertyValues.get(OAuthProviderParameter.oauth_token_secret.toString());
+    String tokenSecret = tokenPropertyValues.remove(OAuthProviderParameter.oauth_token_secret.toString());
     if (tokenSecret == null) {
       throw new OAuthRequestFailedException("OAuth provider failed to return a token secret.");
     }
@@ -379,6 +380,9 @@ public class CoreOAuthConsumerSupport implements OAuthConsumerSupport, Initializ
     consumerToken.setNonce(requestToken.getNonce());
     consumerToken.setResourceId(details.getId());
     consumerToken.setAccessToken(isAccessToken);
+    if (!tokenPropertyValues.isEmpty()) {
+      consumerToken.setAdditionalParameters(tokenPropertyValues);
+    }
     return consumerToken;
   }
 
