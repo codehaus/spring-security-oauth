@@ -1,11 +1,11 @@
 package org.springframework.security.oauth.examples.sparklr.impl;
 
-import org.springframework.security.Authentication;
-import org.springframework.security.BadCredentialsException;
-import org.springframework.security.context.SecurityContextHolder;
-import org.springframework.security.userdetails.UserDetails;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.oauth.examples.sparklr.PhotoInfo;
 import org.springframework.security.oauth.examples.sparklr.PhotoService;
+import org.springframework.security.authentication.BadCredentialsException;
 
 import java.io.IOException;
 import java.io.InputStream;
