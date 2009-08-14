@@ -1,0 +1,665 @@
+/*
+ * Copyright 2008-2009 Web Cohesion
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package org.springframework.security.oauth.consumer;
+
+import org.springframework.security.oauth.consumer.token.OAuthConsumerToken;
+import org.springframework.security.oauth.consumer.nonce.NonceFactory;
+import org.springframework.security.oauth.consumer.nonce.UUIDNonceFactory;
+import org.springframework.security.oauth.consumer.net.OAuthURLStreamHandlerFactory;
+import org.springframework.security.oauth.common.OAuthConsumerParameter;
+import org.springframework.security.oauth.common.OAuthProviderParameter;
+import org.springframework.security.oauth.common.OAuthCodec;
+import org.springframework.security.oauth.common.StringSplitUtils;
+import org.springframework.security.oauth.common.signature.OAuthSignatureMethodFactory;
+import org.springframework.security.oauth.common.signature.CoreOAuthSignatureMethodFactory;
+import org.springframework.security.oauth.common.signature.OAuthSignatureMethod;
+import static org.springframework.security.oauth.common.OAuthCodec.oauthEncode;
+import org.springframework.beans.factory.InitializingBean;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.util.Assert;
+import org.apache.commons.codec.DecoderException;
+
+import java.net.*;
+import java.util.*;
+import java.io.*;
+
+/**
+ * Consumer-side support for OAuth. This support uses a {@link java.net.URLConnection} to interface with the
+ * OAuth provider.  A proxy will be selected, but it is assumed that the {@link javax.net.ssl.TrustManager}s
+ * and other connection-related environment variables are already set up.
+ *
+ * @author Ryan Heaton
+ * @author Andrew McCall
+ */
+public class CoreOAuthConsumerSupport implements OAuthConsumerSupport, InitializingBean {
+
+  private OAuthURLStreamHandlerFactory streamHandlerFactory;
+  private OAuthSignatureMethodFactory signatureFactory = new CoreOAuthSignatureMethodFactory();
+  private NonceFactory nonceFactory = new UUIDNonceFactory();
+
+  private ProtectedResourceDetailsService protectedResourceDetailsService;
+
+  private ProxySelector proxySelector = ProxySelector.getDefault();
+  private int connectionTimeout = 1000 * 60;
+  private int readTimeout = 1000 * 60;
+
+  public void afterPropertiesSet() throws Exception {
+    Assert.notNull(protectedResourceDetailsService, "A protected resource details service is required.");
+
+    if (streamHandlerFactory == null) {
+      try {
+        streamHandlerFactory = (OAuthURLStreamHandlerFactory) Class.forName("org.springframework.security.oauth.consumer.net.DefaultOAuthURLStreamHandlerFactory").newInstance();
+      }
+      catch (Throwable error) {
+        throw new IllegalStateException("A stream handler factory is required.");
+      }
+    }
+  }
+
+  // Inherited.
+  public OAuthConsumerToken getUnauthorizedRequestToken(String resourceId, String callback) throws OAuthRequestFailedException {
+    ProtectedResourceDetails details = getProtectedResourceDetailsService().loadProtectedResourceDetailsById(resourceId);
+
+    URL requestTokenURL;
+    try {
+      requestTokenURL = new URL(details.getRequestTokenURL());
+    }
+    catch (MalformedURLException e) {
+      throw new IllegalStateException("Malformed URL for obtaining a request token.", e);
+    }
+
+    Map<String, String> additionalParameters = new TreeMap<String, String>();
+    if (details.isUse10a()) {
+      additionalParameters.put(OAuthConsumerParameter.oauth_callback.toString(), callback);
+    }
+    return getTokenFromProvider(details, requestTokenURL, null, additionalParameters);
+  }
+
+  // Inherited.
+  public OAuthConsumerToken getAccessToken(OAuthConsumerToken requestToken, String verifier) throws OAuthRequestFailedException {
+    ProtectedResourceDetails details = getProtectedResourceDetailsService().loadProtectedResourceDetailsById(requestToken.getResourceId());
+
+    URL accessTokenURL;
+    try {
+      accessTokenURL = new URL(details.getAccessTokenURL());
+    }
+    catch (MalformedURLException e) {
+      throw new IllegalStateException("Malformed URL for obtaining an access token.", e);
+    }
+
+    Map<String, String> additionalParameters = new TreeMap<String, String>();
+    if (details.isUse10a()) {
+      additionalParameters.put(OAuthConsumerParameter.oauth_verifier.toString(), verifier);
+    }
+    return getTokenFromProvider(details, accessTokenURL, requestToken, additionalParameters);
+  }
+
+  // Inherited.
+  public InputStream readProtectedResource(URL url, OAuthConsumerToken accessToken, String httpMethod) throws OAuthRequestFailedException {
+    if (accessToken == null) {
+      throw new OAuthRequestFailedException("A valid access token must be supplied.");
+    }
+
+    ProtectedResourceDetails resourceDetails = getProtectedResourceDetailsService().loadProtectedResourceDetailsById(accessToken.getResourceId());
+    if ((!resourceDetails.isAcceptsAuthorizationHeader()) && !"POST".equalsIgnoreCase(httpMethod) && !"PUT".equalsIgnoreCase(httpMethod)) {
+      throw new IllegalArgumentException("Protected resource " + resourceDetails.getId() + " cannot be accessed with HTTP method " +
+        httpMethod + " because the OAuth provider doesn't accept the OAuth Authorization header.");
+    }
+    
+    return readResource(resourceDetails, url, accessToken, httpMethod, null);
+  }
+
+  /**
+   * Read a resource.
+   *
+   * @param details The details of the resource.
+   * @param url The URL of the resource.
+   * @param token The token.
+   * @param httpMethod The http method.
+   * @param additionalParameters Any additional request parameters.
+   * @return The resource.
+   */
+  protected InputStream readResource(ProtectedResourceDetails details, URL url, OAuthConsumerToken token, String httpMethod, Map<String, String> additionalParameters) {
+    url = configureURLForProtectedAccess(url, token, details, httpMethod, additionalParameters);
+    String realm = details.getAuthorizationHeaderRealm();
+    boolean sendOAuthParamsInRequestBody = !details.isAcceptsAuthorizationHeader() && (("POST".equalsIgnoreCase(httpMethod) || "PUT".equalsIgnoreCase(httpMethod)));
+    HttpURLConnection connection = openConnection(url);
+
+    try {
+      connection.setRequestMethod(httpMethod);
+    }
+    catch (ProtocolException e) {
+      throw new IllegalStateException(e);
+    }
+
+    int responseCode;
+    String responseMessage;
+    try {
+      connection.setDoOutput(sendOAuthParamsInRequestBody);
+      connection.connect();
+      if (sendOAuthParamsInRequestBody) {
+        String queryString = getOAuthQueryString(details, token, url, httpMethod, additionalParameters);
+        OutputStream out = connection.getOutputStream();
+        out.write(queryString.getBytes("UTF-8"));
+        out.flush();
+        out.close();
+      }
+      responseCode = connection.getResponseCode();
+      responseMessage = connection.getResponseMessage();
+      if (responseMessage == null) {
+        responseMessage = "Unknown Error";
+      }
+    }
+    catch (IOException e) {
+      throw new OAuthRequestFailedException("OAuth connection failed.", e);
+    }
+
+    if (responseCode >= 200 && responseCode < 300) {
+      try {
+        return connection.getInputStream();
+      }
+      catch (IOException e) {
+        throw new OAuthRequestFailedException("Unable to get the input stream from a successful response.", e);
+      }
+    }
+    else if (responseCode == 400) {
+      throw new OAuthRequestFailedException("OAuth authentication failed: " + responseMessage);
+    }
+    else if (responseCode == 401) {
+      String authHeaderValue = connection.getHeaderField("WWW-Authenticate");
+      if (authHeaderValue != null) {
+        Map<String, String> headerEntries = StringSplitUtils.splitEachArrayElementAndCreateMap(StringSplitUtils.splitIgnoringQuotes(authHeaderValue, ','), "=", "\"");
+        String requiredRealm = headerEntries.get("realm");
+        if ((requiredRealm != null) && (!requiredRealm.equals(realm))) {
+          throw new InvalidOAuthRealmException(String.format("Invalid OAuth realm. Provider expects \"%s\", when the resource details specify \"%s\".", requiredRealm, realm), requiredRealm);
+        }
+      }
+
+      throw new OAuthRequestFailedException("OAuth authentication failed: " + responseMessage);
+    }
+    else {
+      throw new OAuthRequestFailedException(String.format("Invalid response code %s (%s).", responseCode, responseMessage));
+    }
+  }
+
+  /**
+   * Create a configured URL.  If the HTTP method to access the resource is "POST" or "PUT" and the "Authorization"
+   * header isn't supported, then the OAuth parameters will be expected to be sent in the body of the request. Otherwise,
+   * you can assume that the given URL is ready to be used without further work.
+   *
+   * @param url         The base URL.
+   * @param accessToken The access token.
+   * @param httpMethod The HTTP method.
+   * @param additionalParameters Any additional request parameters.
+   * @return The configured URL.
+   */
+  public URL configureURLForProtectedAccess(URL url, OAuthConsumerToken accessToken, String httpMethod, Map<String, String> additionalParameters) throws OAuthRequestFailedException {
+    return configureURLForProtectedAccess(url, accessToken, getProtectedResourceDetailsService().loadProtectedResourceDetailsById(accessToken.getResourceId()), httpMethod, additionalParameters);
+  }
+
+  /**
+   * Internal use of configuring the URL for protected access, the resource details already having been loaded.
+   *
+   * @param url          The URL.
+   * @param requestToken The request token.
+   * @param details      The details.
+   * @param httpMethod   The http method.
+   * @param additionalParameters Any additional request parameters.
+   * @return The configured URL.
+   */
+  protected URL configureURLForProtectedAccess(URL url, OAuthConsumerToken requestToken, ProtectedResourceDetails details, String httpMethod, Map<String, String> additionalParameters) {
+    StringBuilder file = new StringBuilder(url.getPath());
+    if (!"POST".equalsIgnoreCase(httpMethod) && !"PUT".equalsIgnoreCase(httpMethod)) {
+      String queryString = getOAuthQueryString(details, requestToken, url, httpMethod, additionalParameters);
+      file.append('?').append(queryString);
+    }
+
+    try {
+      if ("http".equalsIgnoreCase(url.getProtocol())) {
+        URLStreamHandler streamHandler = getStreamHandlerFactory().getHttpStreamHandler(details, requestToken, this, httpMethod, additionalParameters);
+        return new URL(url.getProtocol(), url.getHost(), url.getPort(), file.toString(), streamHandler);
+      }
+      else if ("https".equalsIgnoreCase(url.getProtocol())) {
+        URLStreamHandler streamHandler = getStreamHandlerFactory().getHttpsStreamHandler(details, requestToken, this, httpMethod, additionalParameters);
+        return new URL(url.getProtocol(), url.getHost(), url.getPort(), file.toString(), streamHandler);
+      }
+      else {
+        throw new OAuthRequestFailedException("Unsupport OAuth protocol: " + url.getProtocol());
+      }
+    }
+    catch (MalformedURLException e) {
+      throw new IllegalStateException(e);
+    }
+  }
+
+  // Inherited.
+  public String getAuthorizationHeader(ProtectedResourceDetails details, OAuthConsumerToken accessToken, URL url, String httpMethod, Map<String, String> additionalParameters) {
+    if (!details.isAcceptsAuthorizationHeader()) {
+      return null;
+    }
+    else {
+      Map<String, String> oauthParams = loadOAuthParameters(details, url, accessToken, httpMethod, additionalParameters);
+      String realm = details.getAuthorizationHeaderRealm();
+
+      StringBuilder builder = new StringBuilder("OAuth ");
+      boolean writeComma = false;
+      if (realm != null) { //realm is optional.
+        builder.append("realm=\"").append(realm).append('"');
+        writeComma = true;
+      }
+
+      OAuthConsumerParameter[] parameters = OAuthConsumerParameter.values();
+      for (OAuthConsumerParameter parameter : parameters) {
+        String paramValue = oauthParams.get(parameter.toString());
+        if (paramValue != null) { //token is optional.
+          if (writeComma) {
+            builder.append(", ");
+          }
+
+          builder.append(oauthEncode(parameter.toString())).append("=\"").append(oauthEncode(paramValue)).append('"');
+          writeComma = true;
+        }
+      }
+
+      return builder.toString();
+    }
+  }
+
+  // Inherited.
+  public String getOAuthQueryString(ProtectedResourceDetails details, OAuthConsumerToken accessToken, URL url, String httpMethod, Map<String, String> additionalParameters) {
+    Map<String, String> oauthParams = loadOAuthParameters(details, url, accessToken, httpMethod, additionalParameters);
+
+    StringBuilder queryString = new StringBuilder();
+    if (details.isAcceptsAuthorizationHeader()) {
+      //if the resource accepts the authorization header, the oauth parameters will go in a header and not in the query.
+      for (OAuthConsumerParameter oauthParam : OAuthConsumerParameter.values()) {
+        oauthParams.remove(oauthParam.toString());
+      }
+    }
+
+    Iterator<String> parametersIt = oauthParams.keySet().iterator();
+    while (parametersIt.hasNext()) {
+      String parameter = parametersIt.next();
+      String parameterValue = oauthParams.get(parameter);
+      queryString.append(parameter);
+      if (parameterValue != null) {
+        queryString.append('=').append(parameterValue);
+      }
+      if (parametersIt.hasNext()) {
+        queryString.append('&');
+      }
+    }
+
+    return queryString.toString();
+  }
+
+  /**
+   * Get the consumer token with the given parameters and URL. The determination of whether the retrieved token
+   * is an access token depends on whether a request token is provided.
+   *
+   * @param details      The resource details.
+   * @param tokenURL     The token URL.
+   * @param requestToken The request token, or null if none.
+   * @param additionalParameters The additional request parameter.
+   * @return The token.
+   */
+  protected OAuthConsumerToken getTokenFromProvider(ProtectedResourceDetails details, URL tokenURL,
+                                                    OAuthConsumerToken requestToken, Map<String, String> additionalParameters) {
+    boolean isAccessToken = requestToken != null;
+    if (!isAccessToken) {
+      //create an empty token to make a request for a new unauthorized request token.
+      requestToken = new OAuthConsumerToken();
+      requestToken.setNonce(getNonceFactory().generateNonce());
+    }
+
+    InputStream inputStream = readResource(details, tokenURL, requestToken, "POST", additionalParameters);
+    String tokenInfo;
+    try {
+      ByteArrayOutputStream out = new ByteArrayOutputStream();
+      byte[] buffer = new byte[1024];
+      int len = inputStream.read(buffer);
+      while (len >= 0) {
+        out.write(buffer, 0, len);
+        len = inputStream.read(buffer);
+      }
+
+      tokenInfo = new String(out.toByteArray(), "UTF-8");
+    }
+    catch (IOException e) {
+      throw new OAuthRequestFailedException("Unable to read the token.", e);
+    }
+
+    StringTokenizer tokenProperties = new StringTokenizer(tokenInfo, "&");
+    Map<String, String> tokenPropertyValues = new TreeMap<String, String>();
+    while (tokenProperties.hasMoreElements()) {
+      try {
+        String tokenProperty = (String) tokenProperties.nextElement();
+        int equalsIndex = tokenProperty.indexOf('=');
+        if (equalsIndex > 0) {
+          String propertyName = OAuthCodec.oauthDecode(tokenProperty.substring(0, equalsIndex));
+          String propertyValue = OAuthCodec.oauthDecode(tokenProperty.substring(equalsIndex + 1));
+          tokenPropertyValues.put(propertyName, propertyValue);
+        }
+        else {
+          tokenProperty = OAuthCodec.oauthDecode(tokenProperty);
+          tokenPropertyValues.put(tokenProperty, null);
+        }
+      }
+      catch (DecoderException e) {
+        throw new OAuthRequestFailedException("Unable to decode token parameters.");
+      }
+    }
+
+    String tokenValue = tokenPropertyValues.remove(OAuthProviderParameter.oauth_token.toString());
+    if (tokenValue == null) {
+      throw new OAuthRequestFailedException("OAuth provider failed to return a token.");
+    }
+
+    String tokenSecret = tokenPropertyValues.remove(OAuthProviderParameter.oauth_token_secret.toString());
+    if (tokenSecret == null) {
+      throw new OAuthRequestFailedException("OAuth provider failed to return a token secret.");
+    }
+
+    OAuthConsumerToken consumerToken = new OAuthConsumerToken();
+    consumerToken.setValue(tokenValue);
+    consumerToken.setSecret(tokenSecret);
+    consumerToken.setNonce(requestToken.getNonce());
+    consumerToken.setResourceId(details.getId());
+    consumerToken.setAccessToken(isAccessToken);
+    if (!tokenPropertyValues.isEmpty()) {
+      consumerToken.setAdditionalParameters(tokenPropertyValues);
+    }
+    return consumerToken;
+  }
+
+  /**
+   * Loads the OAuth parameters for the given resource at the given URL and the given token. These parameters include
+   * any query parameters on the URL since they are included in the signature.
+   *
+   * @param details      The resource details.
+   * @param requestURL   The request URL.
+   * @param requestToken The request token.
+   * @param httpMethod   The http method.
+   * @param additionalParameters Additional parameters.
+   * @return The parameters.
+   */
+  protected Map<String, String> loadOAuthParameters(ProtectedResourceDetails details, URL requestURL, OAuthConsumerToken requestToken, String httpMethod, Map<String, String> additionalParameters) {
+    Map<String, String> oauthParams = new TreeMap<String, String>();
+    if (additionalParameters != null) {
+      oauthParams.putAll(additionalParameters);
+    }
+    String query = requestURL.getQuery();
+    if (query != null) {
+      StringTokenizer queryTokenizer = new StringTokenizer(query, "&");
+      while (queryTokenizer.hasMoreElements()) {
+        String token = (String) queryTokenizer.nextElement();
+        if (token.indexOf('=') < 0) {
+          oauthParams.put(token, null);
+        }
+        else {
+          int equalsIndex = token.indexOf('=');
+          if (equalsIndex < 0) {
+            oauthParams.put(token, null);
+          }
+          else {
+            String paramName = token.substring(0, equalsIndex);
+            String paramValue = token.substring(equalsIndex + 1);
+            oauthParams.put(paramName, paramValue);
+          }
+        }
+      }
+    }
+
+    String tokenSecret = requestToken == null ? null : requestToken.getSecret();
+    String nonce = requestToken == null ? getNonceFactory().generateNonce() : requestToken.getNonce();
+    oauthParams.put(OAuthConsumerParameter.oauth_consumer_key.toString(), details.getConsumerKey());
+    if ((requestToken != null) && (requestToken.getValue() != null)) {
+      oauthParams.put(OAuthConsumerParameter.oauth_token.toString(), requestToken.getValue());
+    }
+
+    oauthParams.put(OAuthConsumerParameter.oauth_nonce.toString(), nonce);
+    oauthParams.put(OAuthConsumerParameter.oauth_signature_method.toString(), details.getSignatureMethod());
+    oauthParams.put(OAuthConsumerParameter.oauth_timestamp.toString(), String.valueOf(System.currentTimeMillis() / 1000));
+    oauthParams.put(OAuthConsumerParameter.oauth_version.toString(), "1.0");
+    String signatureBaseString = getSignatureBaseString(oauthParams, requestURL, httpMethod);
+    OAuthSignatureMethod signatureMethod = getSignatureFactory().getSignatureMethod(details.getSignatureMethod(), details.getSharedSecret(), tokenSecret);
+    String signature = signatureMethod.sign(signatureBaseString);
+    oauthParams.put(OAuthConsumerParameter.oauth_signature.toString(), signature);
+    return oauthParams;
+  }
+
+  /**
+   * Open a connection to the given URL.
+   *
+   * @param requestTokenURL The request token URL.
+   * @return The HTTP URL connection.
+   */
+  protected HttpURLConnection openConnection(URL requestTokenURL) {
+    try {
+      HttpURLConnection connection = (HttpURLConnection) requestTokenURL.openConnection(selectProxy(requestTokenURL));
+      connection.setConnectTimeout(getConnectionTimeout());
+      connection.setReadTimeout(getReadTimeout());
+      return connection;
+    }
+    catch (IOException e) {
+      throw new OAuthRequestFailedException("Failed to open an OAuth connection.", e);
+    }
+  }
+
+  /**
+   * Selects a proxy for the given URL.
+   *
+   * @param requestTokenURL The URL
+   * @return The proxy.
+   */
+  protected Proxy selectProxy(URL requestTokenURL) {
+    try {
+      List<Proxy> selectedProxies = getProxySelector().select(requestTokenURL.toURI());
+      return selectedProxies.isEmpty() ? Proxy.NO_PROXY : selectedProxies.get(0);
+    }
+    catch (URISyntaxException e) {
+      throw new IllegalArgumentException(e);
+    }
+  }
+
+  /**
+   * Get the signature base string for the specified parameters.
+   *
+   * @param oauthParams The parameters.
+   * @param requestURL  The request URL.
+   * @param httpMethod  The http method.
+   * @return The signature base string.
+   */
+  protected String getSignatureBaseString(Map<String, String> oauthParams, URL requestURL, String httpMethod) {
+    //now sort them (according to the spec.
+    Map.Entry<String, String>[] sortedParameters = oauthParams.entrySet().toArray(new Map.Entry[oauthParams.size()]);
+    Comparator<Map.Entry<String, String>> parameterComparator = new Comparator<Map.Entry<String, String>>() {
+      public int compare(Map.Entry<String, String> param1, Map.Entry<String, String> param2) {
+        int comparison = param1.getKey().compareTo(param2.getKey());
+        if (comparison == 0) {
+          String value1 = param1.getValue();
+          if (value1 == null) {
+            value1 = "";
+          }
+
+          String value2 = param2.getValue();
+          if (value2 == null) {
+            value2 = "";
+          }
+
+          comparison = value1.compareTo(value2);
+        }
+        return comparison;
+      }
+    };
+    Arrays.sort(sortedParameters, parameterComparator);
+
+    //now concatenate them into a single query string according to the spec.
+    StringBuilder queryString = new StringBuilder();
+    for (int i = 0; i < sortedParameters.length; i++) {
+      Map.Entry<String, String> sortedParameter = sortedParameters[i];
+      String parameterValue = sortedParameter.getValue();
+      if (parameterValue == null) {
+        parameterValue = "";
+      }
+      queryString.append(sortedParameter.getKey()).append('=').append(parameterValue);
+      if (i + 1 < sortedParameters.length) {
+        queryString.append('&');
+      }
+    }
+
+    StringBuilder url = new StringBuilder(requestURL.getProtocol().toLowerCase()).append("://").append(requestURL.getHost().toLowerCase());
+    if ((requestURL.getPort() >= 0) && (requestURL.getPort() != requestURL.getDefaultPort())) {
+      url.append(":").append(requestURL.getPort());
+    }
+    url.append(requestURL.getPath());
+    
+    return new StringBuilder(httpMethod.toUpperCase()).append('&').append(oauthEncode(url.toString())).append('&').append(oauthEncode(queryString.toString())).toString();
+  }
+
+  /**
+   * The protected resource details service.
+   *
+   * @return The protected resource details service.
+   */
+  public ProtectedResourceDetailsService getProtectedResourceDetailsService() {
+    return protectedResourceDetailsService;
+  }
+
+  /**
+   * The protected resource details service.
+   *
+   * @param protectedResourceDetailsService
+   *         The protected resource details service.
+   */
+  @Autowired
+  public void setProtectedResourceDetailsService(ProtectedResourceDetailsService protectedResourceDetailsService) {
+    this.protectedResourceDetailsService = protectedResourceDetailsService;
+  }
+
+  /**
+   * The URL stream handler factory for connections to an OAuth resource.
+   *
+   * @return The URL stream handler factory for connections to an OAuth resource.
+   */
+  public OAuthURLStreamHandlerFactory getStreamHandlerFactory() {
+    return streamHandlerFactory;
+  }
+
+  /**
+   * The URL stream handler factory for connections to an OAuth resource.
+   *
+   * @param streamHandlerFactory The URL stream handler factory for connections to an OAuth resource.
+   */
+  @Autowired (required = false)
+  public void setStreamHandlerFactory(OAuthURLStreamHandlerFactory streamHandlerFactory) {
+    this.streamHandlerFactory = streamHandlerFactory;
+  }
+
+  /**
+   * The nonce factory.
+   *
+   * @return The nonce factory.
+   */
+  public NonceFactory getNonceFactory() {
+    return nonceFactory;
+  }
+
+  /**
+   * The nonce factory.
+   *
+   * @param nonceFactory The nonce factory.
+   */
+  @Autowired (required = false)
+  public void setNonceFactory(NonceFactory nonceFactory) {
+    this.nonceFactory = nonceFactory;
+  }
+
+  /**
+   * The signature factory to use.
+   *
+   * @return The signature factory to use.
+   */
+  public OAuthSignatureMethodFactory getSignatureFactory() {
+    return signatureFactory;
+  }
+
+  /**
+   * The signature factory to use.
+   *
+   * @param signatureFactory The signature factory to use.
+   */
+  @Autowired (required = false)
+  public void setSignatureFactory(OAuthSignatureMethodFactory signatureFactory) {
+    this.signatureFactory = signatureFactory;
+  }
+
+  /**
+   * The proxy selector to use.
+   *
+   * @return The proxy selector to use.
+   */
+  public ProxySelector getProxySelector() {
+    return proxySelector;
+  }
+
+  /**
+   * The proxy selector to use.
+   *
+   * @param proxySelector The proxy selector to use.
+   */
+  @Autowired (required = false)
+  public void setProxySelector(ProxySelector proxySelector) {
+    this.proxySelector = proxySelector;
+  }
+
+  /**
+   * The connection timeout (default 60 seconds).
+   *
+   * @return The connection timeout.
+   */
+  public int getConnectionTimeout() {
+    return connectionTimeout;
+  }
+
+  /**
+   * The connection timeout.
+   *
+   * @param connectionTimeout The connection timeout.
+   */
+  public void setConnectionTimeout(int connectionTimeout) {
+    this.connectionTimeout = connectionTimeout;
+  }
+
+  /**
+   * The read timeout (default 60 seconds).
+   *
+   * @return The read timeout.
+   */
+  public int getReadTimeout() {
+    return readTimeout;
+  }
+
+  /**
+   * The read timeout.
+   *
+   * @param readTimeout The read timeout.
+   */
+  public void setReadTimeout(int readTimeout) {
+    this.readTimeout = readTimeout;
+  }
+}
