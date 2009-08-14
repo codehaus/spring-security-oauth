@@ -56,6 +56,7 @@ public class UserAuthorizationProcessingFilter extends AbstractProcessingFilter 
   private String callbackParameterName = "callbackURL";
   private OAuthCallbackServices callbackServices;
   private OAuthVerifierServices verifierServices;
+  private boolean require10a = true;
 
   public UserAuthorizationProcessingFilter() {
     setDefaultTargetUrl("/");
@@ -69,21 +70,21 @@ public class UserAuthorizationProcessingFilter extends AbstractProcessingFilter 
     Assert.notNull(getVerifierServices(), "Verifier services are required.");
   }
 
-  @Override
-  protected void onPreAuthentication(HttpServletRequest request, HttpServletResponse response) throws AuthenticationException, IOException {
+  public Authentication attemptAuthentication(HttpServletRequest request) throws AuthenticationException {
     String requestToken = request.getParameter(getTokenParameterName());
     if (requestToken == null) {
       throw new InvalidOAuthParametersException("An OAuth token id is required.");
     }
 
     String callbackURL = getCallbackServices().readCallback(requestToken);
-    if (callbackURL == null) {
+    if (isRequire10a() && callbackURL == null) {
       throw new OAuthCallbackException("No callback value has been provided for request token " + requestToken + ".");
     }
-    request.setAttribute(CALLBACK_ATTRIBUTE, callbackURL);
-  }
+    
+    if (callbackURL != null) {
+      request.setAttribute(CALLBACK_ATTRIBUTE, callbackURL);
+    }
 
-  public Authentication attemptAuthentication(HttpServletRequest request) throws AuthenticationException {
     Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
     if (!authentication.isAuthenticated()) {
       throw new InsufficientAuthenticationException("User must be authenticated before authorizing a request token.");
@@ -96,7 +97,16 @@ public class UserAuthorizationProcessingFilter extends AbstractProcessingFilter 
   protected String determineTargetUrl(HttpServletRequest request) {
     String callbackURL = (String) request.getAttribute(CALLBACK_ATTRIBUTE);
     if (callbackURL == null) {
-      throw new IllegalStateException("Callback URL was not loaded into the request. onPreAuthentication() never called?");
+      if (!isRequire10a()) {
+        callbackURL = request.getParameter(getCallbackParameterName());
+        if (callbackURL == null) {
+          //if we're not requiring 1.0a, then not providing a callback url is the same as stating 'oob'
+          callbackURL = "oob";
+        }
+      }
+      else {
+        throw new IllegalStateException("Callback URL was not loaded into the request. attemptAuthentication() never called?");
+      }
     }
 
     if ("oob".equals(callbackURL)) {
@@ -218,4 +228,23 @@ public class UserAuthorizationProcessingFilter extends AbstractProcessingFilter 
   public void setVerifierServices(OAuthVerifierServices verifierServices) {
     this.verifierServices = verifierServices;
   }  
+
+  /**
+   * Whether to require 1.0a support.
+   *
+   * @return Whether to require 1.0a support.
+   */
+  public boolean isRequire10a() {
+    return require10a;
+  }
+
+  /**
+   * Whether to require 1.0a support.
+   *
+   * @param require10a Whether to require 1.0a support.
+   */
+  public void setRequire10a(boolean require10a) {
+    this.require10a = require10a;
+  }
+
 }

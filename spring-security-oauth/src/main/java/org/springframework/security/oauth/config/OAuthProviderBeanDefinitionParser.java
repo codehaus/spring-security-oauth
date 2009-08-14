@@ -121,6 +121,12 @@ public class OAuthProviderBeanDefinitionParser implements BeanDefinitionParser {
       protectedResourceFilterBean.addPropertyReference("providerSupport", supportRef);
     }
 
+    String require10a = element.getAttribute("require10a");
+    if (StringUtils.hasText(require10a)) {
+      requestTokenFilterBean.addPropertyValue("require10a", require10a);
+      authenticateTokenFilterBean.addPropertyValue("require10a", require10a);
+    }
+
     String callbackServicesRef = element.getAttribute("callback-services-ref");
     if (!StringUtils.hasText(callbackServicesRef)) {
       BeanDefinitionBuilder callbackServices = BeanDefinitionBuilder.rootBeanDefinition(InMemoryCallbackServices.class);
