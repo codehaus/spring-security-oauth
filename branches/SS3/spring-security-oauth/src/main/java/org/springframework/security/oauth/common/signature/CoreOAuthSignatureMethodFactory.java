@@ -1,5 +1,5 @@
 /*
- * Copyright 2008 Web Cohesion
+ * Copyright 2008-2009 Web Cohesion
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,8 +16,8 @@
 
 package org.springframework.security.oauth.common.signature;
 
-import org.springframework.security.Authentication;
-import org.springframework.security.context.SecurityContextHolder;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import static org.springframework.security.oauth.common.OAuthCodec.oauthEncode;
 
 import javax.crypto.spec.SecretKeySpec;

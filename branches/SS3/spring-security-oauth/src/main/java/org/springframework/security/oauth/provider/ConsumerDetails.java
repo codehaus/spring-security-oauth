@@ -17,9 +17,10 @@
 package org.springframework.security.oauth.provider;
 
 import org.springframework.security.oauth.common.signature.SignatureSecret;
-import org.springframework.security.GrantedAuthority;
+import org.springframework.security.core.GrantedAuthority;
 
 import java.io.Serializable;
+import java.util.List;
 
 /**
  * Provides core OAuth consumer information.
@@ -56,5 +57,5 @@ public interface ConsumerDetails extends Serializable {
    *
    * @return The authorities.
    */
-  GrantedAuthority[] getAuthorities();
+  List<GrantedAuthority> getAuthorities();
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2008 Web Cohesion
+ * Copyright 2008-2009 Web Cohesion
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,10 +16,10 @@
 
 package org.springframework.security.oauth.provider;
 
-import org.springframework.security.Authentication;
-import org.springframework.security.AccessDeniedException;
-import org.springframework.security.providers.AbstractAuthenticationToken;
-import org.springframework.security.context.SecurityContextHolder;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.authentication.AbstractAuthenticationToken;
 import org.springframework.security.oauth.common.OAuthConsumerParameter;
 import org.springframework.security.oauth.provider.token.OAuthAccessProviderToken;
 import org.springframework.security.oauth.provider.token.OAuthProviderToken;
@@ -39,10 +39,9 @@ import java.util.Map;
  * ONLY via OAuth access token, set <code>requireOAuthCredentials</code> to true. 
  *
  * @author Ryan Heaton
+ * @author Andrew McCall
  */
 public class ProtectedResourceProcessingFilter extends OAuthProviderProcessingFilter {
-
-  public static final int FILTER_CHAIN_ORDER = AccessTokenProcessingFilter.FILTER_CHAIN_ORDER + 1;
 
   private boolean allowAllMethods = true;
 
@@ -95,15 +94,6 @@ public class ProtectedResourceProcessingFilter extends OAuthProviderProcessingFi
   @Override
   public void setFilterProcessesUrl(String filterProcessesUrl) {
     throw new UnsupportedOperationException("The OAuth protected resource processing filter doesn't support a filter processes URL.");
-  }
-
-  /**
-   * The protected resource filtering happens after the access token filtering.
-   *
-   * @return The order after the access token.
-   */
-  public int getOrder() {
-    return ProtectedResourceProcessingFilter.FILTER_CHAIN_ORDER;
   }
 
   /**

@@ -1,5 +1,5 @@
 /*
- * Copyright 2008 Web Cohesion
+ * Copyright 2008-2009 Web Cohesion
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,19 +17,23 @@
 package org.springframework.security.oauth.provider;
 
 import org.springframework.security.oauth.common.signature.SignatureSecret;
-import org.springframework.security.GrantedAuthority;
+import org.springframework.security.core.GrantedAuthority;
+
+import java.util.List;
+import java.util.ArrayList;
 
 /**
  * Base implementation for consumer details.
  *
  * @author Ryan Heaton
+ * @author Andrew McCall
  */
 public class BaseConsumerDetails implements ResourceSpecificConsumerDetails {
 
   private String consumerKey;
   private String consumerName;
   private SignatureSecret signatureSecret;
-  private GrantedAuthority[] authorities = new GrantedAuthority[0];
+  private List<GrantedAuthority> authorities = new ArrayList<GrantedAuthority>();
   private String resourceName;
   private String resourceDescription;
 
@@ -92,7 +96,7 @@ public class BaseConsumerDetails implements ResourceSpecificConsumerDetails {
    *
    * @return The base authorities for this consumer.
    */
-  public GrantedAuthority[] getAuthorities() {
+  public List<GrantedAuthority> getAuthorities() {
     return authorities;
   }
 
@@ -101,7 +105,7 @@ public class BaseConsumerDetails implements ResourceSpecificConsumerDetails {
    *
    * @param authorities The base authorities for this consumer.
    */
-  public void setAuthorities(GrantedAuthority[] authorities) {
+  public void setAuthorities(List<GrantedAuthority> authorities) {
     this.authorities = authorities;
   }
 
