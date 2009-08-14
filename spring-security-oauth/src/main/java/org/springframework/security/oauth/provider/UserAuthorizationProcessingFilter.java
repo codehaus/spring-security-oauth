@@ -43,6 +43,7 @@ import javax.servlet.http.HttpServletResponse;
  */
 public class UserAuthorizationProcessingFilter extends AbstractAuthenticationProcessingFilter {
 
+  public static final int FILTER_CHAIN_ORDER = UnauthenticatedRequestTokenProcessingFilter.FILTER_CHAIN_ORDER + 1;
   protected static final String CALLBACK_ATTRIBUTE = UserAuthorizationProcessingFilter.class.getName() + "#CALLBACK";
 
   private OAuthProviderTokenServices tokenServices;
@@ -92,7 +93,7 @@ public class UserAuthorizationProcessingFilter extends AbstractAuthenticationPro
    * @return The order after the request token.
    */
   public int getOrder() {
-    return FilterChainOrder.EXCEPTION_TRANSLATION_FILTER + 16;
+    return FILTER_CHAIN_ORDER;
   }
 
   /**
