@@ -1,5 +1,5 @@
 /*
- * Copyright 2008 Web Cohesion
+ * Copyright 2008-2009 Web Cohesion
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,21 +16,25 @@
 
 package org.springframework.security.oauth.config;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.springframework.beans.BeanMetadataElement;
+import org.springframework.beans.PropertyValue;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.beans.factory.config.RuntimeBeanReference;
 import org.springframework.beans.factory.support.BeanDefinitionBuilder;
 import org.springframework.beans.factory.xml.BeanDefinitionParser;
 import org.springframework.beans.factory.xml.ParserContext;
-import org.springframework.security.ConfigAttributeEditor;
-import org.springframework.security.ui.webapp.AuthenticationProcessingFilterEntryPoint;
-import org.springframework.security.config.ConfigUtilsBackdoor;
-import org.springframework.security.intercept.web.DefaultFilterInvocationDefinitionSource;
-import org.springframework.security.intercept.web.RequestKey;
-import org.springframework.security.oauth.consumer.OAuthConsumerProcessingFilter;
+import org.springframework.security.access.ConfigAttributeEditor;
+import org.springframework.security.config.BeanIds;
 import org.springframework.security.oauth.consumer.CoreOAuthConsumerSupport;
-import org.springframework.security.util.AntUrlPathMatcher;
-import org.springframework.security.util.RegexUrlPathMatcher;
-import org.springframework.security.util.UrlMatcher;
+import org.springframework.security.oauth.consumer.OAuthConsumerProcessingFilter;
+import org.springframework.security.web.access.intercept.DefaultFilterInvocationSecurityMetadataSource;
+import org.springframework.security.web.access.intercept.RequestKey;
+import org.springframework.security.web.authentication.LoginUrlAuthenticationEntryPoint;
+import org.springframework.security.web.util.AntUrlPathMatcher;
+import org.springframework.security.web.util.RegexUrlPathMatcher;
+import org.springframework.security.web.util.UrlMatcher;
 import org.springframework.util.StringUtils;
 import org.springframework.util.xml.DomUtils;
 import org.w3c.dom.Element;
@@ -38,13 +42,17 @@ import org.w3c.dom.Element;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Parser for the OAuth "consumer" element.
  *
  * @author Ryan Heaton
+ * @author Andrew McCall
  */
 public class OAuthConsumerBeanDefinitionParser implements BeanDefinitionParser {
+
+  private static final Log LOG = LogFactory.getLog(OAuthConsumerBeanDefinitionParser.class);
 
   public BeanDefinition parse(Element element, ParserContext parserContext) {
     BeanDefinitionBuilder consumerFilterBean = BeanDefinitionBuilder.rootBeanDefinition(OAuthConsumerProcessingFilter.class);
@@ -61,7 +69,7 @@ public class OAuthConsumerBeanDefinitionParser implements BeanDefinitionParser {
     else {
       String failurePage = element.getAttribute("oauth-failure-page");
       if (StringUtils.hasText(failurePage)) {
-        AuthenticationProcessingFilterEntryPoint entryPoint = new AuthenticationProcessingFilterEntryPoint();
+        LoginUrlAuthenticationEntryPoint entryPoint = new LoginUrlAuthenticationEntryPoint();
         entryPoint.setLoginFormUrl(failurePage);
         consumerFilterBean.addPropertyValue("OAuthFailureEntryPoint", entryPoint);
       }
@@ -153,9 +161,29 @@ public class OAuthConsumerBeanDefinitionParser implements BeanDefinitionParser {
       }
     }
 
-    consumerFilterBean.addPropertyValue("objectDefinitionSource", new DefaultFilterInvocationDefinitionSource(matcher, invocationDefinitionMap));
+    consumerFilterBean.addPropertyValue("objectDefinitionSource", new DefaultFilterInvocationSecurityMetadataSource(matcher, invocationDefinitionMap));
     parserContext.getRegistry().registerBeanDefinition("oauthConsumerFilter", consumerFilterBean.getBeanDefinition());
-    ConfigUtilsBackdoor.addHttpFilter(parserContext, new RuntimeBeanReference("oauthConsumerFilter"));
+
+    BeanDefinition filterChainProxy = parserContext.getRegistry().getBeanDefinition(BeanIds.FILTER_CHAIN_PROXY);
+    if (filterChainProxy != null) {
+      PropertyValue propValue = filterChainProxy.getPropertyValues().getPropertyValue("filterChainMap");
+      Map filterChainMap = propValue == null ? null : (Map) propValue.getValue();
+      if (filterChainMap != null) {
+        List<BeanMetadataElement> filterChain = (List<BeanMetadataElement>) filterChainMap.get(matcher.getUniversalMatchPattern());
+        if (filterChain != null) {
+          filterChain.add(new RuntimeBeanReference("oauthConsumerFilter"));
+        }
+        else {
+          LOG.error(String.format("Unable to insert consumer filter into the configuration: filter chain defined for pattern %s!", matcher.getUniversalMatchPattern()));
+        }
+      }
+      else {
+        LOG.error("Unable to insert consumer filter into the configuration: no filter chain map defined!");
+      }
+    }
+    else {
+      LOG.error("Unable to insert consumer filter into the configuration: no filter chain proxy defined!");
+    }
 
     return null;
   }

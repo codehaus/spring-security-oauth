@@ -1,5 +1,5 @@
 /*
- * Copyright 2008 Web Cohesion
+ * Copyright 2008-2009 Web Cohesion
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,8 +16,8 @@
 
 package org.springframework.security.oauth.provider;
 
-import org.springframework.security.AuthenticationException;
-import org.springframework.security.context.SecurityContextHolder;
+import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth.common.OAuthConsumerParameter;
 import org.springframework.security.oauth.common.OAuthProviderParameter;
 import org.springframework.security.oauth.common.OAuthCodec;
@@ -36,10 +36,9 @@ import java.io.IOException;
  * Processing filter for handling a request for an OAuth access token.
  *
  * @author Ryan Heaton
+ * @author Andrew McCall
  */
 public class AccessTokenProcessingFilter extends OAuthProviderProcessingFilter {
-
-  public static final int FILTER_CHAIN_ORDER = UserAuthorizationProcessingFilter.FILTER_CHAIN_ORDER + 1;
 
   // The OAuth spec doesn't specify a content-type of the response.  However, it's NOT
   // "application/x-www-form-urlencoded" because the response isn't URL-encoded. Until
@@ -100,15 +99,6 @@ public class AccessTokenProcessingFilter extends OAuthProviderProcessingFilter {
   @Override
   protected void onNewTimestamp() throws AuthenticationException {
     throw new InvalidOAuthParametersException(messages.getMessage("AccessTokenProcessingFilter.timestampNotNew", "A new timestamp should not be used in a request for an access token."));
-  }
-
-  /**
-   * The access token filter comes after the user authorization filter.
-   *
-   * @return The access token filter comes after the user authorization filter.
-   */
-  public int getOrder() {
-    return AccessTokenProcessingFilter.FILTER_CHAIN_ORDER;
   }
 
   /**

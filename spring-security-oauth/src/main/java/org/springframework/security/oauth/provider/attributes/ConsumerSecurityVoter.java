@@ -16,17 +16,17 @@
 
 package org.springframework.security.oauth.provider.attributes;
 
-import org.springframework.security.Authentication;
-import org.springframework.security.ConfigAttribute;
-import org.springframework.security.ConfigAttributeDefinition;
-import org.springframework.security.GrantedAuthority;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.access.AccessDecisionVoter;
+import org.springframework.security.access.ConfigAttribute;
 import org.springframework.security.oauth.provider.OAuthAuthenticationDetails;
-import org.springframework.security.vote.AccessDecisionVoter;
 
-import java.util.Collection;
+import java.util.List;
 
 /**
  * @author Ryan Heaton
+ * @author Andrew McCall
  */
 public class ConsumerSecurityVoter implements AccessDecisionVoter {
 
@@ -55,15 +55,14 @@ public class ConsumerSecurityVoter implements AccessDecisionVoter {
    *
    * @param authentication The authentication.
    * @param object The object.
-   * @param definition The definition.
+   * @param configAttributes the ConfigAttributes.
    * @return The vote.
    */
-  public int vote(Authentication authentication, Object object, ConfigAttributeDefinition definition) {
+  public int vote(Authentication authentication, Object object, List<ConfigAttribute> configAttributes) {
     int result = ACCESS_ABSTAIN;
 
     if (authentication.getDetails() instanceof OAuthAuthenticationDetails) {
       OAuthAuthenticationDetails details = (OAuthAuthenticationDetails) authentication.getDetails();
-      Collection configAttributes = definition.getConfigAttributes();
       for (Object configAttribute : configAttributes) {
         ConfigAttribute attribute = (ConfigAttribute) configAttribute;
 
@@ -80,7 +79,7 @@ public class ConsumerSecurityVoter implements AccessDecisionVoter {
             return ACCESS_GRANTED;
           }
           else if (config.getSecurityType() == ConsumerSecurityConfig.ConsumerSecurityType.CONSUMER_ROLE) {
-            GrantedAuthority[] authorities = details.getConsumerDetails().getAuthorities();
+            List<GrantedAuthority> authorities = details.getConsumerDetails().getAuthorities();
             if (authorities != null) {
               for (GrantedAuthority authority : authorities) {
                 if (authority.getAuthority().equals(config.getAttribute())) {

@@ -16,7 +16,7 @@
 
 package org.springframework.security.oauth.provider;
 
-import org.springframework.security.ui.WebAuthenticationDetails;
+import org.springframework.security.web.authentication.WebAuthenticationDetails;
 
 import javax.servlet.http.HttpServletRequest;
 
