@@ -23,6 +23,7 @@ import org.springframework.security.context.SecurityContextHolder;
 import static org.easymock.EasyMock.*;
 import org.springframework.security.oauth.provider.token.OAuthProviderTokenServices;
 import org.springframework.security.oauth.provider.verifier.OAuthVerifierServices;
+import org.springframework.security.oauth.provider.callback.OAuthCallbackServices;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -39,27 +40,35 @@ public class TestOAuthUserAuthorizationProcessingFilter extends TestCase {
     HttpServletRequest request = createMock(HttpServletRequest.class);
     Authentication authentication = createMock(Authentication.class);
     OAuthProviderTokenServices tokenServices = createMock(OAuthProviderTokenServices.class);
+    OAuthCallbackServices callbackServices = createMock(OAuthCallbackServices.class);
+    filter.setCallbackServices(callbackServices);
 
     SecurityContextHolder.getContext().setAuthentication(authentication);
+    expect(request.getParameter("requestToken")).andReturn("tok");
+    expect(callbackServices.readCallback("tok")).andReturn("callback");
+    request.setAttribute(UserAuthorizationProcessingFilter.CALLBACK_ATTRIBUTE, "callback");
     expect(authentication.isAuthenticated()).andReturn(false);
-    replay(authentication, request, tokenServices);
+    replay(authentication, request, tokenServices, callbackServices);
     try {
       filter.attemptAuthentication(request);
       fail();
     }
     catch (InsufficientAuthenticationException e) {
-      verify(authentication, request, tokenServices);
-      reset(authentication, request, tokenServices);
+      verify(authentication, request, tokenServices, callbackServices);
+      reset(authentication, request, tokenServices, callbackServices);
     }
 
     expect(authentication.isAuthenticated()).andReturn(true);
     expect(request.getParameter("requestToken")).andReturn("tok");
+    expect(callbackServices.readCallback("tok")).andReturn("callback");
+    request.setAttribute(UserAuthorizationProcessingFilter.CALLBACK_ATTRIBUTE, "callback");
+    expect(request.getParameter("requestToken")).andReturn("tok");
     tokenServices.authorizeRequestToken("tok", authentication);
     filter.setTokenServices(tokenServices);
-    replay(authentication, request, tokenServices);
+    replay(authentication, request, tokenServices, callbackServices);
     filter.attemptAuthentication(request);
-    verify(authentication, request, tokenServices);
-    reset(authentication, request, tokenServices);
+    verify(authentication, request, tokenServices, callbackServices);
+    reset(authentication, request, tokenServices, callbackServices);
 
     SecurityContextHolder.getContext().setAuthentication(null);
   }

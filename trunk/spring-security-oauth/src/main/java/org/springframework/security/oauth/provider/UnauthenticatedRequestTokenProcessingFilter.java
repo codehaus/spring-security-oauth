@@ -49,6 +49,7 @@ public class UnauthenticatedRequestTokenProcessingFilter extends OAuthProviderPr
   private String responseContentType = "text/plain;charset=utf-8";
 
   private OAuthCallbackServices callbackServices;
+  private boolean require10a = true;
 
   public UnauthenticatedRequestTokenProcessingFilter() {
     setFilterProcessesUrl("/oauth_request_token");
@@ -64,9 +65,11 @@ public class UnauthenticatedRequestTokenProcessingFilter extends OAuthProviderPr
   protected void validateOAuthParams(ConsumerDetails consumerDetails, Map<String, String> oauthParams) throws InvalidOAuthParametersException {
     super.validateOAuthParams(consumerDetails, oauthParams);
 
-    String token = oauthParams.get(OAuthConsumerParameter.oauth_callback.toString());
-    if (token == null) {
-      throw new InvalidOAuthParametersException(messages.getMessage("AccessTokenProcessingFilter.missingCallback", "Missing callback."));
+    if (isRequire10a()) {
+      String token = oauthParams.get(OAuthConsumerParameter.oauth_callback.toString());
+      if (token == null) {
+        throw new InvalidOAuthParametersException(messages.getMessage("AccessTokenProcessingFilter.missingCallback", "Missing callback."));
+      }
     }
   }
 
@@ -80,7 +83,10 @@ public class UnauthenticatedRequestTokenProcessingFilter extends OAuthProviderPr
 
     //store the callback url.
     String tokenValue = authToken.getValue();
-    getCallbackServices().storeCallback(authentication.getOAuthParameters().get(OAuthConsumerParameter.oauth_callback.toString()), tokenValue);
+    String callback = authentication.getOAuthParameters().get(OAuthConsumerParameter.oauth_callback.toString());
+    if (callback != null) {
+      getCallbackServices().storeCallback(callback, tokenValue);
+    }
 
     StringBuilder responseValue = new StringBuilder(OAuthProviderParameter.oauth_token.toString())
       .append('=')
@@ -88,10 +94,12 @@ public class UnauthenticatedRequestTokenProcessingFilter extends OAuthProviderPr
       .append('&')
       .append(OAuthProviderParameter.oauth_token_secret.toString())
       .append('=')
-      .append(OAuthCodec.oauthEncode(authToken.getSecret()))
-      .append('&')
-      .append(OAuthProviderParameter.oauth_callback_confirmed.toString())
-      .append("=true");
+      .append(OAuthCodec.oauthEncode(authToken.getSecret()));
+    if (callback != null) {
+      responseValue.append('&')
+        .append(OAuthProviderParameter.oauth_callback_confirmed.toString())
+        .append("=true");
+    }
     response.setContentType(getResponseContentType());
     response.getWriter().print(responseValue.toString());
     response.flushBuffer();
@@ -156,5 +164,23 @@ public class UnauthenticatedRequestTokenProcessingFilter extends OAuthProviderPr
   @Autowired
   public void setCallbackServices(OAuthCallbackServices callbackServices) {
     this.callbackServices = callbackServices;
+  }
+
+  /**
+   * Whether to require 1.0a support.
+   *
+   * @return Whether to require 1.0a support.
+   */
+  public boolean isRequire10a() {
+    return require10a;
+  }
+
+  /**
+   * Whether to require 1.0a support.
+   *
+   * @param require10a Whether to require 1.0a support.
+   */
+  public void setRequire10a(boolean require10a) {
+    this.require10a = require10a;
   }
 }

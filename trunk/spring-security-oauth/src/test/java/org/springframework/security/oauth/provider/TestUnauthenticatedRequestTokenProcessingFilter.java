@@ -21,6 +21,7 @@ import org.springframework.security.oauth.provider.token.OAuthProviderToken;
 import org.springframework.security.oauth.provider.token.OAuthProviderTokenServices;
 import org.springframework.security.oauth.provider.token.OAuthAccessProviderToken;
 import org.springframework.security.oauth.provider.callback.OAuthCallbackServices;
+import org.springframework.security.oauth.common.OAuthConsumerParameter;
 import org.springframework.security.context.SecurityContextHolder;
 import org.springframework.security.GrantedAuthority;
 
@@ -62,13 +63,14 @@ public class TestUnauthenticatedRequestTokenProcessingFilter extends TestCase {
     expect(authToken.getSecret()).andReturn("shhhhhh");
     expect(consumerDetails.getAuthorities()).andReturn(new GrantedAuthority[0]);    
     expect(consumerDetails.getConsumerKey()).andReturn("chi");
-    cs.storeCallback(null, "tokvalue");
+    cs.storeCallback("mycallback", "tokvalue");
     response.setContentType("text/plain;charset=utf-8");
     StringWriter writer = new StringWriter();
     expect(response.getWriter()).andReturn(new PrintWriter(writer));
     response.flushBuffer();
     replay(request, response, filterChain, authToken, consumerDetails, cs);
     TreeMap<String, String> params = new TreeMap<String, String>();
+    params.put(OAuthConsumerParameter.oauth_callback.toString(), "mycallback");
     ConsumerAuthentication authentication = new ConsumerAuthentication(consumerDetails, creds, params);
     authentication.setAuthenticated(true);
     SecurityContextHolder.getContext().setAuthentication(authentication);

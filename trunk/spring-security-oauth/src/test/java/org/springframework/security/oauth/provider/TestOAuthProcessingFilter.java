@@ -53,6 +53,8 @@ public class TestOAuthProcessingFilter extends TestCase {
     final boolean[] triggers = new boolean[2];
     Arrays.fill(triggers, false);
     OAuthProviderProcessingFilter filter = new OAuthProviderProcessingFilter() {
+      private boolean require10a = true;
+
       @Override
       protected boolean requiresAuthentication(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) {
         return true;
@@ -175,6 +177,8 @@ public class TestOAuthProcessingFilter extends TestCase {
    */
   public void testValidateParams() throws Exception {
     OAuthProviderProcessingFilter filter = new OAuthProviderProcessingFilter() {
+      private boolean require10a = true;
+
       protected void onValidSignature(HttpServletRequest request, HttpServletResponse response, FilterChain chain) throws IOException, ServletException {
       }
 
@@ -294,6 +298,8 @@ public class TestOAuthProcessingFilter extends TestCase {
    */
   public void testValidateSignature() throws Exception {
     OAuthProviderProcessingFilter filter = new OAuthProviderProcessingFilter() {
+      private boolean require10a = true;
+
       protected void onValidSignature(HttpServletRequest request, HttpServletResponse response, FilterChain chain) throws IOException, ServletException {
       }
 

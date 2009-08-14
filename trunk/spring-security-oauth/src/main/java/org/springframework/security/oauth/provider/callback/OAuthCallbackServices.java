@@ -19,7 +19,7 @@ public interface OAuthCallbackServices {
    * Read the callback for the specified request token.
    *
    * @param requestToken The request token.
-   * @return The callback URL.
+   * @return The callback URL, or null if none found.
    */
   String readCallback(String requestToken) throws OAuthCallbackException;
 }
