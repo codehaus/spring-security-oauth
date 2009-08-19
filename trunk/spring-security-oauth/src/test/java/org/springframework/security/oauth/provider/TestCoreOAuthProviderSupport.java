@@ -25,6 +25,7 @@ import javax.servlet.http.HttpServletRequest;
 import java.util.Map;
 import java.util.HashMap;
 import java.util.Collections;
+import java.util.Arrays;
 
 /**
  * @author Ryan Heaton
@@ -37,14 +38,14 @@ public class TestCoreOAuthProviderSupport extends TestCase {
   public void testParseParameters() throws Exception {
     CoreOAuthProviderSupport support = new CoreOAuthProviderSupport();
     HttpServletRequest request = createMock(HttpServletRequest.class);
-    expect(request.getHeader("Authorization")).andReturn("OAuth realm=\"http://sp.example.com/\",\n" +
+    expect(request.getHeaders("Authorization")).andReturn(Collections.enumeration(Arrays.asList("OAuth realm=\"http://sp.example.com/\",\n" +
       "                oauth_consumer_key=\"0685bd9184jfhq22\",\n" +
       "                oauth_token=\"ad180jjd733klru7\",\n" +
       "                oauth_signature_method=\"HMAC-SHA1\",\n" +
       "                oauth_signature=\"wOJIO9A2W5mFwDgiDvZbTSMK%2FPY%3D\",\n" +
       "                oauth_timestamp=\"137131200\",\n" +
       "                oauth_nonce=\"4572616e48616d6d65724c61686176\",\n" +
-      "                oauth_version=\"1.0\"");
+      "                oauth_version=\"1.0\"")));
     replay(request);
     Map<String,String> params = support.parseParameters(request);
     verify(request);
@@ -78,14 +79,14 @@ public class TestCoreOAuthProviderSupport extends TestCase {
       expect(request.getParameter(key)).andReturn(requestParameters.get(key));
     }
 
-    expect(request.getHeader("Authorization")).andReturn("OAuth realm=\"http://sp.example.com/\",\n" +
+    expect(request.getHeaders("Authorization")).andReturn(Collections.enumeration(Arrays.asList("OAuth realm=\"http://sp.example.com/\",\n" +
       "                oauth_consumer_key=\"dpf43f3p2l4k3l03\",\n" +
       "                oauth_token=\"nnch734d00sl2jdk\",\n" +
       "                oauth_signature_method=\"HMAC-SHA1\",\n" +
       "                oauth_signature=\"unimportantforthistest\",\n" +
       "                oauth_timestamp=\"1191242096\",\n" +
       "                oauth_nonce=\"kllo9940pd9333jh\",\n" +
-      "                oauth_version=\"1.0\"");
+      "                oauth_version=\"1.0\"")));
 
     expect(request.getMethod()).andReturn("gEt");
     CoreOAuthProviderSupport support = new CoreOAuthProviderSupport();

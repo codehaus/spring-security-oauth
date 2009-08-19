@@ -42,15 +42,48 @@ public class CoreOAuthProviderSupport implements OAuthProviderSupport {
     for (OAuthConsumerParameter supportedParameter : OAuthConsumerParameter.values()) {
       supportedOAuthParameters.add(supportedParameter.toString());
     }
-    this.supportedOAuthParameters = Collections.unmodifiableSet(supportedOAuthParameters);
+    this.supportedOAuthParameters = supportedOAuthParameters;
   }
 
   // Inherited.
   public Map<String, String> parseParameters(HttpServletRequest request) {
-    Map<String, String> parameters = new HashMap<String, String>();
+    Map<String, String> parameters = parseHeaderParameters(request);
 
-    String header = request.getHeader("Authorization");
-    if ((header != null) && (header.toLowerCase().startsWith("oauth "))) {
+    if (parameters == null) {
+      //if there is no header authorization parameters, then the oauth parameters are the supported OAuth request parameters.
+      parameters = new HashMap<String, String>();
+      Set<String> supportedOAuthParameters = getSupportedOAuthParameters();
+      for (String supportedOAuthParameter : supportedOAuthParameters) {
+        String param = request.getParameter(supportedOAuthParameter);
+        if (param != null) {
+          parameters.put(supportedOAuthParameter, param);
+        }
+      }
+    }
+
+    return parameters;
+  }
+
+  /**
+   * Parse the OAuth header parameters.
+   *
+   * @param request The request.
+   * @return The parsed parameters, or null if no OAuth authorization header was supplied.
+   */
+  protected Map<String, String> parseHeaderParameters(HttpServletRequest request) {
+    String header = null;
+    Enumeration<String> headers = request.getHeaders("Authorization");
+    while (headers.hasMoreElements()) {
+      String value = headers.nextElement();
+      if ((value.toLowerCase().startsWith("oauth "))) {
+        header = value;
+        break;
+      }
+    }
+
+    Map<String, String> parameters = null;
+    if (header != null) {
+      parameters = new HashMap<String, String>();
       String authHeaderValue = header.substring(6);
 
       //create a map of the authorization header values per OAuth Core 1.0, section 5.4.1
@@ -67,18 +100,7 @@ public class CoreOAuthProviderSupport implements OAuthProviderSupport {
           throw new IllegalStateException(e);
         }
 
-        if ((getSupportedOAuthParameters().contains(key)) || ("realm".equals(key))) {
-          parameters.put(key, value);
-        }
-      }
-    }
-    else {
-      Set<String> supportedOAuthParameters = getSupportedOAuthParameters();
-      for (String supportedOAuthParameter : supportedOAuthParameters) {
-        String param = request.getParameter(supportedOAuthParameter);
-        if (param != null) {
-          parameters.put(supportedOAuthParameter, param);
-        }
+        parameters.put(key, value);
       }
     }
 
@@ -213,7 +235,7 @@ public class CoreOAuthProviderSupport implements OAuthProviderSupport {
    * The configured base URL for this OAuth provider for the given HttpServletRequest. Default implementation return getBaseUrl().
    *
    * @param request The HttpServletRequest currently processed
-   * @returnThe configured base URL for this OAuth provider with respect to the supplied HttpServletRequest.
+   * @return The configured base URL for this OAuth provider with respect to the supplied HttpServletRequest.
    */
   protected String getBaseUrl(HttpServletRequest request) {
     return getBaseUrl();
