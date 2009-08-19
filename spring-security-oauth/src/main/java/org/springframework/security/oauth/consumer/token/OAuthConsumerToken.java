@@ -17,6 +17,7 @@
 package org.springframework.security.oauth.consumer.token;
 
 import java.io.Serializable;
+import java.util.Map;
 
 /**
  * Interface for a consumer-side OAuth token.
@@ -30,6 +31,7 @@ public class OAuthConsumerToken implements Serializable {
   private String secret;
   private String nonce;
   private boolean accessToken;
+  private Map<String, String> additionalParameters;
 
   /**
    * The id of the resource to which this token applies.
@@ -119,5 +121,23 @@ public class OAuthConsumerToken implements Serializable {
    */
   public void setAccessToken(boolean accessToken) {
     this.accessToken = accessToken;
+  }
+
+  /**
+   * Any additional parameters for the consumer token.
+   *
+   * @return Any additional parameters for the consumer token.
+   */
+  public Map<String, String> getAdditionalParameters() {
+    return additionalParameters;
+  }
+
+  /**
+   * Any additional parameters for the consumer token.
+   *
+   * @param additionalParameters Any additional parameters for the consumer token.
+   */
+  public void setAdditionalParameters(Map<String, String> additionalParameters) {
+    this.additionalParameters = additionalParameters;
   }
 }

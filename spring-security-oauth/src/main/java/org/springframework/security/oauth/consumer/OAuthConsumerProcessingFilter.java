@@ -1,5 +1,5 @@
 /*
- * Copyright 2008 Web Cohesion
+ * Copyright 2008-2009 Web Cohesion
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,14 +17,15 @@
 package org.springframework.security.oauth.consumer;
 
 import org.springframework.security.*;
-import org.springframework.security.context.SecurityContextHolder;
-import org.springframework.security.intercept.web.FilterInvocation;
-import org.springframework.security.intercept.web.FilterInvocationDefinitionSource;
-import org.springframework.security.ui.AuthenticationEntryPoint;
-import org.springframework.security.ui.FilterChainOrder;
-import org.springframework.security.ui.savedrequest.SavedRequest;
-import org.springframework.security.util.PortResolver;
-import org.springframework.security.util.PortResolverImpl;
+import org.springframework.security.access.ConfigAttribute;
+import org.springframework.security.web.savedrequest.SavedRequest;
+import org.springframework.security.web.*;
+import org.springframework.security.web.access.intercept.DefaultFilterInvocationSecurityMetadataSource;
+import org.springframework.security.web.access.intercept.FilterInvocationSecurityMetadataSource;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.SpringSecurityMessageSource;
+import org.springframework.security.authentication.InsufficientAuthenticationException;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.InitializingBean;
@@ -51,23 +52,24 @@ import java.util.*;
 
 /**
  * OAuth consumer processing filter. This filter should be applied to requests for OAuth protected resources (see OAuth Core 1.0).<br/><br/>
- *
+ * <p/>
  * When servicing a request that requires protected resources, this filter sets a request attribute (default "OAUTH_ACCESS_TOKENS") that contains
  * the list of {@link org.springframework.security.oauth.consumer.token.OAuthConsumerToken}s.
  *
  * @author Ryan Heaton
+ * @author Andrew McCall
  */
 public class OAuthConsumerProcessingFilter implements Filter, InitializingBean, MessageSourceAware, Ordered {
 
   public static final int FILTER_CHAIN_ORDER = FilterChainOrder.FILTER_SECURITY_INTERCEPTOR + 15;
-
+  
   public static final String ACCESS_TOKENS_DEFAULT_ATTRIBUTE = "OAUTH_ACCESS_TOKENS";
   public static final String OAUTH_FAILURE_KEY = "OAUTH_FAILURE_KEY";
   private static final Log LOG = LogFactory.getLog(OAuthConsumerProcessingFilter.class);
 
   private AuthenticationEntryPoint OAuthFailureEntryPoint;
   protected MessageSourceAccessor messages = SpringSecurityMessageSource.getAccessor();
-  private FilterInvocationDefinitionSource objectDefinitionSource;
+  private FilterInvocationSecurityMetadataSource objectDefinitionSource;
   private OAuthConsumerSupport consumerSupport;
   private boolean requireAuthenticated = true;
   private String accessTokensRequestAttribute = ACCESS_TOKENS_DEFAULT_ATTRIBUTE;
@@ -109,7 +111,7 @@ public class OAuthConsumerProcessingFilter implements Filter, InitializingBean, 
             if (LOG.isDebugEnabled()) {
               LOG.debug("Obtaining request token for dependency: " + dependency);
             }
-            
+
             //obtain authorization.
             String callbackURL = response.encodeRedirectURL(getCallbackURL(request));
             OAuthConsumerToken requestToken = getConsumerSupport().getUnauthorizedRequestToken(dependency, callbackURL);
@@ -132,7 +134,7 @@ public class OAuthConsumerProcessingFilter implements Filter, InitializingBean, 
               if (LOG.isDebugEnabled()) {
                 LOG.debug("Obtaining access token for dependency: " + dependency);
               }
-              
+
               //authorize the request token and store it.
               token = getConsumerSupport().getAccessToken(token, request.getParameter(OAuthProviderParameter.oauth_verifier.toString()));
 
@@ -234,7 +236,7 @@ public class OAuthConsumerProcessingFilter implements Filter, InitializingBean, 
     if (LOG.isDebugEnabled()) {
       LOG.debug(failure);
     }
-    
+
     if (getOAuthFailureEntryPoint() != null) {
       getOAuthFailureEntryPoint().commence(request, response, failure);
     }
@@ -257,16 +259,13 @@ public class OAuthConsumerProcessingFilter implements Filter, InitializingBean, 
 
     if (getObjectDefinitionSource() != null) {
       FilterInvocation invocation = new FilterInvocation(request, response, filterChain);
-      ConfigAttributeDefinition attributeDefinition = getObjectDefinitionSource().getAttributes(invocation);
-      if (attributeDefinition != null) {
-        Collection attributes = attributeDefinition.getConfigAttributes();
-        for (Object att : attributes) {
-          ConfigAttribute attribute = (ConfigAttribute) att;
+      Collection<ConfigAttribute> attributes = getObjectDefinitionSource().getAttributes(invocation);
+      if (attributes != null) {
+        for (ConfigAttribute attribute : attributes) {
           deps.add(attribute.getAttribute());
         }
       }
     }
-
     return deps;
   }
 
@@ -331,7 +330,7 @@ public class OAuthConsumerProcessingFilter implements Filter, InitializingBean, 
    *
    * @param tokenServicesFactory The OAuth token services factory.
    */
-  @Autowired (required = false)
+  @Autowired(required = false)
   public void setTokenServicesFactory(OAuthConsumerTokenServicesFactory tokenServicesFactory) {
     this.tokenServicesFactory = tokenServicesFactory;
   }
@@ -341,7 +340,7 @@ public class OAuthConsumerProcessingFilter implements Filter, InitializingBean, 
    *
    * @return The filter invocation definition source.
    */
-  public FilterInvocationDefinitionSource getObjectDefinitionSource() {
+  public FilterInvocationSecurityMetadataSource getObjectDefinitionSource() {
     return objectDefinitionSource;
   }
 
@@ -350,7 +349,7 @@ public class OAuthConsumerProcessingFilter implements Filter, InitializingBean, 
    *
    * @param objectDefinitionSource The filter invocation definition source.
    */
-  public void setObjectDefinitionSource(FilterInvocationDefinitionSource objectDefinitionSource) {
+  public void setObjectDefinitionSource(FilterInvocationSecurityMetadataSource objectDefinitionSource) {
     this.objectDefinitionSource = objectDefinitionSource;
   }
 
@@ -432,7 +431,7 @@ public class OAuthConsumerProcessingFilter implements Filter, InitializingBean, 
    *
    * @param portResolver The port resolver.
    */
-  @Autowired (required = false)
+  @Autowired(required = false)
   public void setPortResolver(PortResolver portResolver) {
     this.portResolver = portResolver;
   }

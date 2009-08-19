@@ -16,7 +16,7 @@
 
 package org.springframework.security.oauth.consumer.token;
 
-import org.springframework.security.Authentication;
+import org.springframework.security.core.Authentication;
 
 import javax.servlet.http.HttpServletRequest;
 

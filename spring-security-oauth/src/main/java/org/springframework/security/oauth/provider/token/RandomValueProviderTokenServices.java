@@ -16,7 +16,8 @@
 
 package org.springframework.security.oauth.provider.token;
 
-import org.springframework.security.*;
+import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.core.Authentication;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.apache.commons.codec.binary.Base64;

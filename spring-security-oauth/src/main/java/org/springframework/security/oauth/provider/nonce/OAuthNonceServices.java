@@ -16,7 +16,7 @@
 
 package org.springframework.security.oauth.provider.nonce;
 
-import org.springframework.security.AuthenticationException;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.oauth.provider.ConsumerDetails;
 
 /**
@@ -32,7 +32,7 @@ public interface OAuthNonceServices {
    * @param consumerDetails The consumer details.
    * @param timestamp The timestamp.
    * @param nonce The nonce.
-   * @throws org.springframework.security.AuthenticationException If the nonce failed to validate.
+   * @throws org.springframework.security.core.AuthenticationException If the nonce failed to validate.
    */
   void validateNonce(ConsumerDetails consumerDetails, long timestamp, String nonce) throws AuthenticationException;
   

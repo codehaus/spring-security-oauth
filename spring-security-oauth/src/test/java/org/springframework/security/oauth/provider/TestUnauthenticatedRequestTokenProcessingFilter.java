@@ -22,8 +22,8 @@ import org.springframework.security.oauth.provider.token.OAuthProviderTokenServi
 import org.springframework.security.oauth.provider.token.OAuthAccessProviderToken;
 import org.springframework.security.oauth.provider.callback.OAuthCallbackServices;
 import org.springframework.security.oauth.common.OAuthConsumerParameter;
-import org.springframework.security.context.SecurityContextHolder;
-import org.springframework.security.GrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.GrantedAuthority;
 
 import junit.framework.TestCase;
 
@@ -33,6 +33,7 @@ import javax.servlet.FilterChain;
 import java.io.StringWriter;
 import java.io.PrintWriter;
 import java.util.TreeMap;
+import java.util.ArrayList;
 
 /**
  * @author Ryan Heaton
@@ -61,7 +62,7 @@ public class TestUnauthenticatedRequestTokenProcessingFilter extends TestCase {
     expect(authToken.getConsumerKey()).andReturn("chi");
     expect(authToken.getValue()).andReturn("tokvalue");
     expect(authToken.getSecret()).andReturn("shhhhhh");
-    expect(consumerDetails.getAuthorities()).andReturn(new GrantedAuthority[0]);    
+    expect(consumerDetails.getAuthorities()).andReturn(new ArrayList<GrantedAuthority>());    
     expect(consumerDetails.getConsumerKey()).andReturn("chi");
     cs.storeCallback("mycallback", "tokvalue");
     response.setContentType("text/plain;charset=utf-8");
@@ -95,7 +96,7 @@ public class TestUnauthenticatedRequestTokenProcessingFilter extends TestCase {
     filter.setTokenServices(tokenServices);
 
     expect(consumerDetails.getConsumerKey()).andReturn("chi");
-    expect(consumerDetails.getAuthorities()).andReturn(new GrantedAuthority[0]);
+    expect(consumerDetails.getAuthorities()).andReturn(new ArrayList<GrantedAuthority>());
     expect(tokenServices.createUnauthorizedRequestToken("chi")).andReturn(token);
     replay(consumerDetails, tokenServices, token);
     ConsumerAuthentication authentication = new ConsumerAuthentication(consumerDetails, creds);

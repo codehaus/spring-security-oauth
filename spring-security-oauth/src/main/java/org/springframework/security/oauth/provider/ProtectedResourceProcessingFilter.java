@@ -1,5 +1,5 @@
 /*
- * Copyright 2008 Web Cohesion
+ * Copyright 2008-2009 Web Cohesion
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,10 +16,10 @@
 
 package org.springframework.security.oauth.provider;
 
-import org.springframework.security.Authentication;
-import org.springframework.security.AccessDeniedException;
-import org.springframework.security.providers.AbstractAuthenticationToken;
-import org.springframework.security.context.SecurityContextHolder;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.authentication.AbstractAuthenticationToken;
 import org.springframework.security.oauth.common.OAuthConsumerParameter;
 import org.springframework.security.oauth.provider.token.OAuthAccessProviderToken;
 import org.springframework.security.oauth.provider.token.OAuthProviderToken;
@@ -39,6 +39,7 @@ import java.util.Map;
  * ONLY via OAuth access token, set <code>requireOAuthCredentials</code> to true. 
  *
  * @author Ryan Heaton
+ * @author Andrew McCall
  */
 public class ProtectedResourceProcessingFilter extends OAuthProviderProcessingFilter {
 

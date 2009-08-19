@@ -16,13 +16,12 @@
 
 package org.springframework.security.oauth.provider;
 
-import org.springframework.security.AuthenticationException;
-import org.springframework.security.ui.AuthenticationEntryPoint;
+import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.web.AuthenticationEntryPoint;
 
 import javax.servlet.ServletException;
-import javax.servlet.ServletRequest;
-import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
 
 /**
@@ -34,14 +33,13 @@ public class OAuthProcessingFilterEntryPoint implements AuthenticationEntryPoint
 
   private String realmName;
 
-  public void commence(ServletRequest request, ServletResponse response, AuthenticationException authException) throws IOException, ServletException {
-    HttpServletResponse httpResponse = (HttpServletResponse) response;
+  public void commence(HttpServletRequest request, HttpServletResponse response, AuthenticationException authException) throws IOException, ServletException {
     StringBuilder headerValue = new StringBuilder("OAuth");
     if (realmName != null) {
       headerValue.append(" realm=\"").append(realmName).append('"');
     }
-    httpResponse.addHeader("WWW-Authenticate", headerValue.toString());
-    httpResponse.sendError(HttpServletResponse.SC_UNAUTHORIZED, authException.getMessage());
+    response.addHeader("WWW-Authenticate", headerValue.toString());
+    response.sendError(HttpServletResponse.SC_UNAUTHORIZED, authException.getMessage());
   }
 
   public String getRealmName() {

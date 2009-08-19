@@ -18,10 +18,10 @@ package org.springframework.security.oauth.provider;
 
 import junit.framework.TestCase;
 import static org.easymock.EasyMock.*;
-import org.springframework.security.Authentication;
-import org.springframework.security.AuthenticationException;
-import org.springframework.security.GrantedAuthority;
-import org.springframework.security.context.SecurityContextHolder;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.oauth.common.OAuthConsumerParameter;
 import org.springframework.security.oauth.common.signature.OAuthSignatureMethod;
 import org.springframework.security.oauth.common.signature.OAuthSignatureMethodFactory;
@@ -38,6 +38,7 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.ArrayList;
 
 /**
  * Tests the basic processing filter logic.
@@ -146,7 +147,7 @@ public class TestOAuthProcessingFilter extends TestCase {
     requestParams.put(OAuthConsumerParameter.oauth_consumer_key.toString(), "consumerKey");
     expect(providerSupport.parseParameters(request)).andReturn(requestParams);
     ConsumerDetails consumerDetails = createMock(ConsumerDetails.class);
-    expect(consumerDetails.getAuthorities()).andReturn(new GrantedAuthority[0]);
+    expect(consumerDetails.getAuthorities()).andReturn(new ArrayList<GrantedAuthority>());
     expect(consumerDetailsService.loadConsumerByConsumerKey("consumerKey")).andReturn(consumerDetails);
     requestParams.put(OAuthConsumerParameter.oauth_token.toString(), "tokenvalue");
     requestParams.put(OAuthConsumerParameter.oauth_signature_method.toString(), "methodvalue");
@@ -316,7 +317,7 @@ public class TestOAuthProcessingFilter extends TestCase {
     OAuthSignatureMethod sigMethod = createMock(OAuthSignatureMethod.class);
 
     ConsumerCredentials credentials = new ConsumerCredentials("id", "sig", "method", "base", "token");
-    expect(details.getAuthorities()).andReturn(new GrantedAuthority[0]);
+    expect(details.getAuthorities()).andReturn(new ArrayList<GrantedAuthority>());
     expect(details.getSignatureSecret()).andReturn(secret);
     filter.setTokenServices(tokenServices);
     expect(tokenServices.getToken("token")).andReturn(token);

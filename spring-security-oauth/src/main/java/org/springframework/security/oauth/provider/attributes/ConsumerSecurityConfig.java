@@ -16,7 +16,7 @@
 
 package org.springframework.security.oauth.provider.attributes;
 
-import org.springframework.security.SecurityConfig;
+import org.springframework.security.access.SecurityConfig;
 
 /**
  * Security config for consumer authorization of a method.
