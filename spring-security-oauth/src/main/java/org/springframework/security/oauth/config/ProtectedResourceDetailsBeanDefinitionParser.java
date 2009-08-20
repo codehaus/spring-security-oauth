@@ -80,12 +80,22 @@ public class ProtectedResourceDetailsBeanDefinitionParser extends AbstractSingle
         parserContext.getReaderContext().error("A request token URL must be supplied with the definition of a resource.", consumerElement);
       }
 
+      String requestTokenMethod = consumerElement.getAttribute("request-token-method");
+      if (StringUtils.hasText(requestTokenMethod)) {
+        resource.setRequestTokenHttpMethod(requestTokenMethod);
+      }
+
       String accessTokenURL = consumerElement.getAttribute("access-token-url");
       if (StringUtils.hasText(accessTokenURL)) {
         resource.setAccessTokenURL(accessTokenURL);
       }
       else {
         parserContext.getReaderContext().error("An access token URL must be supplied with the definition of a resource.", consumerElement);
+      }
+
+      String accessTokenMethod = consumerElement.getAttribute("access-token-method");
+      if (StringUtils.hasText(accessTokenMethod)) {
+        resource.setAccessTokenHttpMethod(accessTokenMethod);
       }
 
       String userAuthorizationURL = consumerElement.getAttribute("user-authorization-url");

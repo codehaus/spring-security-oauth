@@ -81,11 +81,13 @@ public class CoreOAuthConsumerSupport implements OAuthConsumerSupport, Initializ
       throw new IllegalStateException("Malformed URL for obtaining a request token.", e);
     }
 
+    String httpMethod = details.getRequestTokenHttpMethod();
+
     Map<String, String> additionalParameters = new TreeMap<String, String>();
     if (details.isUse10a()) {
       additionalParameters.put(OAuthConsumerParameter.oauth_callback.toString(), callback);
     }
-    return getTokenFromProvider(details, requestTokenURL, null, additionalParameters);
+    return getTokenFromProvider(details, requestTokenURL, httpMethod, null, additionalParameters);
   }
 
   // Inherited.
@@ -100,11 +102,13 @@ public class CoreOAuthConsumerSupport implements OAuthConsumerSupport, Initializ
       throw new IllegalStateException("Malformed URL for obtaining an access token.", e);
     }
 
+    String httpMethod = details.getAccessTokenHttpMethod();
+
     Map<String, String> additionalParameters = new TreeMap<String, String>();
     if (details.isUse10a()) {
       additionalParameters.put(OAuthConsumerParameter.oauth_verifier.toString(), verifier);
     }
-    return getTokenFromProvider(details, accessTokenURL, requestToken, additionalParameters);
+    return getTokenFromProvider(details, accessTokenURL, httpMethod, requestToken, additionalParameters);
   }
 
   // Inherited.
@@ -119,7 +123,7 @@ public class CoreOAuthConsumerSupport implements OAuthConsumerSupport, Initializ
         httpMethod + " because the OAuth provider doesn't accept the OAuth Authorization header.");
     }
     
-    return readResource(resourceDetails, url, accessToken, httpMethod, null);
+    return readResource(resourceDetails, url, httpMethod, accessToken, null);
   }
 
   /**
@@ -132,7 +136,7 @@ public class CoreOAuthConsumerSupport implements OAuthConsumerSupport, Initializ
    * @param additionalParameters Any additional request parameters.
    * @return The resource.
    */
-  protected InputStream readResource(ProtectedResourceDetails details, URL url, OAuthConsumerToken token, String httpMethod, Map<String, String> additionalParameters) {
+  protected InputStream readResource(ProtectedResourceDetails details, URL url, String httpMethod, OAuthConsumerToken token, Map<String, String> additionalParameters) {
     url = configureURLForProtectedAccess(url, token, details, httpMethod, additionalParameters);
     String realm = details.getAuthorizationHeaderRealm();
     boolean sendOAuthParamsInRequestBody = !details.isAcceptsAuthorizationHeader() && (("POST".equalsIgnoreCase(httpMethod) || "PUT".equalsIgnoreCase(httpMethod)));
@@ -316,7 +320,7 @@ public class CoreOAuthConsumerSupport implements OAuthConsumerSupport, Initializ
    * @param additionalParameters The additional request parameter.
    * @return The token.
    */
-  protected OAuthConsumerToken getTokenFromProvider(ProtectedResourceDetails details, URL tokenURL,
+  protected OAuthConsumerToken getTokenFromProvider(ProtectedResourceDetails details, URL tokenURL, String httpMethod,
                                                     OAuthConsumerToken requestToken, Map<String, String> additionalParameters) {
     boolean isAccessToken = requestToken != null;
     if (!isAccessToken) {
@@ -325,7 +329,7 @@ public class CoreOAuthConsumerSupport implements OAuthConsumerSupport, Initializ
       requestToken.setNonce(getNonceFactory().generateNonce());
     }
 
-    InputStream inputStream = readResource(details, tokenURL, requestToken, "POST", additionalParameters);
+    InputStream inputStream = readResource(details, tokenURL, httpMethod, requestToken, additionalParameters);
     String tokenInfo;
     try {
       ByteArrayOutputStream out = new ByteArrayOutputStream();
