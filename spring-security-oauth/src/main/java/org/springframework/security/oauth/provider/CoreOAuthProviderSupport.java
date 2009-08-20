@@ -238,7 +238,18 @@ public class CoreOAuthProviderSupport implements OAuthProviderSupport {
    * @return The configured base URL for this OAuth provider with respect to the supplied HttpServletRequest.
    */
   protected String getBaseUrl(HttpServletRequest request) {
-    return getBaseUrl();
+    String baseUrl = getBaseUrl();
+    if (baseUrl != null) {
+      StringBuilder builder = new StringBuilder(baseUrl);
+      String path = request.getRequestURI();
+      if (path != null && !"".equals(path)) {
+        if (!baseUrl.endsWith("/") && !path.startsWith("/")) {
+          builder.append('/');
+        }
+        builder.append(path);
+      }
+    }
+    return baseUrl;
   }
 
   /**
