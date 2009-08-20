@@ -79,17 +79,18 @@ public abstract class RandomValueProviderTokenServices implements OAuthProviderT
   }
 
   public OAuthProviderToken getToken(String token) throws AuthenticationException {
-    OAuthProviderTokenImpl authToken = readToken(token);
-    
-    if (authToken == null) {
+    OAuthProviderTokenImpl tokenImpl = readToken(token);
+
+    if (tokenImpl == null) {
       throw new InvalidOAuthTokenException("Invalid token: " + token);
     }
-
-    if (isExpired(authToken)) {
+    else if (isExpired(tokenImpl)) {
+      removeToken(token);
+      onTokenRemoved(tokenImpl);
       throw new ExpiredOAuthTokenException("Expired token.");
     }
 
-    return authToken;
+    return tokenImpl;
   }
 
   /**
@@ -131,22 +132,40 @@ public abstract class RandomValueProviderTokenServices implements OAuthProviderT
   }
 
   public void authorizeRequestToken(String requestToken, Authentication authentication) throws AuthenticationException {
-    OAuthProviderTokenImpl authToken = readToken(requestToken);
-    if (authToken.isAccessToken()) {
+    OAuthProviderTokenImpl tokenImpl = readToken(requestToken);
+
+    if (tokenImpl == null) {
+      throw new InvalidOAuthTokenException("Invalid token: " + requestToken);
+    }
+    else if (isExpired(tokenImpl)) {
+      removeToken(requestToken);
+      onTokenRemoved(tokenImpl);
+      throw new ExpiredOAuthTokenException("Expired token.");
+    }
+    else if (tokenImpl.isAccessToken()) {
       throw new InvalidOAuthTokenException("Request to authorize an access token.");
     }
 
-    authToken.setUserAuthentication(authentication);
-    authToken.setTimestamp(System.currentTimeMillis());//reset the expiration.
-    storeToken(requestToken, authToken);
+    tokenImpl.setUserAuthentication(authentication);
+    tokenImpl.setTimestamp(System.currentTimeMillis());//reset the expiration.
+    storeToken(requestToken, tokenImpl);
   }
 
   public OAuthAccessProviderToken createAccessToken(String requestToken) throws AuthenticationException {
-    OAuthProviderTokenImpl authToken = readToken(requestToken);
-    if (authToken.isAccessToken()) {
+    OAuthProviderTokenImpl tokenImpl = readToken(requestToken);
+
+    if (tokenImpl == null) {
+      throw new InvalidOAuthTokenException("Invalid token: " + requestToken);
+    }
+    else if (isExpired(tokenImpl)) {
+      removeToken(requestToken);
+      onTokenRemoved(tokenImpl);
+      throw new ExpiredOAuthTokenException("Expired token.");
+    }
+    else if (tokenImpl.isAccessToken()) {
       throw new InvalidOAuthTokenException("Not a request token.");
     }
-    else if (authToken.getUserAuthentication() == null) {
+    else if (tokenImpl.getUserAuthentication() == null) {
       throw new InvalidOAuthTokenException("Request token has not been authorized.");
     }
 
@@ -161,8 +180,8 @@ public abstract class RandomValueProviderTokenServices implements OAuthProviderT
     String secret = new String(Base64.encodeBase64(secretBytes));
     OAuthProviderTokenImpl token = new OAuthProviderTokenImpl();
     token.setAccessToken(true);
-    token.setConsumerKey(authToken.getConsumerKey());
-    token.setUserAuthentication(authToken.getUserAuthentication());
+    token.setConsumerKey(tokenImpl.getConsumerKey());
+    token.setUserAuthentication(tokenImpl.getUserAuthentication());
     token.setSecret(secret);
     token.setValue(tokenValue);
     token.setTimestamp(System.currentTimeMillis());
