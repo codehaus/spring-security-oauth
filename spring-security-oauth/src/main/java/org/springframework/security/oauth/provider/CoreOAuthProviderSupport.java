@@ -232,7 +232,7 @@ public class CoreOAuthProviderSupport implements OAuthProviderSupport {
   }
 
   /**
-   * The configured base URL for this OAuth provider for the given HttpServletRequest. Default implementation return getBaseUrl().
+   * The configured base URL for this OAuth provider for the given HttpServletRequest. Default implementation return getBaseUrl() + request URI.
    *
    * @param request The HttpServletRequest currently processed
    * @return The configured base URL for this OAuth provider with respect to the supplied HttpServletRequest.
@@ -248,6 +248,7 @@ public class CoreOAuthProviderSupport implements OAuthProviderSupport {
         }
         builder.append(path);
       }
+      baseUrl = builder.toString();
     }
     return baseUrl;
   }
