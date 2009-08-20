@@ -172,14 +172,9 @@
                           <xs:documentation>The secret is a simple shared secret.</xs:documentation>
                         </xs:annotation>
                       </xs:enumeration>
-                      <xs:enumeration value="rsa-cert-file">
+                      <xs:enumeration value="rsa-cert">
                         <xs:annotation>
-                          <xs:documentation>The secret is an rsa certificate found on the filesystem.</xs:documentation>
-                        </xs:annotation>
-                      </xs:enumeration>
-                      <xs:enumeration value="rsa-cert-resource">
-                        <xs:annotation>
-                          <xs:documentation>The secret is an rsa certificate found on the classpath.</xs:documentation>
+                          <xs:documentation>The secret is an rsa certificate. It will be located according to org.springframework.core.io.ResourceLoader#getResource(String)</xs:documentation>
                         </xs:annotation>
                       </xs:enumeration>
                     </xs:restriction>

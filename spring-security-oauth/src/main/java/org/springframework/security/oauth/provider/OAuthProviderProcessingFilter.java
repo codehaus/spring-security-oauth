@@ -255,6 +255,9 @@ public abstract class OAuthProviderProcessingFilter implements Filter, Initializ
 
     String signatureBaseString = authentication.getConsumerCredentials().getSignatureBaseString();
     String signature = authentication.getConsumerCredentials().getSignature();
+    if (log.isDebugEnabled()) {
+      log.debug("Verifying signature " + signature + " for signature base string " + signatureBaseString + " with method " + method.getName() + ".");
+    }
     method.verify(signatureBaseString, signature);
   }
 
