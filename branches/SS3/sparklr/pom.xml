@@ -5,7 +5,7 @@
   <groupId>org.codehaus.enunciate.samples.sparklr</groupId>
   <artifactId>sparklr</artifactId>
   <packaging>war</packaging>
-  <version>2.0.SS3-SNAPSHOT</version>
+  <version>3.5.SS3.M1-SNAPSHOT</version>
 
   <repositories>
     <repository>
@@ -51,7 +51,7 @@
     <dependency>
       <groupId>org.codehaus.spring-security-oauth</groupId>
       <artifactId>spring-security-oauth</artifactId>
-      <version>3.4.SS3.M1</version>
+      <version>3.5.SS3.M1-SNAPSHOT</version>
     </dependency>
 
     <dependency>
