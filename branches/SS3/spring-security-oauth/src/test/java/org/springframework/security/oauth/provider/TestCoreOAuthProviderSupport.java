@@ -90,7 +90,8 @@ public class TestCoreOAuthProviderSupport extends TestCase {
 
     expect(request.getMethod()).andReturn("gEt");
     CoreOAuthProviderSupport support = new CoreOAuthProviderSupport();
-    support.setBaseUrl("http://photos.example.net/photos");
+    support.setBaseUrl("http://photos.example.net");
+    expect(request.getRequestURI()).andReturn("photos");
 
     replay(request);
     String baseString = support.getSignatureBaseString(request);
