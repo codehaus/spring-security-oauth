@@ -28,8 +28,7 @@ import org.springframework.util.StringUtils;
 import org.springframework.util.xml.DomUtils;
 import org.w3c.dom.Element;
 
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.security.cert.Certificate;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
@@ -66,22 +65,13 @@ public class ConsumerServiceBeanDefinitionParser extends AbstractSingleBeanDefin
       String secret = consumerElement.getAttribute("secret");
       if (secret != null) {
         String typeOfSecret = consumerElement.getAttribute("typeOfSecret");
-        if ("rsa-cert-file".equals(typeOfSecret)) {
+        if ("rsa-cert".equals(typeOfSecret)) {
           try {
-            Certificate cert = CertificateFactory.getInstance("X.509").generateCertificate(new FileInputStream(secret));
+            Certificate cert = CertificateFactory.getInstance("X.509").generateCertificate(parserContext.getReaderContext().getResourceLoader().getResource(secret).getInputStream());
             consumer.setSignatureSecret(new RSAKeySecret(cert.getPublicKey()));
           }
-          catch (CertificateException e) {
-            parserContext.getReaderContext().error("Invalid RSA certificate at " + secret + ".", consumerElement, e);
-          }
-          catch (FileNotFoundException e) {
+          catch (IOException e) {
             parserContext.getReaderContext().error("RSA certificate not found at " + secret + ".", consumerElement, e);
-          }
-        }
-        else if ("rsa-cert-resource".equals(typeOfSecret)) {
-          try {
-            Certificate cert = CertificateFactory.getInstance("X.509").generateCertificate(Thread.currentThread().getContextClassLoader().getResourceAsStream(secret));
-            consumer.setSignatureSecret(new RSAKeySecret(cert.getPublicKey()));
           }
           catch (CertificateException e) {
             parserContext.getReaderContext().error("Invalid RSA certificate at " + secret + ".", consumerElement, e);
