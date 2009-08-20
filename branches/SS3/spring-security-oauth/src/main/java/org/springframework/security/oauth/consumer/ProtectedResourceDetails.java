@@ -22,6 +22,7 @@ import org.springframework.security.oauth.common.signature.SignatureSecret;
  * Details about a protected resource.
  *
  * @author Ryan Heaton
+ * @author Andrew McCall
  */
 public interface ProtectedResourceDetails {
 
@@ -61,6 +62,13 @@ public interface ProtectedResourceDetails {
   String getRequestTokenURL();
 
   /**
+   * The HTTP method to use with getRequestTokenURL()
+   *
+   * @return the HTTP method to use with getRequestTokenURL()
+   */
+  String getRequestTokenHttpMethod();
+
+  /**
    * The URL to which to redirect the user for authorization of access to the protected resource.
    *
    * @return The URL to which to redirect the user for authorization of access to the protected resource.
@@ -73,6 +81,13 @@ public interface ProtectedResourceDetails {
    * @return The URL to use to obtain an OAuth access token.
    */
   String getAccessTokenURL();
+
+  /**
+   * The HTTP method to use with getAccessTokenURL()
+   *
+   * @return the HTTP method to use with getAccessTokenURL()
+   */
+  String getAccessTokenHttpMethod();
 
   /**
    * Whether the provider of this resource accepts the OAuth Authorization HTTP header.  Default: true.

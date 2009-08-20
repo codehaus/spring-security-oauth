@@ -30,8 +30,10 @@ public class BaseProtectedResourceDetails implements ProtectedResourceDetails {
   private String signatureMethod;
   private SignatureSecret sharedSecret;
   private String requestTokenURL;
+  private String requestTokenHttpMethod = "POST";
   private String userAuthorizationURL;
   private String accessTokenURL;
+  private String accessTokenHttpMethod = "POST";
   private boolean acceptsAuthorizationHeader = true;
   private String authorizationHeaderRealm;
   private boolean use10a = true;
@@ -76,6 +78,14 @@ public class BaseProtectedResourceDetails implements ProtectedResourceDetails {
     this.requestTokenURL = requestTokenURL;
   }
 
+  public String getRequestTokenHttpMethod() {
+    return requestTokenHttpMethod;
+  }
+
+  public void setRequestTokenHttpMethod(String requestTokenHttpMethod) {
+    this.requestTokenHttpMethod = requestTokenHttpMethod;
+  }
+
   public String getUserAuthorizationURL() {
     return userAuthorizationURL;
   }
@@ -90,6 +100,14 @@ public class BaseProtectedResourceDetails implements ProtectedResourceDetails {
 
   public void setAccessTokenURL(String accessTokenURL) {
     this.accessTokenURL = accessTokenURL;
+  }
+
+  public String getAccessTokenHttpMethod() {
+    return accessTokenHttpMethod;
+  }
+
+  public void setAccessTokenHttpMethod(String accessTokenHttpMethod) {
+    this.accessTokenHttpMethod = accessTokenHttpMethod;
   }
 
   public boolean isAcceptsAuthorizationHeader() {
