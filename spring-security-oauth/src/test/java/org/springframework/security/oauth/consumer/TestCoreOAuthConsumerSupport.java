@@ -130,7 +130,7 @@ public class TestCoreOAuthConsumerSupport extends TestCase {
     expect(details.isAcceptsAuthorizationHeader()).andReturn(true);
     replay(details);
     try {
-      support.readResource(details, url, token, "POST", null);
+      support.readResource(details, url, "POST", token , null);
       fail("shouldn't have been a valid response code.");
     }
     catch (OAuthRequestFailedException e) {
@@ -149,7 +149,7 @@ public class TestCoreOAuthConsumerSupport extends TestCase {
     connectionProps.responseMessage = "Nasty";
     replay(details);
     try {
-      support.readResource(details, url, token, "POST", null);
+      support.readResource(details, url, "POST", token, null);
       fail("shouldn't have been a valid response code.");
     }
     catch (OAuthRequestFailedException e) {
@@ -169,7 +169,7 @@ public class TestCoreOAuthConsumerSupport extends TestCase {
     connectionProps.headerFields.put("WWW-Authenticate", "realm=\"goodrealm\"");
     replay(details);
     try {
-      support.readResource(details, url, token, "POST", null);
+      support.readResource(details, url, "POST", token, null);
       fail("shouldn't have been a valid response code.");
     }
     catch (InvalidOAuthRealmException e) {
@@ -187,7 +187,7 @@ public class TestCoreOAuthConsumerSupport extends TestCase {
     connectionProps.responseCode = 200;
     connectionProps.responseMessage = "Congrats";
     replay(details);
-    assertSame(inputStream, support.readResource(details, url, token, "GET", null));
+    assertSame(inputStream, support.readResource(details, url, "GET", token, null));
     verify(details);
     reset(details);
     assertFalse(connectionProps.doOutput);
@@ -200,7 +200,7 @@ public class TestCoreOAuthConsumerSupport extends TestCase {
     connectionProps.responseCode = 200;
     connectionProps.responseMessage = "Congrats";
     replay(details);
-    assertSame(inputStream, support.readResource(details, url, token, "POST", null));
+    assertSame(inputStream, support.readResource(details, url, "POST", token, null));
     assertEquals("POSTBODY", new String(((ByteArrayOutputStream) connectionProps.outputStream).toByteArray()));
     verify(details);
     reset(details);
@@ -345,7 +345,7 @@ public class TestCoreOAuthConsumerSupport extends TestCase {
     final ByteArrayInputStream in = new ByteArrayInputStream("oauth_token=mytoken&oauth_token_secret=mytokensecret".getBytes("UTF-8"));
     CoreOAuthConsumerSupport support = new CoreOAuthConsumerSupport() {
       @Override
-      protected InputStream readResource(ProtectedResourceDetails details, URL url, OAuthConsumerToken token, String httpMethod, Map<String, String> additionalParameters) {
+      protected InputStream readResource(ProtectedResourceDetails details, URL url, String httpMethod, OAuthConsumerToken token, Map<String, String> additionalParameters) {
         return in;
       }
     };
@@ -358,7 +358,7 @@ public class TestCoreOAuthConsumerSupport extends TestCase {
     expect(nonceFactory.generateNonce()).andReturn("mynonce");
     expect(details.getId()).andReturn("resourceId");
     replay(details, nonceFactory);
-    OAuthConsumerToken token = support.getTokenFromProvider(details, url, null, null);
+    OAuthConsumerToken token = support.getTokenFromProvider(details, url, "POST", null, null);
     verify(details, nonceFactory);
     reset(details, nonceFactory);
     assertEquals("mynonce", token.getNonce());

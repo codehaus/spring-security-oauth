@@ -389,6 +389,13 @@
                     </xs:documentation>
                   </xs:annotation>
                 </xs:attribute>
+                <xs:attribute name="request-token-method" type="xs:string" use="required">
+                  <xs:annotation>
+                    <xs:documentation>
+                      The HTTP method to use for the request token.
+                    </xs:documentation>
+                  </xs:annotation>
+                </xs:attribute>
                 <xs:attribute name="user-authorization-url" type="xs:string" use="required">
                   <xs:annotation>
                     <xs:documentation>
@@ -414,6 +421,13 @@
                   <xs:annotation>
                     <xs:documentation>
                       The URL to the access token.
+                    </xs:documentation>
+                  </xs:annotation>
+                </xs:attribute>
+                <xs:attribute name="access-token-method" type="xs:string" use="required">
+                  <xs:annotation>
+                    <xs:documentation>
+                      The HTTP method to use for the access token.
                     </xs:documentation>
                   </xs:annotation>
                 </xs:attribute>
