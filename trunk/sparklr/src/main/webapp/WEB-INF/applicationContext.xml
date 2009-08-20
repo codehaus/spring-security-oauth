@@ -33,10 +33,12 @@
                   authenticate-token-url="/oauth/authorize"
                   authentication-failed-url="/oauth/confirm_access"
                   access-granted-url="/request_token_authorized.jsp"
-                  access-token-url="/oauth/access_token"/>
+                  access-token-url="/oauth/access_token"
+                  require10a="false"/>
 
   <oauth:consumer-details-service id="consumerDetails">
     <oauth:consumer name="Tonr.com" key="tonr-consumer-key" secret="SHHHHH!!!!!!!!!!" resourceName="Your Photos" resourceDescription="Your photos that you have uploaded to sparklr.com."/>
+    <oauth:consumer name="iGoogle" key="www.google.com" secret="classpath:/org/springframework/security/oauth/examples/sparklr/certs/igoogle.cert" typeOfSecret="rsa-cert" resourceName="Your Photos" resourceDescription="Your photos that you have uploaded to sparklr.com."/>
   </oauth:consumer-details-service>
 
   <oauth:token-services id="tokenServices"/>
