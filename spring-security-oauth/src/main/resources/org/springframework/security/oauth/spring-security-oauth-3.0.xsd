@@ -159,6 +159,32 @@
                     </xs:documentation>
                   </xs:annotation>
                 </xs:attribute>
+                <xs:attribute name="typeOfSecret" use="optional" default="shared">
+                  <xs:annotation>
+                    <xs:documentation>
+                      The type of the secret. Default: shared.
+                    </xs:documentation>
+                  </xs:annotation>
+                  <xs:simpleType>
+                    <xs:restriction base="xs:string">
+                      <xs:enumeration value="shared">
+                        <xs:annotation>
+                          <xs:documentation>The secret is a simple shared secret.</xs:documentation>
+                        </xs:annotation>
+                      </xs:enumeration>
+                      <xs:enumeration value="rsa-cert-file">
+                        <xs:annotation>
+                          <xs:documentation>The secret is an rsa certificate found on the filesystem.</xs:documentation>
+                        </xs:annotation>
+                      </xs:enumeration>
+                      <xs:enumeration value="rsa-cert-resource">
+                        <xs:annotation>
+                          <xs:documentation>The secret is an rsa certificate found on the classpath.</xs:documentation>
+                        </xs:annotation>
+                      </xs:enumeration>
+                    </xs:restriction>
+                  </xs:simpleType>
+                </xs:attribute>
                 <xs:attribute name="name" type="xs:string">
                   <xs:annotation>
                     <xs:documentation>
