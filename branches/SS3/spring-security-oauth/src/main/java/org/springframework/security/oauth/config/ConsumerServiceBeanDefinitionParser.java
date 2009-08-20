@@ -19,14 +19,20 @@ package org.springframework.security.oauth.config;
 import org.springframework.beans.factory.support.BeanDefinitionBuilder;
 import org.springframework.beans.factory.xml.AbstractSingleBeanDefinitionParser;
 import org.springframework.beans.factory.xml.ParserContext;
+import org.springframework.security.core.authority.AuthorityUtils;
+import org.springframework.security.oauth.common.signature.RSAKeySecret;
 import org.springframework.security.oauth.common.signature.SharedConsumerSecret;
 import org.springframework.security.oauth.provider.BaseConsumerDetails;
 import org.springframework.security.oauth.provider.InMemoryConsumerDetailsService;
-import org.springframework.security.core.authority.AuthorityUtils;
 import org.springframework.util.StringUtils;
 import org.springframework.util.xml.DomUtils;
 import org.w3c.dom.Element;
 
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.security.cert.Certificate;
+import java.security.cert.CertificateException;
+import java.security.cert.CertificateFactory;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
@@ -59,7 +65,31 @@ public class ConsumerServiceBeanDefinitionParser extends AbstractSingleBeanDefin
 
       String secret = consumerElement.getAttribute("secret");
       if (secret != null) {
-        consumer.setSignatureSecret(new SharedConsumerSecret(secret));
+        String typeOfSecret = consumerElement.getAttribute("typeOfSecret");
+        if ("rsa-cert-file".equals(typeOfSecret)) {
+          try {
+            Certificate cert = CertificateFactory.getInstance("X.509").generateCertificate(new FileInputStream(secret));
+            consumer.setSignatureSecret(new RSAKeySecret(cert.getPublicKey()));
+          }
+          catch (CertificateException e) {
+            parserContext.getReaderContext().error("Invalid RSA certificate at " + secret + ".", consumerElement, e);
+          }
+          catch (FileNotFoundException e) {
+            parserContext.getReaderContext().error("RSA certificate not found at " + secret + ".", consumerElement, e);
+          }
+        }
+        else if ("rsa-cert-resource".equals(typeOfSecret)) {
+          try {
+            Certificate cert = CertificateFactory.getInstance("X.509").generateCertificate(Thread.currentThread().getContextClassLoader().getResourceAsStream(secret));
+            consumer.setSignatureSecret(new RSAKeySecret(cert.getPublicKey()));
+          }
+          catch (CertificateException e) {
+            parserContext.getReaderContext().error("Invalid RSA certificate at " + secret + ".", consumerElement, e);
+          }
+        }
+        else {
+          consumer.setSignatureSecret(new SharedConsumerSecret(secret));
+        }
       }
       else {
         parserContext.getReaderContext().error("A consumer secret must be supplied with the definition of a consumer.", consumerElement);
