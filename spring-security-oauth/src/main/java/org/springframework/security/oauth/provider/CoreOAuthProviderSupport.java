@@ -47,6 +47,17 @@ public class CoreOAuthProviderSupport implements OAuthProviderSupport {
 
   // Inherited.
   public Map<String, String> parseParameters(HttpServletRequest request) {
+    return parseParameters(request, true);
+  }
+
+  /**
+   * Parse the OAuth parameters.
+   *
+   * @param request The request.
+   * @param decoded Whether the parameters are to be decoded.
+   * @return The parameters.
+   */
+  protected Map<String, String> parseParameters(HttpServletRequest request, boolean decoded) {
     Map<String, String> parameters = parseHeaderParameters(request);
 
     if (parameters == null) {
@@ -59,6 +70,20 @@ public class CoreOAuthProviderSupport implements OAuthProviderSupport {
           parameters.put(supportedOAuthParameter, param);
         }
       }
+    }
+    else if (decoded) {
+      //the OAuth spec doesn't specify whether OAuth parameters sent as query params are to be oauth-encoded.
+      //therefore, the "decoded" flag only applies to header parameters.
+      Map<String, String> decodedParameters = new HashMap<String, String>(parameters.size());
+      for (Map.Entry<String, String> headerParam : parameters.entrySet()) {
+        try {
+          decodedParameters.put(oauthDecode(headerParam.getKey()), oauthDecode(headerParam.getValue()));
+        }
+        catch (DecoderException e) {
+          throw new IllegalStateException(e);
+        }
+      }
+      parameters = decodedParameters;
     }
 
     return parameters;
@@ -90,16 +115,8 @@ public class CoreOAuthProviderSupport implements OAuthProviderSupport {
       String[] headerEntries = StringSplitUtils.splitIgnoringQuotes(authHeaderValue, ',');
       for (Object o : StringSplitUtils.splitEachArrayElementAndCreateMap(headerEntries, "=", "\"").entrySet()) {
         Map.Entry entry = (Map.Entry) o;
-        String key;
-        String value;
-        try {
-          key = oauthDecode((String) entry.getKey());
-          value = oauthDecode((String) entry.getValue());
-        }
-        catch (DecoderException e) {
-          throw new IllegalStateException(e);
-        }
-
+        String key = (String) entry.getKey();
+        String value = (String) entry.getValue();
         parameters.put(key, value);
       }
     }
@@ -214,7 +231,7 @@ public class CoreOAuthProviderSupport implements OAuthProviderSupport {
     }
 
     //then take into account the header parameter values...
-    Map<String, String> oauthParams = parseParameters(request);
+    Map<String, String> oauthParams = parseParameters(request, false);
     oauthParams.remove("realm"); //remove the realm
     Set<String> parsedParams = oauthParams.keySet();
     for (String parameterName : parsedParams) {
