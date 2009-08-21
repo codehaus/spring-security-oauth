@@ -88,6 +88,8 @@ public interface OAuthConsumerSupport {
    * however, that an OAuth parameter is not considered "necessary" if the provider of the resource
    * supports the authorization header.<br/><br/>
    *
+   * Any OAuth parameters will be URL-encoded, but not oauth-encoded, per the OAuth spec.<br/><br/>
+   *
    * The query string is to be used by either applying it to the URL (for HTTP GET) or putting it
    * in the body of the request (for HTTP POST).
    *
@@ -95,7 +97,7 @@ public interface OAuthConsumerSupport {
    * @param accessToken The access token.
    * @param url The URL
    * @param httpMethod The http method.
-   * @param additionalParameters Any additional request parameters.
+   * @param additionalParameters Any additional OAuth request parameters.
    * @return The query string.
    */
   String getOAuthQueryString(ProtectedResourceDetails details, OAuthConsumerToken accessToken, URL url, String httpMethod, Map<String, String> additionalParameters);

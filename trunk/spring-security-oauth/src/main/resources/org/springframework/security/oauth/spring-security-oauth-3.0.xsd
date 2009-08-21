@@ -382,6 +382,17 @@
               </xs:annotation>
 
               <xs:complexType>
+                <xs:sequence>
+                  <xs:element name="addtionalParameter" minOccurs="0" maxOccurs="unbounded">
+                    <xs:annotation>
+                      <xs:documentation>Any additional oauth parameters that is supported by the resource provider.</xs:documentation>
+                    </xs:annotation>
+                    <xs:complexType>
+                      <xs:attribute name="name" type="xs:string" use="required"/>
+                      <xs:attribute name="value" type="xs:string" use="required"/>
+                    </xs:complexType>
+                  </xs:element>
+                </xs:sequence>
                 <xs:attribute name="id" type="xs:string" use="required">
                   <xs:annotation>
                     <xs:documentation>
@@ -410,7 +421,7 @@
                     </xs:documentation>
                   </xs:annotation>
                 </xs:attribute>
-                <xs:attribute name="request-token-method" type="xs:string" use="required">
+                <xs:attribute name="request-token-method" type="xs:string">
                   <xs:annotation>
                     <xs:documentation>
                       The HTTP method to use for the request token.
@@ -445,7 +456,7 @@
                     </xs:documentation>
                   </xs:annotation>
                 </xs:attribute>
-                <xs:attribute name="access-token-method" type="xs:string" use="required">
+                <xs:attribute name="access-token-method" type="xs:string">
                   <xs:annotation>
                     <xs:documentation>
                       The HTTP method to use for the access token.
