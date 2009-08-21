@@ -48,6 +48,7 @@ public class AccessTokenProcessingFilter extends OAuthProviderProcessingFilter {
   private String responseContentType = "text/plain;charset=utf-8";
 
   private OAuthVerifierServices verifierServices;
+  private boolean require10a = true;
 
   public AccessTokenProcessingFilter() {
     setFilterProcessesUrl("/oauth_access_token");
@@ -56,7 +57,9 @@ public class AccessTokenProcessingFilter extends OAuthProviderProcessingFilter {
   @Override
   public void afterPropertiesSet() throws Exception {
     super.afterPropertiesSet();
-    Assert.notNull(getVerifierServices(), "Verifier services are required.");
+    if (isRequire10a()) {
+      Assert.notNull(getVerifierServices(), "Verifier services are required.");
+    }
   }
 
   protected OAuthProviderToken createOAuthToken(ConsumerAuthentication authentication) {
@@ -72,7 +75,13 @@ public class AccessTokenProcessingFilter extends OAuthProviderProcessingFilter {
       throw new InvalidOAuthParametersException(messages.getMessage("AccessTokenProcessingFilter.missingToken", "Missing token."));
     }
 
-    getVerifierServices().validateVerifier(oauthParams.get(OAuthConsumerParameter.oauth_verifier.toString()), token);
+    if (isRequire10a()) {
+      String verifier = oauthParams.get(OAuthConsumerParameter.oauth_verifier.toString());
+      if (verifier == null) {
+        throw new InvalidOAuthParametersException(messages.getMessage("AccessTokenProcessingFilter.missingVerifier", "Missing verifier."));
+      }
+      getVerifierServices().validateVerifier(verifier, token);
+    }
   }
 
   protected void onValidSignature(HttpServletRequest request, HttpServletResponse response, FilterChain chain) throws IOException {
@@ -146,5 +155,23 @@ public class AccessTokenProcessingFilter extends OAuthProviderProcessingFilter {
   @Autowired
   public void setVerifierServices(OAuthVerifierServices verifierServices) {
     this.verifierServices = verifierServices;
+  }
+
+  /**
+   * Whether to require 1.0a support.
+   *
+   * @return Whether to require 1.0a support.
+   */
+  public boolean isRequire10a() {
+    return require10a;
+  }
+
+  /**
+   * Whether to require 1.0a support.
+   *
+   * @param require10a Whether to require 1.0a support.
+   */
+  public void setRequire10a(boolean require10a) {
+    this.require10a = require10a;
   }
 }

@@ -25,7 +25,7 @@ import java.util.Map;
  *
  * @author Ryan Heaton
  */
-public class BaseProtectedResourceDetails implements ProtectedResourceDetailsWithAdditionalParameters {
+public class BaseProtectedResourceDetails implements ProtectedResourceDetails {
 
   private String id;
   private String consumerKey;
