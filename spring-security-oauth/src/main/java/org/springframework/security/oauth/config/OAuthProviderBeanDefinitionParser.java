@@ -125,6 +125,7 @@ public class OAuthProviderBeanDefinitionParser implements BeanDefinitionParser {
     if (StringUtils.hasText(require10a)) {
       requestTokenFilterBean.addPropertyValue("require10a", require10a);
       authenticateTokenFilterBean.addPropertyValue("require10a", require10a);
+      accessTokenFilterBean.addPropertyValue("require10a", require10a);
     }
 
     String callbackServicesRef = element.getAttribute("callback-services-ref");
