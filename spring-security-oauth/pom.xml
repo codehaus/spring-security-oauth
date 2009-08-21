@@ -6,7 +6,7 @@
   <name>OAuth for Spring Security</name>
   <description>Module for providing OAuth support to Spring Security</description>
   <packaging>jar</packaging>
-  <version>3.5</version>
+  <version>3.5.SS3.M1</version>
 
   <build>
     <plugins>
@@ -121,6 +121,10 @@
       <id>oauth.googlecode.net</id>
       <url>http://oauth.googlecode.com/svn/code/maven/</url>
     </repository>
+    <repository>
+      <id>spring.milestone</id>
+      <url>http://s3.amazonaws.com/maven.springframework.org/milestone</url>
+    </repository>
   </repositories>
 
   <dependencies>
@@ -135,34 +139,46 @@
       <!--for the annotations.-->
       <groupId>org.springframework</groupId>
       <artifactId>spring-beans</artifactId>
-      <version>2.5.4</version>
+      <version>3.0.0.M3</version>
     </dependency>
 
     <dependency>
       <!--for the annotations.-->
       <groupId>org.springframework</groupId>
       <artifactId>spring-core</artifactId>
-      <version>2.5.4</version>
+      <version>3.0.0.M3</version>
     </dependency>
 
     <dependency>
       <!--for the annotations.-->
       <groupId>org.springframework</groupId>
       <artifactId>spring-context</artifactId>
-      <version>2.5.4</version>
+      <version>3.0.0.M3</version>
     </dependency>
 
     <dependency>
       <!--for the annotations.-->
       <groupId>org.springframework</groupId>
       <artifactId>spring-aop</artifactId>
-      <version>2.5.4</version>
+      <version>3.0.0.M3</version>
     </dependency>
 
     <dependency>
       <groupId>org.springframework.security</groupId>
-      <artifactId>spring-security-core-tiger</artifactId>
-      <version>2.0.3</version>
+      <artifactId>spring-security-core</artifactId>
+      <version>3.0.0.M1</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.springframework.security</groupId>
+      <artifactId>spring-security-config</artifactId>
+        <version>3.0.0.M1</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.springframework.security</groupId>
+      <artifactId>spring-security-web</artifactId>
+      <version>3.0.0.M1</version>
     </dependency>
 
     <dependency>
@@ -185,6 +201,21 @@
       <version>20081126</version>
       <scope>test</scope>
     </dependency>
+
+    <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-api</artifactId>
+      <version>1.5.8</version>
+      <scope>test</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>net.oauth</groupId>
+      <artifactId>oauth-core</artifactId>
+      <version>20081126</version>
+      <scope>test</scope>
+    </dependency>
+
   </dependencies>
 
   <distributionManagement>

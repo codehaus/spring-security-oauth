@@ -1,5 +1,5 @@
-<%@ page import="org.springframework.security.ui.AbstractProcessingFilter" %>
-<%@ page import="org.springframework.security.AuthenticationException" %>
+<%@ page import="org.springframework.security.web.authentication.AbstractAuthenticationProcessingFilter" %>
+<%@ page import="org.springframework.security.core.AuthenticationException" %>
 <%@ taglib prefix="authz" uri="http://www.springframework.org/security/tags" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jstl/core" %>
 <authz:authorize ifAllGranted="ROLE_USER">
@@ -24,7 +24,7 @@
     <c:if test="${!empty sessionScope.SPRING_SECURITY_LAST_EXCEPTION}">
       <h1>Woops!</h1>
 
-      <p class="error">Your login attempt was not successful. (<%= ((AuthenticationException) session.getAttribute(AbstractProcessingFilter.SPRING_SECURITY_LAST_EXCEPTION_KEY)).getMessage() %>)</p>
+      <p class="error">Your login attempt was not successful. (<%= ((AuthenticationException) session.getAttribute(AbstractAuthenticationProcessingFilter.SPRING_SECURITY_LAST_EXCEPTION_KEY)).getMessage() %>)</p>
     </c:if>
     <c:remove scope="session" var="SPRING_SECURITY_LAST_EXCEPTION"/>
 

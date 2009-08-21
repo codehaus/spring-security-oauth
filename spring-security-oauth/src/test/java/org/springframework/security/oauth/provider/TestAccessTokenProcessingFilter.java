@@ -19,9 +19,11 @@ package org.springframework.security.oauth.provider;
 import static org.easymock.EasyMock.*;
 import org.springframework.security.oauth.provider.token.OAuthProviderTokenServices;
 import org.springframework.security.oauth.provider.token.OAuthAccessProviderToken;
-import org.springframework.security.GrantedAuthority;
+import org.springframework.security.core.GrantedAuthority;
 
 import junit.framework.TestCase;
+
+import java.util.ArrayList;
 
 /**
  * @author Ryan Heaton
@@ -34,7 +36,7 @@ public class TestAccessTokenProcessingFilter extends TestCase {
   public void testCreateOAuthToken() throws Exception {
     ConsumerDetails consumerDetails = createMock(ConsumerDetails.class);
     ConsumerCredentials creds = new ConsumerCredentials("key", "sig", "meth", "base", "tok");
-    expect(consumerDetails.getAuthorities()).andReturn(new GrantedAuthority[0]);
+    expect(consumerDetails.getAuthorities()).andReturn(new ArrayList<GrantedAuthority>());
     OAuthProviderTokenServices tokenServices = createMock(OAuthProviderTokenServices.class);
     OAuthAccessProviderToken token = createMock(OAuthAccessProviderToken.class);
 

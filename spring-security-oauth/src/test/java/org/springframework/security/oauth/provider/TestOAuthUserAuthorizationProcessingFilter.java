@@ -17,40 +17,44 @@
 package org.springframework.security.oauth.provider;
 
 import junit.framework.TestCase;
-import org.springframework.security.Authentication;
-import org.springframework.security.InsufficientAuthenticationException;
-import org.springframework.security.context.SecurityContextHolder;
+import org.springframework.security.authentication.InsufficientAuthenticationException;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import static org.easymock.EasyMock.*;
 import org.springframework.security.oauth.provider.token.OAuthProviderTokenServices;
-import org.springframework.security.oauth.provider.verifier.OAuthVerifierServices;
 import org.springframework.security.oauth.provider.callback.OAuthCallbackServices;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
 /**
  * @author Ryan Heaton
  */
 public class TestOAuthUserAuthorizationProcessingFilter extends TestCase {
 
+
   /**
    * tests the attempt to authenticate.
    */
   public void testAttemptAuthentication() throws Exception {
-    UserAuthorizationProcessingFilter filter = new UserAuthorizationProcessingFilter();
+    UserAuthorizationProcessingFilter filter = new UserAuthorizationProcessingFilter("/");
     HttpServletRequest request = createMock(HttpServletRequest.class);
+    HttpServletResponse response = createMock(HttpServletResponse.class);
     Authentication authentication = createMock(Authentication.class);
     OAuthProviderTokenServices tokenServices = createMock(OAuthProviderTokenServices.class);
     OAuthCallbackServices callbackServices = createMock(OAuthCallbackServices.class);
     filter.setCallbackServices(callbackServices);
 
     SecurityContextHolder.getContext().setAuthentication(authentication);
+    expect(authentication.isAuthenticated()).andReturn(false);
     expect(request.getParameter("requestToken")).andReturn("tok");
     expect(callbackServices.readCallback("tok")).andReturn("callback");
     request.setAttribute(UserAuthorizationProcessingFilter.CALLBACK_ATTRIBUTE, "callback");
-    expect(authentication.isAuthenticated()).andReturn(false);
+
     replay(authentication, request, tokenServices, callbackServices);
+
     try {
-      filter.attemptAuthentication(request);
+      filter.attemptAuthentication(request, response);     
       fail();
     }
     catch (InsufficientAuthenticationException e) {
@@ -62,41 +66,16 @@ public class TestOAuthUserAuthorizationProcessingFilter extends TestCase {
     expect(request.getParameter("requestToken")).andReturn("tok");
     expect(callbackServices.readCallback("tok")).andReturn("callback");
     request.setAttribute(UserAuthorizationProcessingFilter.CALLBACK_ATTRIBUTE, "callback");
-    expect(request.getParameter("requestToken")).andReturn("tok");
     tokenServices.authorizeRequestToken("tok", authentication);
     filter.setTokenServices(tokenServices);
     replay(authentication, request, tokenServices, callbackServices);
-    filter.attemptAuthentication(request);
+    filter.attemptAuthentication(request, response);
     verify(authentication, request, tokenServices, callbackServices);
     reset(authentication, request, tokenServices, callbackServices);
 
     SecurityContextHolder.getContext().setAuthentication(null);
   }
 
-  /**
-   * test determineTargetUrl
-   */
-  public void testDetermineTargetUrl() throws Exception {
-    UserAuthorizationProcessingFilter filter = new UserAuthorizationProcessingFilter();
-    OAuthVerifierServices vs = createMock(OAuthVerifierServices.class);
-    filter.setVerifierServices(vs);
-    HttpServletRequest request = createMock(HttpServletRequest.class);
 
-    expect(vs.createVerifier("mytok")).andReturn("myver");
-    expect(request.getAttribute(UserAuthorizationProcessingFilter.CALLBACK_ATTRIBUTE)).andReturn("http://my.host.com/my/context");
-    expect(request.getParameter("requestToken")).andReturn("mytok");
-    replay(request, vs);
-    assertEquals("http://my.host.com/my/context?oauth_token=mytok&oauth_verifier=myver", filter.determineTargetUrl(request));
-    verify(request, vs);
-    reset(request, vs);
-
-    expect(vs.createVerifier("mytok")).andReturn("myver");
-    expect(request.getAttribute(UserAuthorizationProcessingFilter.CALLBACK_ATTRIBUTE)).andReturn("http://my.host.com/my/context?with=some&query=parameter");
-    expect(request.getParameter("requestToken")).andReturn("mytok");
-    replay(request, vs);
-    assertEquals("http://my.host.com/my/context?with=some&query=parameter&oauth_token=mytok&oauth_verifier=myver", filter.determineTargetUrl(request));
-    verify(request, vs);
-    reset(request, vs);
-  }
 
 }

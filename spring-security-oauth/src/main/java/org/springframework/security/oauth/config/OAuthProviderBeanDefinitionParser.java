@@ -1,5 +1,5 @@
 /*
- * Copyright 2008 Web Cohesion
+ * Copyright 2008-2009 Web Cohesion
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,14 +21,13 @@ import org.springframework.beans.factory.config.RuntimeBeanReference;
 import org.springframework.beans.factory.support.BeanDefinitionBuilder;
 import org.springframework.beans.factory.xml.BeanDefinitionParser;
 import org.springframework.beans.factory.xml.ParserContext;
+import org.springframework.security.config.BeanIds;
 import org.springframework.security.config.ConfigUtilsBackdoor;
-import org.springframework.security.oauth.provider.AccessTokenProcessingFilter;
-import org.springframework.security.oauth.provider.ProtectedResourceProcessingFilter;
-import org.springframework.security.oauth.provider.UnauthenticatedRequestTokenProcessingFilter;
-import org.springframework.security.oauth.provider.UserAuthorizationProcessingFilter;
+import org.springframework.security.oauth.provider.*;
+import org.springframework.security.oauth.provider.callback.InMemoryCallbackServices;
 import org.springframework.security.oauth.provider.token.OAuthTokenLifecycleRegistryPostProcessor;
 import org.springframework.security.oauth.provider.verifier.RandomValueInMemoryVerifierServices;
-import org.springframework.security.oauth.provider.callback.InMemoryCallbackServices;
+import org.springframework.security.web.authentication.SimpleUrlAuthenticationFailureHandler;
 import org.springframework.util.StringUtils;
 import org.w3c.dom.Element;
 
@@ -36,6 +35,7 @@ import org.w3c.dom.Element;
  * Parser for the OAuth "provider" element.
  *
  * @author Ryan Heaton
+ * @author Andrew McCall
  */
 public class OAuthProviderBeanDefinitionParser implements BeanDefinitionParser {
 
@@ -56,6 +56,8 @@ public class OAuthProviderBeanDefinitionParser implements BeanDefinitionParser {
     }
 
     BeanDefinitionBuilder authenticateTokenFilterBean = BeanDefinitionBuilder.rootBeanDefinition(UserAuthorizationProcessingFilter.class);
+
+    authenticateTokenFilterBean.addPropertyReference("authenticationManager", BeanIds.AUTHENTICATION_MANAGER);
     if (StringUtils.hasText(tokenServicesRef)) {
       authenticateTokenFilterBean.addPropertyReference("tokenServices", tokenServicesRef);
     }
@@ -66,23 +68,25 @@ public class OAuthProviderBeanDefinitionParser implements BeanDefinitionParser {
     }
 
     String accessGrantedURL = element.getAttribute("access-granted-url");
-    if (StringUtils.hasText(accessGrantedURL)) {
-      authenticateTokenFilterBean.addPropertyValue("defaultTargetUrl", accessGrantedURL);
+    if (!StringUtils.hasText(accessGrantedURL)) {
+      // create the simple URl handler and add it.
+      accessGrantedURL = "/";
     }
+    authenticateTokenFilterBean.addConstructorArgValue(accessGrantedURL);
 
+    // create a AuthenticationFailureHandler
+    BeanDefinitionBuilder simpleUrlAuthenticationFailureHandler = BeanDefinitionBuilder.rootBeanDefinition(SimpleUrlAuthenticationFailureHandler.class);
     String authenticationFailedURL = element.getAttribute("authentication-failed-url");
     if (StringUtils.hasText(authenticationFailedURL)) {
-      authenticateTokenFilterBean.addPropertyValue("authenticationFailureUrl", authenticationFailedURL);
+      simpleUrlAuthenticationFailureHandler.addConstructorArgValue (authenticationFailedURL);
+    }
+    else {
+      simpleUrlAuthenticationFailureHandler.addConstructorArgValue ("/");
     }
 
     String tokenIdParam = element.getAttribute("token-id-param");
     if (StringUtils.hasText(tokenIdParam)) {
       authenticateTokenFilterBean.addPropertyValue("tokenIdParameterName", tokenIdParam);
-    }
-
-    String callbackUrlParam = element.getAttribute("callback-url-param");
-    if (StringUtils.hasText(callbackUrlParam)) {
-      authenticateTokenFilterBean.addPropertyValue("callbackParameterName", callbackUrlParam);
     }
 
     BeanDefinitionBuilder accessTokenFilterBean = BeanDefinitionBuilder.rootBeanDefinition(AccessTokenProcessingFilter.class);
@@ -121,13 +125,6 @@ public class OAuthProviderBeanDefinitionParser implements BeanDefinitionParser {
       protectedResourceFilterBean.addPropertyReference("providerSupport", supportRef);
     }
 
-    String require10a = element.getAttribute("require10a");
-    if (StringUtils.hasText(require10a)) {
-      requestTokenFilterBean.addPropertyValue("require10a", require10a);
-      authenticateTokenFilterBean.addPropertyValue("require10a", require10a);
-      accessTokenFilterBean.addPropertyValue("require10a", require10a);
-    }
-
     String callbackServicesRef = element.getAttribute("callback-services-ref");
     if (!StringUtils.hasText(callbackServicesRef)) {
       BeanDefinitionBuilder callbackServices = BeanDefinitionBuilder.rootBeanDefinition(InMemoryCallbackServices.class);
@@ -137,14 +134,36 @@ public class OAuthProviderBeanDefinitionParser implements BeanDefinitionParser {
     requestTokenFilterBean.addPropertyReference("callbackServices", callbackServicesRef);
     authenticateTokenFilterBean.addPropertyReference("callbackServices", callbackServicesRef);
 
+    BeanDefinitionBuilder successfulAuthenticationHandler = BeanDefinitionBuilder.rootBeanDefinition(UserAuthorizationSuccessfulAuthenticationHandler.class);
+    successfulAuthenticationHandler.addConstructorArgValue(accessGrantedURL);
+    successfulAuthenticationHandler.addPropertyReference("callbackServices", callbackServicesRef);
+
+    String callbackUrlParam = element.getAttribute("callback-url-param");
+    if (StringUtils.hasText(callbackUrlParam)) {
+      successfulAuthenticationHandler.addPropertyValue("callbackParameterName", callbackUrlParam);
+    }
+
+    String require10a = element.getAttribute("require10a");
+    if (StringUtils.hasText(require10a)) {
+      requestTokenFilterBean.addPropertyValue("require10a", require10a);
+      authenticateTokenFilterBean.addPropertyValue("require10a", require10a);
+      accessTokenFilterBean.addPropertyValue("require10a", require10a);
+      successfulAuthenticationHandler.addPropertyValue("require10a", require10a);
+    }
+
     String verifierServicesRef = element.getAttribute("verifier-services-ref");
     if (!StringUtils.hasText(verifierServicesRef)) {
       BeanDefinitionBuilder verifierServices = BeanDefinitionBuilder.rootBeanDefinition(RandomValueInMemoryVerifierServices.class);
       parserContext.getRegistry().registerBeanDefinition("oauthVerifierServices", verifierServices.getBeanDefinition());
       verifierServicesRef = "oauthVerifierServices";
     }
-    authenticateTokenFilterBean.addPropertyReference("verifierServices", verifierServicesRef);
+    successfulAuthenticationHandler.addPropertyReference("verifierServices", verifierServicesRef);
     accessTokenFilterBean.addPropertyReference("verifierServices", verifierServicesRef);
+
+    // register the successfulAuthenticationHandler with the UserAuthorizationFilter
+    String oauthSuccessfulAuthenticationHandlerRef = "oauthSuccessfulAuthenticationHandler";
+    parserContext.getRegistry().registerBeanDefinition(oauthSuccessfulAuthenticationHandlerRef, successfulAuthenticationHandler.getBeanDefinition());
+    authenticateTokenFilterBean.addPropertyReference("authenticationSuccessHandler", oauthSuccessfulAuthenticationHandlerRef);
 
     parserContext.getRegistry().registerBeanDefinition("_oauthTokenRegistryPostProcessor",
       BeanDefinitionBuilder.rootBeanDefinition(OAuthTokenLifecycleRegistryPostProcessor.class).getBeanDefinition());
@@ -160,4 +179,5 @@ public class OAuthProviderBeanDefinitionParser implements BeanDefinitionParser {
 
     return null;
   }
+
 }

@@ -16,7 +16,7 @@
 
 package org.springframework.security.oauth.provider.nonce;
 
-import org.springframework.security.AuthenticationException;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.oauth.provider.ConsumerDetails;
 
 /**
