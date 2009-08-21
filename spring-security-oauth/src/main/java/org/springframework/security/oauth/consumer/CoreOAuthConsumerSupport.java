@@ -88,6 +88,10 @@ public class CoreOAuthConsumerSupport implements OAuthConsumerSupport, Initializ
     if (details.isUse10a()) {
       additionalParameters.put(OAuthConsumerParameter.oauth_callback.toString(), callback);
     }
+    Map<String, String> specifiedParams = details.getAdditionalParameters();
+    if (specifiedParams != null) {
+      additionalParameters.putAll(specifiedParams);
+    }
     return getTokenFromProvider(details, requestTokenURL, httpMethod, null, additionalParameters);
   }
 
@@ -109,6 +113,10 @@ public class CoreOAuthConsumerSupport implements OAuthConsumerSupport, Initializ
     if (details.isUse10a()) {
       additionalParameters.put(OAuthConsumerParameter.oauth_verifier.toString(), verifier);
     }
+    Map<String, String> specifiedParams = details.getAdditionalParameters();
+    if (specifiedParams != null) {
+      additionalParameters.putAll(specifiedParams);
+    }
     return getTokenFromProvider(details, accessTokenURL, httpMethod, requestToken, additionalParameters);
   }
 
@@ -123,8 +131,8 @@ public class CoreOAuthConsumerSupport implements OAuthConsumerSupport, Initializ
       throw new IllegalArgumentException("Protected resource " + resourceDetails.getId() + " cannot be accessed with HTTP method " +
         httpMethod + " because the OAuth provider doesn't accept the OAuth Authorization header.");
     }
-    
-    return readResource(resourceDetails, url, httpMethod, accessToken, null);
+
+    return readResource(resourceDetails, url, httpMethod, accessToken, resourceDetails.getAdditionalParameters());
   }
 
   /**
@@ -274,7 +282,7 @@ public class CoreOAuthConsumerSupport implements OAuthConsumerSupport, Initializ
             builder.append(", ");
           }
 
-          builder.append(oauthEncode(parameter.toString())).append("=\"").append(oauthEncode(paramValue)).append('"');
+          builder.append(parameter.toString()).append("=\"").append(paramValue).append('"');
           writeComma = true;
         }
       }
@@ -288,10 +296,36 @@ public class CoreOAuthConsumerSupport implements OAuthConsumerSupport, Initializ
     Map<String, String> oauthParams = loadOAuthParameters(details, url, accessToken, httpMethod, additionalParameters);
 
     StringBuilder queryString = new StringBuilder();
-    if (details.isAcceptsAuthorizationHeader()) {
-      //if the resource accepts the authorization header, the oauth parameters will go in a header and not in the query.
-      for (OAuthConsumerParameter oauthParam : OAuthConsumerParameter.values()) {
-        oauthParams.remove(oauthParam.toString());
+    boolean acceptsHeader = details.isAcceptsAuthorizationHeader();
+    for (OAuthConsumerParameter oauthParam : OAuthConsumerParameter.values()) {
+      String value = oauthParams.remove(oauthParam.toString());
+
+      if (!acceptsHeader && value != null) {
+        //if the resource accepts the authorization header, the oauth parameters will go in a header and not in the query.
+        //otherwise, they need to be URL-encoded.
+        try {
+          oauthParams.put(oauthParam.toString(), URLEncoder.encode(value, "UTF-8"));
+        }
+        catch (UnsupportedEncodingException e) {
+          throw new IllegalStateException(e);
+        }
+      }
+    }
+
+    if (additionalParameters != null) {
+      for (String additionalParam : additionalParameters.keySet()) {
+        String value = oauthParams.remove(additionalParam);
+
+        if (!acceptsHeader) {
+          //if the resource accepts the authorization header, the oauth parameters will go in a header and not in the query.
+          //otherwise, they need to be URL-encoded.
+          try {
+            oauthParams.put(URLEncoder.encode(additionalParam, "UTF-8"), URLEncoder.encode(value, "UTF-8"));
+          }
+          catch (UnsupportedEncodingException e) {
+            throw new IllegalStateException(e);
+          }
+        }
       }
     }
 
@@ -317,6 +351,7 @@ public class CoreOAuthConsumerSupport implements OAuthConsumerSupport, Initializ
    *
    * @param details      The resource details.
    * @param tokenURL     The token URL.
+   * @param httpMethod   The http method.
    * @param requestToken The request token, or null if none.
    * @param additionalParameters The additional request parameter.
    * @return The token.
@@ -392,20 +427,33 @@ public class CoreOAuthConsumerSupport implements OAuthConsumerSupport, Initializ
 
   /**
    * Loads the OAuth parameters for the given resource at the given URL and the given token. These parameters include
-   * any query parameters on the URL since they are included in the signature.
+   * any query parameters on the URL since they are included in the signature.<br/><br/>
+   *
+   * If the protected resource accepts the authorization header, the oauth parameters will be OAuth-encoded.
    *
    * @param details      The resource details.
    * @param requestURL   The request URL.
    * @param requestToken The request token.
    * @param httpMethod   The http method.
-   * @param additionalParameters Additional parameters.
+   * @param additionalParameters Additional oauth parameters (outside of the core oauth spec).
    * @return The parameters.
    */
   protected Map<String, String> loadOAuthParameters(ProtectedResourceDetails details, URL requestURL, OAuthConsumerToken requestToken, String httpMethod, Map<String, String> additionalParameters) {
     Map<String, String> oauthParams = new TreeMap<String, String>();
+
+    boolean encode = details.isAcceptsAuthorizationHeader();
     if (additionalParameters != null) {
-      oauthParams.putAll(additionalParameters);
+      for (Map.Entry<String, String> additionalParam : additionalParameters.entrySet()) {
+        String name = additionalParam.getKey();
+        String value = additionalParam.getValue();
+        if (encode) {
+          name = oauthEncode(name);
+          value = oauthEncode(value);
+        }
+        oauthParams.put(name, value);
+      }
     }
+    
     String query = requestURL.getQuery();
     if (query != null) {
       StringTokenizer queryTokenizer = new StringTokenizer(query, "&");
@@ -430,19 +478,19 @@ public class CoreOAuthConsumerSupport implements OAuthConsumerSupport, Initializ
 
     String tokenSecret = requestToken == null ? null : requestToken.getSecret();
     String nonce = requestToken == null ? getNonceFactory().generateNonce() : requestToken.getNonce();
-    oauthParams.put(OAuthConsumerParameter.oauth_consumer_key.toString(), details.getConsumerKey());
+    oauthParams.put(OAuthConsumerParameter.oauth_consumer_key.toString(), encode ? oauthEncode(details.getConsumerKey()) : details.getConsumerKey());
     if ((requestToken != null) && (requestToken.getValue() != null)) {
-      oauthParams.put(OAuthConsumerParameter.oauth_token.toString(), requestToken.getValue());
+      oauthParams.put(OAuthConsumerParameter.oauth_token.toString(), encode ? oauthEncode(requestToken.getValue()) : requestToken.getValue());
     }
 
-    oauthParams.put(OAuthConsumerParameter.oauth_nonce.toString(), nonce);
-    oauthParams.put(OAuthConsumerParameter.oauth_signature_method.toString(), details.getSignatureMethod());
+    oauthParams.put(OAuthConsumerParameter.oauth_nonce.toString(), encode ? oauthEncode(nonce) : nonce);
+    oauthParams.put(OAuthConsumerParameter.oauth_signature_method.toString(), encode ? oauthEncode(details.getSignatureMethod()) : details.getSignatureMethod());
     oauthParams.put(OAuthConsumerParameter.oauth_timestamp.toString(), String.valueOf(System.currentTimeMillis() / 1000));
     oauthParams.put(OAuthConsumerParameter.oauth_version.toString(), "1.0");
     String signatureBaseString = getSignatureBaseString(oauthParams, requestURL, httpMethod);
     OAuthSignatureMethod signatureMethod = getSignatureFactory().getSignatureMethod(details.getSignatureMethod(), details.getSharedSecret(), tokenSecret);
     String signature = signatureMethod.sign(signatureBaseString);
-    oauthParams.put(OAuthConsumerParameter.oauth_signature.toString(), signature);
+    oauthParams.put(OAuthConsumerParameter.oauth_signature.toString(), encode ? oauthEncode(signature) : signature);
     return oauthParams;
   }
 

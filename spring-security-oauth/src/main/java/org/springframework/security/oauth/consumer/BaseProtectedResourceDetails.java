@@ -18,12 +18,14 @@ package org.springframework.security.oauth.consumer;
 
 import org.springframework.security.oauth.common.signature.SignatureSecret;
 
+import java.util.Map;
+
 /**
  * Basic implementation of protected resource details.
  *
  * @author Ryan Heaton
  */
-public class BaseProtectedResourceDetails implements ProtectedResourceDetails {
+public class BaseProtectedResourceDetails implements ProtectedResourceDetailsWithAdditionalParameters {
 
   private String id;
   private String consumerKey;
@@ -37,6 +39,7 @@ public class BaseProtectedResourceDetails implements ProtectedResourceDetails {
   private boolean acceptsAuthorizationHeader = true;
   private String authorizationHeaderRealm;
   private boolean use10a = true;
+  private Map<String, String> additionalParameters;
 
   public String getId() {
     return id;
@@ -132,5 +135,13 @@ public class BaseProtectedResourceDetails implements ProtectedResourceDetails {
 
   public void setUse10a(boolean use10a) {
     this.use10a = use10a;
+  }
+
+  public Map<String, String> getAdditionalParameters() {
+    return additionalParameters;
+  }
+
+  public void setAdditionalParameters(Map<String, String> additionalParameters) {
+    this.additionalParameters = additionalParameters;
   }
 }

@@ -27,7 +27,7 @@ import java.util.Map;
 public interface OAuthProviderSupport {
   
   /**
-   * Parse the oauth consumer paramters from an HttpServletRequest.
+   * Parse the oauth consumer paramters from an HttpServletRequest. The parameters are to be decoded per the OAuth spec.
    *
    * @param request The servlet request.
    * @return The parsed parameters.

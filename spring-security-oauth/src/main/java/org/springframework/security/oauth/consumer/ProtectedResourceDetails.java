@@ -18,6 +18,8 @@ package org.springframework.security.oauth.consumer;
 
 import org.springframework.security.oauth.common.signature.SignatureSecret;
 
+import java.util.Map;
+
 /**
  * Details about a protected resource.
  *
@@ -109,4 +111,11 @@ public interface ProtectedResourceDetails {
    * @return Whether to use OAuth Core 1.0a.
    */
   boolean isUse10a();
+
+  /**
+   * The additional OAuth parameters for this protected resource.
+   *
+   * @return The additional OAuth parameters for this protected resource, or null if none.
+   */
+  Map<String, String> getAdditionalParameters();
 }

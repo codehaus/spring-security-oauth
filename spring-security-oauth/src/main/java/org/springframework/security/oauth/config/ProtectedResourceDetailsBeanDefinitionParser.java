@@ -30,6 +30,7 @@ import org.w3c.dom.Element;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
+import java.util.HashMap;
 
 /**
  * @author Ryan Heaton
@@ -125,6 +126,15 @@ public class ProtectedResourceDetailsBeanDefinitionParser extends AbstractSingle
       String use10a = consumerElement.getAttribute("use10a");
       if (StringUtils.hasText(use10a)) {
         resource.setUse10a("true".equals(use10a));
+      }
+
+      List additionalParameters = DomUtils.getChildElementsByTagName(consumerElement, "addtionalParameter");
+      if (additionalParameters != null && !additionalParameters.isEmpty()) {
+        Map<String, String> additionalParams = new HashMap<String, String>();
+        for (Object additionalParameter : additionalParameters) {
+          additionalParams.put(((Element)additionalParameter).getAttribute("name"), ((Element)additionalParameter).getAttribute("value"));
+        }
+        resource.setAdditionalParameters(additionalParams);
       }
 
       resources.put(id, resource);
