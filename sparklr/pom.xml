@@ -51,7 +51,7 @@
     <dependency>
       <groupId>org.codehaus.spring-security-oauth</groupId>
       <artifactId>spring-security-oauth</artifactId>
-      <version>3.5.SS3.M1-SNAPSHOT</version>
+      <version>3.5.SS3.M1</version>
     </dependency>
 
     <dependency>
