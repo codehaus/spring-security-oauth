@@ -28,13 +28,7 @@ public class InMemoryProviderTokenServices extends RandomValueProviderTokenServi
   protected final ConcurrentHashMap<String, OAuthProviderTokenImpl> tokenStore = new ConcurrentHashMap<String, OAuthProviderTokenImpl>();
 
   protected OAuthProviderTokenImpl readToken(String token) {
-    OAuthProviderTokenImpl tokenImpl = tokenStore.get(token);
-    if (isExpired(tokenImpl)) {
-      onTokenRemoved(tokenImpl);
-      this.tokenStore.remove(token);
-      tokenImpl = null;
-    }
-    return tokenImpl;
+    return tokenStore.get(token);
   }
 
   protected void storeToken(String tokenValue, OAuthProviderTokenImpl token) {
