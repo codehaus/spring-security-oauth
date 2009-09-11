@@ -5,7 +5,7 @@
   xmlns:oauth="http://spring-security-oauth.codehaus.org/3.0"
   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
   xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-2.0.xsd
-              http://www.springframework.org/schema/security http://www.springframework.org/schema/security/spring-security-2.0.xsd
+              http://www.springframework.org/schema/security http://www.springframework.org/schema/security/spring-security-3.0.xsd
               http://spring-security-oauth.codehaus.org/3.0 http://spring-security-oauth.codehaus.org/schema/spring-security-oauth-3.0.xsd">
 
   <http auto-config='true' access-denied-page="/login.jsp">
@@ -20,12 +20,14 @@
     <logout logout-success-url="/index.jsp" logout-url="/logout.do"/>
   </http>
 
-  <authentication-provider>
-    <user-service>
-      <user name="marissa" password="koala" authorities="ROLE_USER" />
-      <user name="paul" password="emu" authorities="ROLE_USER" />
-    </user-service>
-  </authentication-provider>
+  <authentication-manager>
+    <authentication-provider>
+      <user-service>
+        <user name="marissa" password="koala" authorities="ROLE_USER" />
+        <user name="paul" password="emu" authorities="ROLE_USER" />
+      </user-service>
+    </authentication-provider>
+  </authentication-manager>
 
   <oauth:provider consumer-details-service-ref="consumerDetails"
                   token-services-ref="tokenServices"

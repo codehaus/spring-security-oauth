@@ -19,17 +19,23 @@ package org.springframework.security.oauth.config;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.beans.factory.config.RuntimeBeanReference;
 import org.springframework.beans.factory.support.BeanDefinitionBuilder;
+import org.springframework.beans.factory.support.RootBeanDefinition;
 import org.springframework.beans.factory.xml.BeanDefinitionParser;
 import org.springframework.beans.factory.xml.ParserContext;
+import org.springframework.beans.BeanMetadataElement;
 import org.springframework.security.config.BeanIds;
-import org.springframework.security.config.ConfigUtilsBackdoor;
 import org.springframework.security.oauth.provider.*;
 import org.springframework.security.oauth.provider.callback.InMemoryCallbackServices;
 import org.springframework.security.oauth.provider.token.OAuthTokenLifecycleRegistryPostProcessor;
 import org.springframework.security.oauth.provider.verifier.RandomValueInMemoryVerifierServices;
 import org.springframework.security.web.authentication.SimpleUrlAuthenticationFailureHandler;
+import org.springframework.security.web.util.UrlMatcher;
+import org.springframework.security.web.access.ExceptionTranslationFilter;
 import org.springframework.util.StringUtils;
 import org.w3c.dom.Element;
+
+import java.util.Map;
+import java.util.List;
 
 /**
  * Parser for the OAuth "provider" element.
@@ -168,16 +174,40 @@ public class OAuthProviderBeanDefinitionParser implements BeanDefinitionParser {
     parserContext.getRegistry().registerBeanDefinition("_oauthTokenRegistryPostProcessor",
       BeanDefinitionBuilder.rootBeanDefinition(OAuthTokenLifecycleRegistryPostProcessor.class).getBeanDefinition());
 
+    BeanDefinition filterChainProxy = parserContext.getRegistry().getBeanDefinition(BeanIds.FILTER_CHAIN_PROXY);
+    Map filterChainMap = (Map) filterChainProxy.getPropertyValues().getPropertyValue("filterChainMap").getValue();
+    UrlMatcher matcher = (UrlMatcher) filterChainProxy.getPropertyValues().getPropertyValue("matcher").getValue();
+    List<BeanMetadataElement> filterChain = (List<BeanMetadataElement>) filterChainMap.get(matcher.getUniversalMatchPattern());
+
+    int index = insertIndex(filterChain);
     parserContext.getRegistry().registerBeanDefinition("oauthRequestTokenFilter", requestTokenFilterBean.getBeanDefinition());
-    ConfigUtilsBackdoor.addHttpFilter(parserContext, new RuntimeBeanReference("oauthRequestTokenFilter"));
+    filterChain.add(++index, new RuntimeBeanReference("oauthRequestTokenFilter"));
     parserContext.getRegistry().registerBeanDefinition("oauthAuthenticateTokenFilter", authenticateTokenFilterBean.getBeanDefinition());
-    ConfigUtilsBackdoor.addHttpFilter(parserContext, new RuntimeBeanReference("oauthAuthenticateTokenFilter"));
+    filterChain.add(++index, new RuntimeBeanReference("oauthAuthenticateTokenFilter"));
     parserContext.getRegistry().registerBeanDefinition("oauthAccessTokenFilter", accessTokenFilterBean.getBeanDefinition());
-    ConfigUtilsBackdoor.addHttpFilter(parserContext, new RuntimeBeanReference("oauthAccessTokenFilter"));
+    filterChain.add(++index, new RuntimeBeanReference("oauthAccessTokenFilter"));
     parserContext.getRegistry().registerBeanDefinition("oauthProtectedResourceFilter", protectedResourceFilterBean.getBeanDefinition());
-    ConfigUtilsBackdoor.addHttpFilter(parserContext, new RuntimeBeanReference("oauthProtectedResourceFilter"));
+    filterChain.add(++index, new RuntimeBeanReference("oauthProtectedResourceFilter"));
 
     return null;
   }
 
+  /**
+   * Attempts to find the place in the filter chain to insert the spring security oauth filters. Currently,
+   * these filters are inserted after the ExceptionTranslationFilter.
+   *
+   * @param filterChain The filter chain configuration.
+   * @return The insert index.
+   */
+  private int insertIndex(List<BeanMetadataElement> filterChain) {
+    int i;
+    for (i = 0; i < filterChain.size(); i++) {
+      RootBeanDefinition filter = (RootBeanDefinition) filterChain.get(i);
+      String beanName = filter.getBeanClassName();
+      if (beanName.equals(ExceptionTranslationFilter.class.getName())) {
+         return i + 1;
+      }
+    }
+    return filterChain.size();
+  }
 }

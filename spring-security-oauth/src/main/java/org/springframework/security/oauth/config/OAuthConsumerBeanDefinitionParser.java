@@ -21,8 +21,9 @@ import org.springframework.beans.factory.config.RuntimeBeanReference;
 import org.springframework.beans.factory.support.BeanDefinitionBuilder;
 import org.springframework.beans.factory.xml.BeanDefinitionParser;
 import org.springframework.beans.factory.xml.ParserContext;
+import org.springframework.beans.BeanMetadataElement;
 import org.springframework.security.access.ConfigAttributeEditor;
-import org.springframework.security.config.ConfigUtilsBackdoor;
+import org.springframework.security.config.BeanIds;
 import org.springframework.security.oauth.consumer.CoreOAuthConsumerSupport;
 import org.springframework.security.oauth.consumer.OAuthConsumerProcessingFilter;
 import org.springframework.security.web.access.intercept.DefaultFilterInvocationSecurityMetadataSource;
@@ -38,6 +39,7 @@ import org.w3c.dom.Element;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Parser for the OAuth "consumer" element.
@@ -156,8 +158,12 @@ public class OAuthConsumerBeanDefinitionParser implements BeanDefinitionParser {
 
     consumerFilterBean.addPropertyValue("objectDefinitionSource", new DefaultFilterInvocationSecurityMetadataSource(matcher, invocationDefinitionMap));
     parserContext.getRegistry().registerBeanDefinition("oauthConsumerFilter", consumerFilterBean.getBeanDefinition());
-    ConfigUtilsBackdoor.addHttpFilter(parserContext, new RuntimeBeanReference("oauthConsumerFilter"));
+    BeanDefinition filterChainProxy = parserContext.getRegistry().getBeanDefinition(BeanIds.FILTER_CHAIN_PROXY);
+    Map filterChainMap = (Map) filterChainProxy.getPropertyValues().getPropertyValue("filterChainMap").getValue();
+    List<BeanMetadataElement> filterChain = (List<BeanMetadataElement>) filterChainMap.get(matcher.getUniversalMatchPattern());
 
+    //parserContext.getRegistry().registerBeanDefinition("oauthRequestTokenFilter", requestTokenFilterBean.getBeanDefinition());
+    filterChain.add(filterChain.size(), new RuntimeBeanReference("oauthConsumerFilter"));
     return null;
   }
 }
