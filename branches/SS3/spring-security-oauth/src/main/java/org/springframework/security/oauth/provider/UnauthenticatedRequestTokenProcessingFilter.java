@@ -24,7 +24,6 @@ import org.springframework.security.oauth.common.OAuthConsumerParameter;
 import org.springframework.security.oauth.common.OAuthProviderParameter;
 import org.springframework.security.oauth.provider.callback.OAuthCallbackServices;
 import org.springframework.security.oauth.provider.token.OAuthProviderToken;
-import org.springframework.security.web.FilterChainOrder;
 import org.springframework.util.Assert;
 
 import javax.servlet.FilterChain;
@@ -41,8 +40,6 @@ import java.util.Map;
  * @author Andrew McCall
  */
 public class UnauthenticatedRequestTokenProcessingFilter extends OAuthProviderProcessingFilter {
-
-  public static final int FILTER_CHAIN_ORDER = FilterChainOrder.EXCEPTION_TRANSLATION_FILTER + 15;
 
   // The OAuth spec doesn't specify a content-type of the response.  However, it's NOT
   // "application/x-www-form-urlencoded" because the response isn't URL-encoded. Until
@@ -119,15 +116,6 @@ public class UnauthenticatedRequestTokenProcessingFilter extends OAuthProviderPr
    */
   protected OAuthProviderToken createOAuthToken(ConsumerAuthentication authentication) {
     return getTokenServices().createUnauthorizedRequestToken(authentication.getConsumerDetails().getConsumerKey());
-  }
-
-  /**
-   * The request token filter comes after the exception translation filter.
-   *
-   * @return The request token filter comes after the exception translation filter.
-   */
-  public int getOrder() {
-    return FILTER_CHAIN_ORDER;
   }
 
   /**

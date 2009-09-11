@@ -16,16 +16,6 @@
 
 package org.springframework.security.oauth.consumer;
 
-import org.springframework.security.*;
-import org.springframework.security.access.ConfigAttribute;
-import org.springframework.security.web.savedrequest.SavedRequest;
-import org.springframework.security.web.*;
-import org.springframework.security.web.access.intercept.DefaultFilterInvocationSecurityMetadataSource;
-import org.springframework.security.web.access.intercept.FilterInvocationSecurityMetadataSource;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.SpringSecurityMessageSource;
-import org.springframework.security.authentication.InsufficientAuthenticationException;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.InitializingBean;
@@ -33,14 +23,24 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.MessageSource;
 import org.springframework.context.MessageSourceAware;
 import org.springframework.context.support.MessageSourceAccessor;
+import org.springframework.security.access.ConfigAttribute;
+import org.springframework.security.authentication.InsufficientAuthenticationException;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.SpringSecurityMessageSource;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth.common.OAuthException;
 import org.springframework.security.oauth.common.OAuthProviderParameter;
 import org.springframework.security.oauth.consumer.token.HttpSessionBasedTokenServicesFactory;
 import org.springframework.security.oauth.consumer.token.OAuthConsumerToken;
 import org.springframework.security.oauth.consumer.token.OAuthConsumerTokenServices;
 import org.springframework.security.oauth.consumer.token.OAuthConsumerTokenServicesFactory;
+import org.springframework.security.web.AuthenticationEntryPoint;
+import org.springframework.security.web.FilterInvocation;
+import org.springframework.security.web.PortResolver;
+import org.springframework.security.web.PortResolverImpl;
+import org.springframework.security.web.access.intercept.FilterInvocationSecurityMetadataSource;
+import org.springframework.security.web.savedrequest.SavedRequest;
 import org.springframework.util.Assert;
-import org.springframework.core.Ordered;
 
 import javax.servlet.*;
 import javax.servlet.http.HttpServletRequest;
@@ -59,10 +59,8 @@ import java.util.*;
  * @author Ryan Heaton
  * @author Andrew McCall
  */
-public class OAuthConsumerProcessingFilter implements Filter, InitializingBean, MessageSourceAware, Ordered {
+public class OAuthConsumerProcessingFilter implements Filter, InitializingBean, MessageSourceAware {
 
-  public static final int FILTER_CHAIN_ORDER = FilterChainOrder.FILTER_SECURITY_INTERCEPTOR + 15;
-  
   public static final String ACCESS_TOKENS_DEFAULT_ATTRIBUTE = "OAUTH_ACCESS_TOKENS";
   public static final String OAUTH_FAILURE_KEY = "OAUTH_FAILURE_KEY";
   private static final Log LOG = LogFactory.getLog(OAuthConsumerProcessingFilter.class);
@@ -267,15 +265,6 @@ public class OAuthConsumerProcessingFilter implements Filter, InitializingBean, 
       }
     }
     return deps;
-  }
-
-  /**
-   * The consumer processing filter comes after the filter security interceptor.
-   *
-   * @return The order.
-   */
-  public int getOrder() {
-    return OAuthConsumerProcessingFilter.FILTER_CHAIN_ORDER;
   }
 
   /**

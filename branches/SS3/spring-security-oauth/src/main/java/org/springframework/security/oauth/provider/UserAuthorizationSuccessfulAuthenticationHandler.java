@@ -85,22 +85,24 @@ public class UserAuthorizationSuccessfulAuthenticationHandler extends SimpleUrlA
     }
 
     if ("oob".equals(callbackURL)) {
-      super.onAuthenticationSuccess(request, response, authentication);
+      //(heatonra) what I'd LIKE to do is this:
+      // callbackURL = super.determineTargetUrl(request, response);
+      // but NO! They made that method private for some reason.
+      callbackURL = getDefaultTargetUrl();
     }
-    else {
-      if (LOG.isDebugEnabled()) {
-        LOG.debug("Storing verifier.");
-      }
-      String requestToken = request.getParameter(getTokenParameterName());
-      String verifier = getVerifierServices().createVerifier(requestToken);
-      char appendChar = '?';
-      if (callbackURL.indexOf('?') > 0) {
-        appendChar = '&';
-      }
-      String targetUrl = new StringBuilder(callbackURL).append(appendChar).append("oauth_token=").append(requestToken).append("&oauth_verifier=").append(verifier).toString();
 
-      RedirectUtils.sendRedirect(request, response, targetUrl, this.isUseRelativeContext());
+    if (LOG.isDebugEnabled()) {
+      LOG.debug("Storing verifier.");
     }
+    String requestToken = request.getParameter(getTokenParameterName());
+    String verifier = getVerifierServices().createVerifier(requestToken);
+    char appendChar = '?';
+    if (callbackURL.indexOf('?') > 0) {
+      appendChar = '&';
+    }
+    String targetUrl = new StringBuilder(callbackURL).append(appendChar).append("oauth_token=").append(requestToken).append("&oauth_verifier=").append(verifier).toString();
+
+    RedirectUtils.sendRedirect(request, response, targetUrl, this.isUseRelativeContext());
   }
 
   /**

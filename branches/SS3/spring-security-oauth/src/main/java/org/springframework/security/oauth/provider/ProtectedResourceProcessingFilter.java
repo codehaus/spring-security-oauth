@@ -43,8 +43,6 @@ import java.util.Map;
  */
 public class ProtectedResourceProcessingFilter extends OAuthProviderProcessingFilter {
 
-  public static final int FILTER_CHAIN_ORDER = AccessTokenProcessingFilter.FILTER_CHAIN_ORDER + 1;
-
   private boolean allowAllMethods = true;
 
   public ProtectedResourceProcessingFilter() {
@@ -96,15 +94,6 @@ public class ProtectedResourceProcessingFilter extends OAuthProviderProcessingFi
   @Override
   public void setFilterProcessesUrl(String filterProcessesUrl) {
     throw new UnsupportedOperationException("The OAuth protected resource processing filter doesn't support a filter processes URL.");
-  }
-
-  /**
-   * The protected resource filtering happens after the access token filtering.
-   *
-   * @return The order after the access token.
-   */
-  public int getOrder() {
-    return ProtectedResourceProcessingFilter.FILTER_CHAIN_ORDER;
   }
 
   /**

@@ -16,10 +16,6 @@
 
 package org.springframework.security.oauth.provider;
 
-import org.springframework.security.core.SpringSecurityMessageSource;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.AuthenticationException;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.InitializingBean;
@@ -27,6 +23,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.MessageSource;
 import org.springframework.context.MessageSourceAware;
 import org.springframework.context.support.MessageSourceAccessor;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.core.SpringSecurityMessageSource;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth.common.OAuthConsumerParameter;
 import org.springframework.security.oauth.common.signature.*;
 import org.springframework.security.oauth.provider.nonce.ExpiringTimestampNonceServices;
@@ -34,7 +34,6 @@ import org.springframework.security.oauth.provider.nonce.OAuthNonceServices;
 import org.springframework.security.oauth.provider.token.OAuthProviderToken;
 import org.springframework.security.oauth.provider.token.OAuthProviderTokenServices;
 import org.springframework.util.Assert;
-import org.springframework.core.Ordered;
 
 import javax.servlet.*;
 import javax.servlet.http.HttpServletRequest;
@@ -50,7 +49,7 @@ import java.util.Map;
  *
  * @author Ryan Heaton
  */
-public abstract class OAuthProviderProcessingFilter implements Filter, InitializingBean, MessageSourceAware, Ordered {
+public abstract class OAuthProviderProcessingFilter implements Filter, InitializingBean, MessageSourceAware {
 
   /**
    * Attribute for indicating that OAuth processing has already occurred.

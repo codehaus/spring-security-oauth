@@ -42,7 +42,6 @@ import javax.servlet.http.HttpServletResponse;
  */
 public class UserAuthorizationProcessingFilter extends AbstractAuthenticationProcessingFilter {
 
-  public static final int FILTER_CHAIN_ORDER = UnauthenticatedRequestTokenProcessingFilter.FILTER_CHAIN_ORDER + 1;
   protected static final String CALLBACK_ATTRIBUTE = UserAuthorizationProcessingFilter.class.getName() + "#CALLBACK";
 
   private OAuthProviderTokenServices tokenServices;
@@ -55,7 +54,7 @@ public class UserAuthorizationProcessingFilter extends AbstractAuthenticationPro
   }
 
   @Override
-  public void afterPropertiesSet() throws Exception {
+  public void afterPropertiesSet() {
     // call super.
     super.afterPropertiesSet();
     Assert.notNull(getTokenServices(), "A token services must be provided.");
@@ -87,15 +86,6 @@ public class UserAuthorizationProcessingFilter extends AbstractAuthenticationPro
 
   public String getDefaultFilterProcessesUrl() {
     return "/oauth_authenticate_token";
-  }
-
-  /**
-   * User authorization comes after the request token.
-   *
-   * @return The order after the request token.
-   */
-  public int getOrder() {
-    return FILTER_CHAIN_ORDER;
   }
 
   /**
