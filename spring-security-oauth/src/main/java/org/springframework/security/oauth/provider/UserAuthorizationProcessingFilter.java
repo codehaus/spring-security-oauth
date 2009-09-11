@@ -109,18 +109,18 @@ public class UserAuthorizationProcessingFilter extends AbstractProcessingFilter 
       }
     }
 
+    String requestToken = request.getParameter(getTokenParameterName());
+    String verifier = getVerifierServices().createVerifier(requestToken);
     if ("oob".equals(callbackURL)) {
-      return super.determineTargetUrl(request);
+      callbackURL = super.determineTargetUrl(request);
     }
-    else {
-      String requestToken = request.getParameter(getTokenParameterName());
-      String verifier = getVerifierServices().createVerifier(requestToken);
-      char appendChar = '?';
-      if (callbackURL.indexOf('?') > 0) {
-        appendChar = '&';
-      }
-      return new StringBuilder(callbackURL).append(appendChar).append("oauth_token=").append(requestToken).append("&oauth_verifier=").append(verifier).toString();
+
+    char appendChar = '?';
+    if (callbackURL.indexOf('?') > 0) {
+      appendChar = '&';
     }
+    
+    return new StringBuilder(callbackURL).append(appendChar).append("oauth_token=").append(requestToken).append("&oauth_verifier=").append(verifier).toString();
   }
 
   public String getDefaultFilterProcessesUrl() {
