@@ -249,7 +249,7 @@ public class CoreOAuthConsumerSupport implements OAuthConsumerSupport, Initializ
         return new URL(url.getProtocol(), url.getHost(), url.getPort(), file.toString(), streamHandler);
       }
       else {
-        throw new OAuthRequestFailedException("Unsupport OAuth protocol: " + url.getProtocol());
+        throw new OAuthRequestFailedException("Unsupported OAuth protocol: " + url.getProtocol());
       }
     }
     catch (MalformedURLException e) {
@@ -281,7 +281,7 @@ public class CoreOAuthConsumerSupport implements OAuthConsumerSupport, Initializ
             builder.append(", ");
           }
 
-          builder.append(parameter.toString()).append("=\"").append(paramValue).append('"');
+          builder.append(parameter.toString()).append("=\"").append(oauthEncode(paramValue)).append('"');
           writeComma = true;
         }
       }
@@ -302,12 +302,7 @@ public class CoreOAuthConsumerSupport implements OAuthConsumerSupport, Initializ
       if (!acceptsHeader && value != null) {
         //if the resource accepts the authorization header, the oauth parameters will go in a header and not in the query.
         //otherwise, they need to be URL-encoded.
-        try {
-          oauthParams.put(oauthParam.toString(), URLEncoder.encode(value, "UTF-8"));
-        }
-        catch (UnsupportedEncodingException e) {
-          throw new IllegalStateException(e);
-        }
+        oauthParams.put(oauthParam.toString(), urlEncode(value));
       }
     }
 
@@ -318,12 +313,7 @@ public class CoreOAuthConsumerSupport implements OAuthConsumerSupport, Initializ
         if (!acceptsHeader) {
           //if the resource accepts the authorization header, the oauth parameters will go in a header and not in the query.
           //otherwise, they need to be URL-encoded.
-          try {
-            oauthParams.put(URLEncoder.encode(additionalParam, "UTF-8"), URLEncoder.encode(value, "UTF-8"));
-          }
-          catch (UnsupportedEncodingException e) {
-            throw new IllegalStateException(e);
-          }
+          oauthParams.put(urlEncode(additionalParam), urlEncode(value));
         }
       }
     }
@@ -423,9 +413,7 @@ public class CoreOAuthConsumerSupport implements OAuthConsumerSupport, Initializ
 
   /**
    * Loads the OAuth parameters for the given resource at the given URL and the given token. These parameters include
-   * any query parameters on the URL since they are included in the signature.<br/><br/>
-   *
-   * If the protected resource accepts the authorization header, the oauth parameters will be OAuth-encoded.
+   * any query parameters on the URL since they are included in the signature. The oauth parameters are NOT encoded.
    *
    * @param details      The resource details.
    * @param requestURL   The request URL.
@@ -437,16 +425,9 @@ public class CoreOAuthConsumerSupport implements OAuthConsumerSupport, Initializ
   protected Map<String, String> loadOAuthParameters(ProtectedResourceDetails details, URL requestURL, OAuthConsumerToken requestToken, String httpMethod, Map<String, String> additionalParameters) {
     Map<String, String> oauthParams = new TreeMap<String, String>();
 
-    boolean encode = details.isAcceptsAuthorizationHeader();
     if (additionalParameters != null) {
       for (Map.Entry<String, String> additionalParam : additionalParameters.entrySet()) {
-        String name = additionalParam.getKey();
-        String value = additionalParam.getValue();
-        if (encode) {
-          name = oauthEncode(name);
-          value = oauthEncode(value);
-        }
-        oauthParams.put(name, value);
+        oauthParams.put(additionalParam.getKey(), additionalParam.getValue());
       }
     }
     
@@ -456,12 +437,12 @@ public class CoreOAuthConsumerSupport implements OAuthConsumerSupport, Initializ
       while (queryTokenizer.hasMoreElements()) {
         String token = (String) queryTokenizer.nextElement();
         if (token.indexOf('=') < 0) {
-          oauthParams.put(token, null);
+          oauthParams.put(urlDecode(token), null);
         }
         else {
           int equalsIndex = token.indexOf('=');
           if (equalsIndex < 0) {
-            oauthParams.put(token, null);
+            oauthParams.put(urlDecode(token), null);
           }
           else {
             String paramName = token.substring(0, equalsIndex);
@@ -474,20 +455,50 @@ public class CoreOAuthConsumerSupport implements OAuthConsumerSupport, Initializ
 
     String tokenSecret = requestToken == null ? null : requestToken.getSecret();
     String nonce = requestToken == null ? getNonceFactory().generateNonce() : requestToken.getNonce();
-    oauthParams.put(OAuthConsumerParameter.oauth_consumer_key.toString(), encode ? oauthEncode(details.getConsumerKey()) : details.getConsumerKey());
+    oauthParams.put(OAuthConsumerParameter.oauth_consumer_key.toString(), details.getConsumerKey());
     if ((requestToken != null) && (requestToken.getValue() != null)) {
-      oauthParams.put(OAuthConsumerParameter.oauth_token.toString(), encode ? oauthEncode(requestToken.getValue()) : requestToken.getValue());
+      oauthParams.put(OAuthConsumerParameter.oauth_token.toString(), requestToken.getValue());
     }
 
-    oauthParams.put(OAuthConsumerParameter.oauth_nonce.toString(), encode ? oauthEncode(nonce) : nonce);
-    oauthParams.put(OAuthConsumerParameter.oauth_signature_method.toString(), encode ? oauthEncode(details.getSignatureMethod()) : details.getSignatureMethod());
+    oauthParams.put(OAuthConsumerParameter.oauth_nonce.toString(), nonce);
+    oauthParams.put(OAuthConsumerParameter.oauth_signature_method.toString(), details.getSignatureMethod());
     oauthParams.put(OAuthConsumerParameter.oauth_timestamp.toString(), String.valueOf(System.currentTimeMillis() / 1000));
     oauthParams.put(OAuthConsumerParameter.oauth_version.toString(), "1.0");
     String signatureBaseString = getSignatureBaseString(oauthParams, requestURL, httpMethod);
     OAuthSignatureMethod signatureMethod = getSignatureFactory().getSignatureMethod(details.getSignatureMethod(), details.getSharedSecret(), tokenSecret);
     String signature = signatureMethod.sign(signatureBaseString);
-    oauthParams.put(OAuthConsumerParameter.oauth_signature.toString(), encode ? oauthEncode(signature) : signature);
+    oauthParams.put(OAuthConsumerParameter.oauth_signature.toString(), signature);
     return oauthParams;
+  }
+
+  /**
+   * URL-encode a value.
+   *
+   * @param value The value to encode.
+   * @return The URL-encoded value.
+   */
+  protected String urlEncode(String value) {
+    try {
+      return URLEncoder.encode(value, "UTF-8");
+    }
+    catch (UnsupportedEncodingException e) {
+      throw new RuntimeException(e);
+    }
+  }
+
+  /**
+   * URL-decode a token.
+   *
+   * @param token The token to URL-decode.
+   * @return The decoded token.
+   */
+  protected String urlDecode(String token) {
+    try {
+      return URLDecoder.decode(token, "utf-8");
+    }
+    catch (UnsupportedEncodingException e) {
+      throw new RuntimeException(e);
+    }
   }
 
   /**
@@ -525,48 +536,44 @@ public class CoreOAuthConsumerSupport implements OAuthConsumerSupport, Initializ
   }
 
   /**
-   * Get the signature base string for the specified parameters.
+   * Get the signature base string for the specified parameters. It is presumed the parameters are NOT OAuth-encoded.
    *
-   * @param oauthParams The parameters.
+   * @param oauthParams The parameters (NOT oauth-encoded).
    * @param requestURL  The request URL.
    * @param httpMethod  The http method.
    * @return The signature base string.
    */
   protected String getSignatureBaseString(Map<String, String> oauthParams, URL requestURL, String httpMethod) {
-    //now sort them (according to the spec.
-    Map.Entry<String, String>[] sortedParameters = oauthParams.entrySet().toArray(new Map.Entry[oauthParams.size()]);
-    Comparator<Map.Entry<String, String>> parameterComparator = new Comparator<Map.Entry<String, String>>() {
-      public int compare(Map.Entry<String, String> param1, Map.Entry<String, String> param2) {
-        int comparison = param1.getKey().compareTo(param2.getKey());
-        if (comparison == 0) {
-          String value1 = param1.getValue();
-          if (value1 == null) {
-            value1 = "";
-          }
+    TreeMap<String, TreeSet<String>> sortedParameters = new TreeMap<String, TreeSet<String>>();
 
-          String value2 = param2.getValue();
-          if (value2 == null) {
-            value2 = "";
-          }
+    for (Map.Entry<String, String> param : oauthParams.entrySet()) {
+      //first encode all parameter names and values (spec section 9.1)
+      String key = oauthEncode(param.getKey());
+      String value = oauthEncode(param.getValue());
 
-          comparison = value1.compareTo(value2);
-        }
-        return comparison;
+      //add the encoded parameters sorted according to the spec.
+      TreeSet<String> sortedValues = sortedParameters.get(key);
+      if (sortedValues == null) {
+        sortedValues = new TreeSet<String>();
+        sortedParameters.put(key, sortedValues);
       }
-    };
-    Arrays.sort(sortedParameters, parameterComparator);
+      sortedValues.add(value);
+    }
 
     //now concatenate them into a single query string according to the spec.
     StringBuilder queryString = new StringBuilder();
-    for (int i = 0; i < sortedParameters.length; i++) {
-      Map.Entry<String, String> sortedParameter = sortedParameters[i];
-      String parameterValue = sortedParameter.getValue();
-      if (parameterValue == null) {
-        parameterValue = "";
-      }
-      queryString.append(sortedParameter.getKey()).append('=').append(parameterValue);
-      if (i + 1 < sortedParameters.length) {
-        queryString.append('&');
+    Iterator<Map.Entry<String, TreeSet<String>>> sortedIt = sortedParameters.entrySet().iterator();
+    while (sortedIt.hasNext()) {
+      Map.Entry<String, TreeSet<String>> sortedParameter = sortedIt.next();
+      for (String parameterValue : sortedParameter.getValue()) {
+        if (parameterValue == null) {
+          parameterValue = "";
+        }
+
+        queryString.append(sortedParameter.getKey()).append('=').append(parameterValue);
+        if (sortedIt.hasNext()) {
+          queryString.append('&');
+        }
       }
     }
 

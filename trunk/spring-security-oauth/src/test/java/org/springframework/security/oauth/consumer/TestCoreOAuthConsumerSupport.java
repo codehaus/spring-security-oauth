@@ -387,7 +387,6 @@ public class TestCoreOAuthConsumerSupport extends TestCase {
     token.setNonce("mynonce");
     OAuthSignatureMethod sigMethod = createMock(OAuthSignatureMethod.class);
 
-    expect(details.isAcceptsAuthorizationHeader()).andReturn(true);
     expect(details.getConsumerKey()).andReturn("my-consumer-key");
     expect(details.getSignatureMethod()).andReturn(HMAC_SHA1SignatureMethod.SIGNATURE_NAME);
     expect(details.getSignatureMethod()).andReturn(HMAC_SHA1SignatureMethod.SIGNATURE_NAME);
