@@ -69,9 +69,7 @@ public class TestGoogleCodeCompatibility extends TestCase {
 
     expect(request.getParameterNames()).andReturn(Collections.enumeration(parameterMap.keySet()));
     for (Map.Entry<String, String[]> param : parameterMap.entrySet()) {
-      for (String value : param.getValue()) {
-        expect(request.getParameter(param.getKey())).andReturn(value);
-      }
+      expect(request.getParameterValues(param.getKey())).andReturn(param.getValue());
     }
 
     String header = "OAuth realm=\"http://sp.example.com/\"," +
