@@ -115,43 +115,20 @@ public class CoreOAuthProviderSupport implements OAuthProviderSupport {
 
   // Inherited.
   public String getSignatureBaseString(HttpServletRequest request) {
-    Map<String, String> significantParameters = loadSignificantParametersForSignatureBaseString(request);
-
-    //now sort them (according to the spec.
-    Map.Entry<String, String>[] sortedParameters = significantParameters.entrySet().toArray(new Map.Entry[significantParameters.size()]);
-    Comparator<Map.Entry<String, String>> parameterComparator = new Comparator<Map.Entry<String, String>>() {
-      public int compare(Map.Entry<String, String> param1, Map.Entry<String, String> param2) {
-        int comparison = param1.getKey().compareTo(param2.getKey());
-        if (comparison == 0) {
-          String value1 = param1.getValue();
-          if (value1 == null) {
-            value1 = "";
-          }
-
-          String value2 = param2.getValue();
-          if (value2 == null) {
-            value2 = "";
-          }
-
-          comparison = value1.compareTo(value2);
-        }
-        return comparison;
-      }
-    };
-    Arrays.sort(sortedParameters, parameterComparator);
+    SortedMap<String, SortedSet<String>> significantParameters = loadSignificantParametersForSignatureBaseString(request);
 
     //now concatenate them into a single query string according to the spec.
     StringBuilder queryString = new StringBuilder();
-    for (int i = 0; i < sortedParameters.length; i++) {
-      Map.Entry<String, String> sortedParameter = sortedParameters[i];
-      String parameterValue = sortedParameter.getValue();
-      if (parameterValue == null) {
-        parameterValue = "";
-      }
-
-      queryString.append(sortedParameter.getKey()).append('=').append(parameterValue);
-      if (i + 1 < sortedParameters.length) {
-        queryString.append('&');
+    Iterator<Map.Entry<String, SortedSet<String>>> paramIt = significantParameters.entrySet().iterator();
+    while (paramIt.hasNext()) {
+      Map.Entry<String, SortedSet<String>> sortedParameter = paramIt.next();
+      Iterator<String> valueIt = sortedParameter.getValue().iterator();
+      while (valueIt.hasNext()) {
+        String parameterValue = valueIt.next();
+        queryString.append(sortedParameter.getKey()).append('=').append(parameterValue);
+        if (paramIt.hasNext() || valueIt.hasNext()) {
+          queryString.append('&');
+        }
       }
     }
 
@@ -196,19 +173,32 @@ public class CoreOAuthProviderSupport implements OAuthProviderSupport {
    * @param request The request.
    * @return The significan parameters.
    */
-  protected Map<String, String> loadSignificantParametersForSignatureBaseString(HttpServletRequest request) {
+  protected SortedMap<String, SortedSet<String>> loadSignificantParametersForSignatureBaseString(HttpServletRequest request) {
     //first collect the relevant parameters...
-    Map<String, String> significantParameters = new HashMap<String, String>();
+    SortedMap<String, SortedSet<String>> significantParameters = new TreeMap<String, SortedSet<String>>();
     //first pull from the request...
     Enumeration parameterNames = request.getParameterNames();
     while (parameterNames.hasMoreElements()) {
       String parameterName = (String) parameterNames.nextElement();
-      String parameterValue = request.getParameter(parameterName);
-      if (parameterValue == null) {
-        parameterValue = "";
+      String[] values = request.getParameterValues(parameterName);
+      if (values == null) {
+        values = new String[]{ "" };
       }
 
-      significantParameters.put(parameterName, parameterValue);
+      for (String parameterValue : values) {
+        if (parameterValue == null) {
+          parameterValue = "";
+        }
+
+        parameterName = oauthEncode(parameterName);
+        parameterValue = oauthEncode(parameterValue);
+        SortedSet<String> significantValues = significantParameters.get(parameterName);
+        if (significantValues == null) {
+          significantValues = new TreeSet<String>();
+          significantParameters.put(parameterName, significantValues);
+        }
+        significantValues.add(parameterValue);
+      }
     }
 
     //then take into account the header parameter values...
@@ -221,7 +211,14 @@ public class CoreOAuthProviderSupport implements OAuthProviderSupport {
         parameterValue = "";
       }
 
-      significantParameters.put(oauthEncode(parameterName), oauthEncode(parameterValue));
+      parameterName = oauthEncode(parameterName);
+      parameterValue = oauthEncode(parameterValue);
+      SortedSet<String> significantValues = significantParameters.get(parameterName);
+      if (significantValues == null) {
+        significantValues = new TreeSet<String>();
+        significantParameters.put(parameterName, significantValues);
+      }
+      significantValues.add(parameterValue);
     }
 
     //remove the oauth signature parameter value.

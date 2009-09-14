@@ -34,9 +34,7 @@ import java.net.MalformedURLException;
 import java.net.ProtocolException;
 import java.net.URLEncoder;
 import java.io.*;
-import java.util.Map;
-import java.util.TreeMap;
-import java.util.HashMap;
+import java.util.*;
 
 /**
  * @author Ryan Heaton
@@ -246,10 +244,10 @@ public class TestCoreOAuthConsumerSupport extends TestCase {
    * test getAuthorizationHeader
    */
   public void testGetAuthorizationHeader() throws Exception {
-    final TreeMap<String, String> params = new TreeMap<String, String>();
+    final TreeMap<String, Set<String>> params = new TreeMap<String, Set<String>>();
     CoreOAuthConsumerSupport support = new CoreOAuthConsumerSupport() {
       @Override
-      protected Map<String, String> loadOAuthParameters(ProtectedResourceDetails details, URL requestURL, OAuthConsumerToken requestToken, String httpMethod, Map<String, String> additionalParameters) {
+      protected Map<String, Set<String>> loadOAuthParameters(ProtectedResourceDetails details, URL requestURL, OAuthConsumerToken requestToken, String httpMethod, Map<String, String> additionalParameters) {
         return params;
       }
     };
@@ -263,8 +261,8 @@ public class TestCoreOAuthConsumerSupport extends TestCase {
     verify(details);
     reset(details);
 
-    params.put("with", "some");
-    params.put("query", "params");
+    params.put("with", Collections.singleton("some"));
+    params.put("query", Collections.singleton("params"));
     params.put("too", null);
     expect(details.isAcceptsAuthorizationHeader()).andReturn(true);
     expect(details.getAuthorizationHeaderRealm()).andReturn("myrealm");
@@ -273,9 +271,9 @@ public class TestCoreOAuthConsumerSupport extends TestCase {
     verify(details);
     reset(details);
 
-    params.put(OAuthConsumerParameter.oauth_consumer_key.toString(), "mykey");
-    params.put(OAuthConsumerParameter.oauth_nonce.toString(), "mynonce");
-    params.put(OAuthConsumerParameter.oauth_timestamp.toString(), "myts");
+    params.put(OAuthConsumerParameter.oauth_consumer_key.toString(), Collections.singleton("mykey"));
+    params.put(OAuthConsumerParameter.oauth_nonce.toString(), Collections.singleton("mynonce"));
+    params.put(OAuthConsumerParameter.oauth_timestamp.toString(), Collections.singleton("myts"));
     expect(details.isAcceptsAuthorizationHeader()).andReturn(true);
     expect(details.getAuthorizationHeaderRealm()).andReturn("myrealm");
     replay(details);
@@ -288,10 +286,10 @@ public class TestCoreOAuthConsumerSupport extends TestCase {
    * getOAuthQueryString
    */
   public void testGetOAuthQueryString() throws Exception {
-    final TreeMap<String, String> params = new TreeMap<String, String>();
+    final TreeMap<String, Set<String>> params = new TreeMap<String, Set<String>>();
     CoreOAuthConsumerSupport support = new CoreOAuthConsumerSupport() {
       @Override
-      protected Map<String, String> loadOAuthParameters(ProtectedResourceDetails details, URL requestURL, OAuthConsumerToken requestToken, String httpMethod, Map<String, String> additionalParameters) {
+      protected Map<String, Set<String>> loadOAuthParameters(ProtectedResourceDetails details, URL requestURL, OAuthConsumerToken requestToken, String httpMethod, Map<String, String> additionalParameters) {
         return params;
       }
     };
@@ -301,37 +299,37 @@ public class TestCoreOAuthConsumerSupport extends TestCase {
     ProtectedResourceDetails details = createMock(ProtectedResourceDetails.class);
 
     expect(details.isAcceptsAuthorizationHeader()).andReturn(true);
-    params.put("with", "some");
-    params.put("query", "params");
+    params.put("with", Collections.singleton("some"));
+    params.put("query", Collections.singleton("params"));
     params.put("too", null);
-    params.put(OAuthConsumerParameter.oauth_consumer_key.toString(), "mykey");
-    params.put(OAuthConsumerParameter.oauth_nonce.toString(), "mynonce");
-    params.put(OAuthConsumerParameter.oauth_timestamp.toString(), "myts");
+    params.put(OAuthConsumerParameter.oauth_consumer_key.toString(), Collections.singleton("mykey"));
+    params.put(OAuthConsumerParameter.oauth_nonce.toString(), Collections.singleton("mynonce"));
+    params.put(OAuthConsumerParameter.oauth_timestamp.toString(), Collections.singleton("myts"));
     replay(details);
     assertEquals("query=params&too&with=some", support.getOAuthQueryString(details, token, url, "POST", null));
     verify(details);
     reset(details);
 
     expect(details.isAcceptsAuthorizationHeader()).andReturn(false);
-    params.put("with", "some");
-    params.put("query", "params");
+    params.put("with", Collections.singleton("some"));
+    params.put("query", Collections.singleton("params"));
     params.put("too", null);
-    params.put(OAuthConsumerParameter.oauth_consumer_key.toString(), "mykey");
-    params.put(OAuthConsumerParameter.oauth_nonce.toString(), "mynonce");
-    params.put(OAuthConsumerParameter.oauth_timestamp.toString(), "myts");
+    params.put(OAuthConsumerParameter.oauth_consumer_key.toString(), Collections.singleton("mykey"));
+    params.put(OAuthConsumerParameter.oauth_nonce.toString(), Collections.singleton("mynonce"));
+    params.put(OAuthConsumerParameter.oauth_timestamp.toString(), Collections.singleton("myts"));
     replay(details);
     assertEquals("oauth_consumer_key=mykey&oauth_nonce=mynonce&oauth_timestamp=myts&query=params&too&with=some", support.getOAuthQueryString(details, token, url, "POST", null));
     verify(details);
     reset(details);
 
     expect(details.isAcceptsAuthorizationHeader()).andReturn(false);
-    params.put("with", "some");
+    params.put("with", Collections.singleton("some"));
     String encoded_space = URLEncoder.encode(" ", "utf-8");
-    params.put("query", "params" + encoded_space + "spaced");
+    params.put("query",Collections.singleton("params" + encoded_space + "spaced"));
     params.put("too", null);
-    params.put(OAuthConsumerParameter.oauth_consumer_key.toString(), "mykey");
-    params.put(OAuthConsumerParameter.oauth_nonce.toString(), "mynonce");
-    params.put(OAuthConsumerParameter.oauth_timestamp.toString(), "myts");
+    params.put(OAuthConsumerParameter.oauth_consumer_key.toString(), Collections.singleton("mykey"));
+    params.put(OAuthConsumerParameter.oauth_nonce.toString(), Collections.singleton("mynonce"));
+    params.put(OAuthConsumerParameter.oauth_timestamp.toString(), Collections.singleton("myts"));
     replay(details);
     assertEquals("oauth_consumer_key=mykey&oauth_nonce=mynonce&oauth_timestamp=myts&query=params" + encoded_space + "spaced&too&with=some", support.getOAuthQueryString(details, token, url, "POST", null));
     verify(details);
@@ -377,7 +375,7 @@ public class TestCoreOAuthConsumerSupport extends TestCase {
     URL url = new URL("https://myhost.com/somepath?with=some&query=params&too");
     CoreOAuthConsumerSupport support = new CoreOAuthConsumerSupport() {
       @Override
-      protected String getSignatureBaseString(Map<String, String> oauthParams, URL requestURL, String httpMethod) {
+      protected String getSignatureBaseString(Map<String, Set<String>> oauthParams, URL requestURL, String httpMethod) {
         return "MYSIGBASESTRING";
       }
     };
@@ -396,20 +394,20 @@ public class TestCoreOAuthConsumerSupport extends TestCase {
     expect(sigMethod.sign("MYSIGBASESTRING")).andReturn("MYSIGNATURE");
 
     replay(details, sigFactory, sigMethod);
-    Map<String, String> params = support.loadOAuthParameters(details, url, token, "POST", null);
+    Map<String, Set<String>> params = support.loadOAuthParameters(details, url, token, "POST", null);
     verify(details, sigFactory, sigMethod);
     reset(details, sigFactory, sigMethod);
-    assertEquals("some", params.remove("with"));
-    assertEquals("params", params.remove("query"));
+    assertEquals("some", params.remove("with").iterator().next());
+    assertEquals("params", params.remove("query").iterator().next());
     assertTrue(params.containsKey("too"));
-    assertNull(params.remove("too"));
+    assertTrue(params.remove("too").isEmpty());
     assertNull(params.remove(OAuthConsumerParameter.oauth_token.toString()));
-    assertEquals("mynonce", params.remove(OAuthConsumerParameter.oauth_nonce.toString()));
-    assertEquals("my-consumer-key", params.remove(OAuthConsumerParameter.oauth_consumer_key.toString()));
-    assertEquals("MYSIGNATURE", params.remove(OAuthConsumerParameter.oauth_signature.toString()));
-    assertEquals("1.0", params.remove(OAuthConsumerParameter.oauth_version.toString()));
-    assertEquals(HMAC_SHA1SignatureMethod.SIGNATURE_NAME, params.remove(OAuthConsumerParameter.oauth_signature_method.toString()));
-    assertTrue(Long.parseLong(params.remove(OAuthConsumerParameter.oauth_timestamp.toString())) <= (System.currentTimeMillis() / 1000));
+    assertEquals("mynonce", params.remove(OAuthConsumerParameter.oauth_nonce.toString()).iterator().next());
+    assertEquals("my-consumer-key", params.remove(OAuthConsumerParameter.oauth_consumer_key.toString()).iterator().next());
+    assertEquals("MYSIGNATURE", params.remove(OAuthConsumerParameter.oauth_signature.toString()).iterator().next());
+    assertEquals("1.0", params.remove(OAuthConsumerParameter.oauth_version.toString()).iterator().next());
+    assertEquals(HMAC_SHA1SignatureMethod.SIGNATURE_NAME, params.remove(OAuthConsumerParameter.oauth_signature_method.toString()).iterator().next());
+    assertTrue(Long.parseLong(params.remove(OAuthConsumerParameter.oauth_timestamp.toString()).iterator().next()) <= (System.currentTimeMillis() / 1000));
     assertTrue(params.isEmpty());
   }
 
@@ -418,15 +416,15 @@ public class TestCoreOAuthConsumerSupport extends TestCase {
    */
   public void testGetSignatureBaseString() throws Exception {
     HttpServletRequest request = createMock(HttpServletRequest.class);
-    Map<String, String> oauthParams = new HashMap<String, String>();
-    oauthParams.put("oauth_consumer_key", "dpf43f3p2l4k3l03");
-    oauthParams.put("oauth_token", "nnch734d00sl2jdk");
-    oauthParams.put("oauth_signature_method", "HMAC-SHA1");
-    oauthParams.put("oauth_timestamp", "1191242096");
-    oauthParams.put("oauth_nonce", "kllo9940pd9333jh");
-    oauthParams.put("oauth_version", "1.0");
-    oauthParams.put("file", "vacation.jpg");
-    oauthParams.put("size", "original");
+    Map<String, Set<String>> oauthParams = new HashMap<String, Set<String>>();
+    oauthParams.put("oauth_consumer_key", Collections.singleton("dpf43f3p2l4k3l03"));
+    oauthParams.put("oauth_token", Collections.singleton("nnch734d00sl2jdk"));
+    oauthParams.put("oauth_signature_method", Collections.singleton("HMAC-SHA1"));
+    oauthParams.put("oauth_timestamp", Collections.singleton("1191242096"));
+    oauthParams.put("oauth_nonce", Collections.singleton("kllo9940pd9333jh"));
+    oauthParams.put("oauth_version", Collections.singleton("1.0"));
+    oauthParams.put("file", Collections.singleton("vacation.jpg"));
+    oauthParams.put("size", Collections.singleton("original"));
 
     CoreOAuthConsumerSupport support = new CoreOAuthConsumerSupport();
 
