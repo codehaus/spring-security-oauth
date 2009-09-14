@@ -18,8 +18,16 @@ package net.oauth.signature;
 
 import junit.framework.TestCase;
 import org.springframework.security.oauth.common.signature.HMAC_SHA1SignatureMethod;
+import org.springframework.security.oauth.common.OAuthCodec;
+import org.springframework.security.oauth.provider.CoreOAuthProviderSupport;
+import static org.easymock.EasyMock.*;
 
 import javax.crypto.spec.SecretKeySpec;
+import javax.servlet.http.HttpServletRequest;
+import java.util.*;
+
+import net.oauth.server.OAuthServlet;
+import net.oauth.*;
 
 /**
  * @author Ryan Heaton
@@ -39,6 +47,59 @@ public class TestGoogleCodeCompatibility extends TestCase {
     String theirSignature = theirMethod.getSignature(baseString);
     String ourSignature = ourMethod.sign(baseString);
     assertEquals(theirSignature, ourSignature);
+  }
+
+  /**
+   * tests compatibility of calculating the signature base string.
+   */
+  public void testCalculateSignatureBaseString() throws Exception {
+    final String baseUrl = "http://spring-security-oauth.codehaus.org/";
+    CoreOAuthProviderSupport support = new CoreOAuthProviderSupport() {
+      @Override
+      protected String getBaseUrl(HttpServletRequest request) {
+        return baseUrl;
+      }
+    };
+    HttpServletRequest request = createMock(HttpServletRequest.class);
+
+    Map<String, String[]> parameterMap = new HashMap<String, String[]>();
+    parameterMap.put("a", new String[] {"value-a"});
+    parameterMap.put("b", new String[] {"value-b"});
+    parameterMap.put("c", new String[] {"value-c"});
+
+    expect(request.getParameterNames()).andReturn(Collections.enumeration(parameterMap.keySet()));
+    for (Map.Entry<String, String[]> param : parameterMap.entrySet()) {
+      for (String value : param.getValue()) {
+        expect(request.getParameter(param.getKey())).andReturn(value);
+      }
+    }
+
+    String header = "OAuth realm=\"http://sp.example.com/\"," +
+      "                oauth_consumer_key=\"0685bd9184jfhq22\"," +
+      "                oauth_token=\"ad180jjd733klru7\"," +
+      "                oauth_signature_method=\"HMAC-SHA1\"," +
+      "                oauth_signature=\"wOJIO9A2W5mFwDgiDvZbTSMK%2FPY%3D\"," +
+      "                oauth_timestamp=\"137131200\"," +
+      "                oauth_callback=\"" + OAuthCodec.oauthEncode("http://myhost.com/callback") + "\"," +
+      "                oauth_nonce=\"4572616e48616d6d65724c61686176\"," +
+      "                oauth_version=\"1.0\"";
+    expect(request.getHeaders("Authorization")).andReturn(Collections.enumeration(Arrays.asList(header)));
+    expect(request.getMethod()).andReturn("GET");
+    replay(request);
+    String ours = support.getSignatureBaseString(request);
+    verify(request);
+    reset(request);
+
+    expect(request.getMethod()).andReturn("GET");
+    expect(request.getHeaders("Authorization")).andReturn(Collections.enumeration(Arrays.asList(header)));
+    expect(request.getParameterMap()).andReturn(parameterMap);
+    expect(request.getHeaderNames()).andReturn(null);
+    replay(request);
+    OAuthMessage message = OAuthServlet.getMessage(request, baseUrl);
+    verify(request);
+
+    String theirs = OAuthSignatureMethod.getBaseString(message);
+    assertEquals(theirs, ours);
   }
 
 }
