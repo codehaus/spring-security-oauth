@@ -47,50 +47,25 @@ public class CoreOAuthProviderSupport implements OAuthProviderSupport {
 
   // Inherited.
   public Map<String, String> parseParameters(HttpServletRequest request) {
-    return parseParameters(request, true);
-  }
-
-  /**
-   * Parse the OAuth parameters.
-   *
-   * @param request The request.
-   * @param decoded Whether the parameters are to be decoded.
-   * @return The parameters.
-   */
-  protected Map<String, String> parseParameters(HttpServletRequest request, boolean decoded) {
     Map<String, String> parameters = parseHeaderParameters(request);
 
     if (parameters == null) {
       //if there is no header authorization parameters, then the oauth parameters are the supported OAuth request parameters.
       parameters = new HashMap<String, String>();
-      Set<String> supportedOAuthParameters = getSupportedOAuthParameters();
-      for (String supportedOAuthParameter : supportedOAuthParameters) {
+      Set<String> supportedOAuthParameters1 = getSupportedOAuthParameters();
+      for (String supportedOAuthParameter : supportedOAuthParameters1) {
         String param = request.getParameter(supportedOAuthParameter);
         if (param != null) {
           parameters.put(supportedOAuthParameter, param);
         }
       }
     }
-    else if (decoded) {
-      //the OAuth spec doesn't specify whether OAuth parameters sent as query params are to be oauth-encoded.
-      //therefore, the "decoded" flag only applies to header parameters.
-      Map<String, String> decodedParameters = new HashMap<String, String>(parameters.size());
-      for (Map.Entry<String, String> headerParam : parameters.entrySet()) {
-        try {
-          decodedParameters.put(oauthDecode(headerParam.getKey()), oauthDecode(headerParam.getValue()));
-        }
-        catch (DecoderException e) {
-          throw new IllegalStateException(e);
-        }
-      }
-      parameters = decodedParameters;
-    }
 
     return parameters;
   }
 
   /**
-   * Parse the OAuth header parameters.
+   * Parse the OAuth header parameters. The parameters will be oauth-decoded.
    *
    * @param request The request.
    * @return The parsed parameters, or null if no OAuth authorization header was supplied.
@@ -115,9 +90,14 @@ public class CoreOAuthProviderSupport implements OAuthProviderSupport {
       String[] headerEntries = StringSplitUtils.splitIgnoringQuotes(authHeaderValue, ',');
       for (Object o : StringSplitUtils.splitEachArrayElementAndCreateMap(headerEntries, "=", "\"").entrySet()) {
         Map.Entry entry = (Map.Entry) o;
-        String key = (String) entry.getKey();
-        String value = (String) entry.getValue();
-        parameters.put(key, value);
+        try {
+          String key = oauthDecode((String) entry.getKey());
+          String value = oauthDecode((String) entry.getValue());
+          parameters.put(key, value);
+        }
+        catch (DecoderException e) {
+          throw new IllegalStateException(e);
+        }
       }
     }
 
@@ -211,6 +191,7 @@ public class CoreOAuthProviderSupport implements OAuthProviderSupport {
 
   /**
    * Loads the significant parameters (name-to-value map) that are to be used to calculate the signature base string.
+   * The parameters will be encoded, per the spec section 9.1.
    *
    * @param request The request.
    * @return The significan parameters.
@@ -231,7 +212,7 @@ public class CoreOAuthProviderSupport implements OAuthProviderSupport {
     }
 
     //then take into account the header parameter values...
-    Map<String, String> oauthParams = parseParameters(request, false);
+    Map<String, String> oauthParams = parseParameters(request);
     oauthParams.remove("realm"); //remove the realm
     Set<String> parsedParams = oauthParams.keySet();
     for (String parameterName : parsedParams) {
@@ -240,7 +221,7 @@ public class CoreOAuthProviderSupport implements OAuthProviderSupport {
         parameterValue = "";
       }
 
-      significantParameters.put(parameterName, parameterValue);
+      significantParameters.put(oauthEncode(parameterName), oauthEncode(parameterValue));
     }
 
     //remove the oauth signature parameter value.
