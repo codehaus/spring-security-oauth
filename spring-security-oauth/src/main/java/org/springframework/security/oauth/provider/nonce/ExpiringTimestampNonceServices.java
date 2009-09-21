@@ -18,10 +18,7 @@ package org.springframework.security.oauth.provider.nonce;
 
 import org.springframework.security.AuthenticationException;
 import org.springframework.security.CredentialsExpiredException;
-import org.springframework.security.oauth.provider.ConsumerDetailsService;
 import org.springframework.security.oauth.provider.ConsumerDetails;
-import org.springframework.beans.factory.InitializingBean;
-import org.springframework.util.Assert;
 
 /**
  * Nonce services that only validates the timestamp of a consumer request.  The nonce
@@ -33,38 +30,15 @@ import org.springframework.util.Assert;
  *
  * @author Ryan Heaton
  */
-public class ExpiringTimestampNonceServices implements OAuthNonceServices, InitializingBean {
+public class ExpiringTimestampNonceServices implements OAuthNonceServices {
 
   private long validityWindowSeconds = 60 * 60 * 12; //we'll default to a 12-hour validity window.
-  private ConsumerDetailsService consumerDetailsService;
-
-  public void afterPropertiesSet() throws Exception {
-    Assert.notNull(consumerDetailsService, "A consumer details service must be supplied to validate the consumer key.");
-  }
 
   public void validateNonce(ConsumerDetails consumerDetails, long timestamp, String nonce) throws AuthenticationException {
     long nowSeconds = (System.currentTimeMillis() / 1000);
     if ((nowSeconds - timestamp) > getValidityWindowSeconds()) {
       throw new CredentialsExpiredException("Expired timestamp.");
     }
-  }
-
-  /**
-   * The consumer details service.
-   *
-   * @return The consumer details service.
-   */
-  public ConsumerDetailsService getConsumerDetailsService() {
-    return consumerDetailsService;
-  }
-
-  /**
-   * The consumer details service.
-   *
-   * @param consumerDetailsService The consumer details service.
-   */
-  public void setConsumerDetailsService(ConsumerDetailsService consumerDetailsService) {
-    this.consumerDetailsService = consumerDetailsService;
   }
 
   /**
