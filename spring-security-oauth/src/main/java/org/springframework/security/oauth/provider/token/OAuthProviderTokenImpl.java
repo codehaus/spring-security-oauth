@@ -28,6 +28,8 @@ public class OAuthProviderTokenImpl implements OAuthAccessProviderToken {
   private String value;
   private String secret;
   private String consumerKey;
+  private String callbackUrl;
+  private String verifier;
   private boolean accessToken;
   private Authentication userAuthentication;
   private long timestamp;
@@ -87,6 +89,24 @@ public class OAuthProviderTokenImpl implements OAuthAccessProviderToken {
   }
 
   /**
+   * The callback url associated with this token.
+   *
+   * @return The callback url associated with this token.
+   */
+  public String getCallbackUrl() {
+    return callbackUrl;
+  }
+
+  /**
+   * The callback url associated with this token.
+   *
+   * @param callbackUrl The callback url associated with this token.
+   */
+  public void setCallbackUrl(String callbackUrl) {
+    this.callbackUrl = callbackUrl;
+  }
+
+  /**
    * Whether this is an OAuth access token.
    *
    * @return Whether this is an OAuth access token.
@@ -102,6 +122,24 @@ public class OAuthProviderTokenImpl implements OAuthAccessProviderToken {
    */
   public void setAccessToken(boolean accessToken) {
     this.accessToken = accessToken;
+  }
+
+  /**
+   * The verifier string for this token.
+   *
+   * @return The verifier string for this token.
+   */
+  public String getVerifier() {
+    return verifier;
+  }
+
+  /**
+   * The verifier string for this (access) token.
+   *
+   * @param verifier The verifier string for this (access) token.
+   */
+  public void setVerifier(String verifier) {
+    this.verifier = verifier;
   }
 
   /**
