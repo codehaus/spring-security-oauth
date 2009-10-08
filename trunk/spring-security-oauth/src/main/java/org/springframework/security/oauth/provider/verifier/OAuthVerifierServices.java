@@ -8,18 +8,10 @@ package org.springframework.security.oauth.provider.verifier;
 public interface OAuthVerifierServices {
 
   /**
-   * Create a verifier for the specified request token.
+   * Create a verifier.
    *
-   * @param requestToken The request token.
    * @return The verifier.
    */
-  String createVerifier(String requestToken);
+  String createVerifier();
 
-  /**
-   * Validate the verifier for the specified request token.
-   * @param verifier The verifier.
-   * @param requestToken the request token.
-   * @throws VerificationFailedException If verification failed.
-   */
-  void validateVerifier(String verifier, String requestToken) throws VerificationFailedException;
 }

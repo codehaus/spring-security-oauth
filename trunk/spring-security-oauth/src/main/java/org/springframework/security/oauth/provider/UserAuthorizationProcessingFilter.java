@@ -16,21 +16,19 @@
 
 package org.springframework.security.oauth.provider;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.Authentication;
 import org.springframework.security.AuthenticationException;
 import org.springframework.security.InsufficientAuthenticationException;
 import org.springframework.security.context.SecurityContextHolder;
+import org.springframework.security.oauth.provider.token.InvalidOAuthTokenException;
+import org.springframework.security.oauth.provider.token.OAuthProviderToken;
 import org.springframework.security.oauth.provider.token.OAuthProviderTokenServices;
-import org.springframework.security.oauth.provider.callback.OAuthCallbackServices;
-import org.springframework.security.oauth.provider.callback.OAuthCallbackException;
 import org.springframework.security.oauth.provider.verifier.OAuthVerifierServices;
 import org.springframework.security.ui.AbstractProcessingFilter;
 import org.springframework.util.Assert;
-import org.springframework.beans.factory.annotation.Autowired;
 
 import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import java.io.IOException;
 
 /**
  * Processing filter for handling a request to authenticate an OAuth request token. The default {@link #setFilterProcessesUrl(String) processes URL}
@@ -50,11 +48,11 @@ public class UserAuthorizationProcessingFilter extends AbstractProcessingFilter 
 
   public static final int FILTER_CHAIN_ORDER = UnauthenticatedRequestTokenProcessingFilter.FILTER_CHAIN_ORDER + 1;
   protected static final String CALLBACK_ATTRIBUTE = UserAuthorizationProcessingFilter.class.getName() + "#CALLBACK";
+  protected static final String VERIFIER_ATTRIBUTE = UserAuthorizationProcessingFilter.class.getName() + "#VERIFIER";
 
   private OAuthProviderTokenServices tokenServices;
   private String tokenIdParameterName = "requestToken";
   private String callbackParameterName = "callbackURL";
-  private OAuthCallbackServices callbackServices;
   private OAuthVerifierServices verifierServices;
   private boolean require10a = true;
 
@@ -66,7 +64,6 @@ public class UserAuthorizationProcessingFilter extends AbstractProcessingFilter 
   public void afterPropertiesSet() throws Exception {
     Assert.notNull(getRememberMeServices());
     Assert.notNull(getTokenServices(), "A token services must be provided.");
-    Assert.notNull(getCallbackServices(), "Callback services are required.");
     Assert.notNull(getVerifierServices(), "Verifier services are required.");
   }
 
@@ -76,9 +73,14 @@ public class UserAuthorizationProcessingFilter extends AbstractProcessingFilter 
       throw new InvalidOAuthParametersException("An OAuth token id is required.");
     }
 
-    String callbackURL = getCallbackServices().readCallback(requestToken);
+    OAuthProviderToken token = getTokenServices().getToken(requestToken);
+    if (token == null) {
+      throw new InvalidOAuthTokenException("Invalid token: " + requestToken);
+    }
+
+    String callbackURL = token.getCallbackUrl();
     if (isRequire10a() && callbackURL == null) {
-      throw new OAuthCallbackException("No callback value has been provided for request token " + requestToken + ".");
+      throw new InvalidOAuthTokenException("No callback value has been provided for request token " + requestToken + ".");
     }
     
     if (callbackURL != null) {
@@ -89,7 +91,9 @@ public class UserAuthorizationProcessingFilter extends AbstractProcessingFilter 
     if (!authentication.isAuthenticated()) {
       throw new InsufficientAuthenticationException("User must be authenticated before authorizing a request token.");
     }
-    getTokenServices().authorizeRequestToken(request.getParameter(getTokenParameterName()), authentication);
+    String verifier = getVerifierServices().createVerifier();
+    request.setAttribute(VERIFIER_ATTRIBUTE, verifier);
+    getTokenServices().authorizeRequestToken(requestToken, verifier, authentication);
     return authentication;
   }
 
@@ -110,7 +114,6 @@ public class UserAuthorizationProcessingFilter extends AbstractProcessingFilter 
     }
 
     String requestToken = request.getParameter(getTokenParameterName());
-    String verifier = getVerifierServices().createVerifier(requestToken);
     if ("oob".equals(callbackURL)) {
       callbackURL = super.determineTargetUrl(request);
     }
@@ -119,7 +122,8 @@ public class UserAuthorizationProcessingFilter extends AbstractProcessingFilter 
     if (callbackURL.indexOf('?') > 0) {
       appendChar = '&';
     }
-    
+
+    String verifier = (String) request.getAttribute(VERIFIER_ATTRIBUTE);
     return new StringBuilder(callbackURL).append(appendChar).append("oauth_token=").append(requestToken).append("&oauth_verifier=").append(verifier).toString();
   }
 
@@ -189,25 +193,6 @@ public class UserAuthorizationProcessingFilter extends AbstractProcessingFilter 
   @Autowired
   public void setTokenServices(OAuthProviderTokenServices tokenServices) {
     this.tokenServices = tokenServices;
-  }
-
-  /**
-   * The callback services to use.
-   *
-   * @return The callback services to use.
-   */
-  public OAuthCallbackServices getCallbackServices() {
-    return callbackServices;
-  }
-
-  /**
-   * The callback services to use.
-   *
-   * @param callbackServices The callback services to use.
-   */
-  @Autowired
-  public void setCallbackServices(OAuthCallbackServices callbackServices) {
-    this.callbackServices = callbackServices;
   }
 
   /**

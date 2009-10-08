@@ -107,19 +107,11 @@
           </xs:documentation>
         </xs:annotation>
       </xs:attribute>
-      <xs:attribute name="callback-services-ref" type="xs:string">
-        <xs:annotation>
-          <xs:documentation>
-            The reference to the bean that defines the verifier services. Default value:
-            org.springframework.security.oauth.provider.callback.InMemoryCallbackServices
-          </xs:documentation>
-        </xs:annotation>
-      </xs:attribute>
       <xs:attribute name="verifier-services-ref" type="xs:string">
         <xs:annotation>
           <xs:documentation>
             The reference to the bean that defines the verifier services. Default value:
-            org.springframework.security.oauth.provider.verifier.RandomValueInMemoryVerifierServices
+            org.springframework.security.oauth.provider.verifier.RandomValueVerifierServices
           </xs:documentation>
         </xs:annotation>
       </xs:attribute>

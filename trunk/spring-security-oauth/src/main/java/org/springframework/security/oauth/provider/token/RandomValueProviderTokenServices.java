@@ -113,7 +113,7 @@ public abstract class RandomValueProviderTokenServices implements OAuthProviderT
     return false;
   }
 
-  public OAuthProviderToken createUnauthorizedRequestToken(String consumerKey) throws AuthenticationException {
+  public OAuthProviderToken createUnauthorizedRequestToken(String consumerKey, String callbackUrl) throws AuthenticationException {
     String tokenValue = UUID.randomUUID().toString();
     byte[] secretBytes = new byte[getTokenSecretLengthBytes()];
     getRandom().nextBytes(secretBytes);
@@ -121,6 +121,7 @@ public abstract class RandomValueProviderTokenServices implements OAuthProviderT
     OAuthProviderTokenImpl token = new OAuthProviderTokenImpl();
     token.setAccessToken(false);
     token.setConsumerKey(consumerKey);
+    token.setCallbackUrl(callbackUrl);
     token.setUserAuthentication(null);
     token.setSecret(secret);
     token.setValue(tokenValue);
@@ -130,7 +131,7 @@ public abstract class RandomValueProviderTokenServices implements OAuthProviderT
     return token;
   }
 
-  public void authorizeRequestToken(String requestToken, Authentication authentication) throws AuthenticationException {
+  public void authorizeRequestToken(String requestToken, String verifier, Authentication authentication) throws AuthenticationException {
     OAuthProviderTokenImpl tokenImpl = readToken(requestToken);
 
     if (tokenImpl == null) {
@@ -147,6 +148,7 @@ public abstract class RandomValueProviderTokenServices implements OAuthProviderT
 
     tokenImpl.setUserAuthentication(authentication);
     tokenImpl.setTimestamp(System.currentTimeMillis());//reset the expiration.
+    tokenImpl.setVerifier(verifier);
     storeToken(requestToken, tokenImpl);
   }
 

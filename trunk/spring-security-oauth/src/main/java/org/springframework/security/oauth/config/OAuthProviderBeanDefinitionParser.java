@@ -27,8 +27,7 @@ import org.springframework.security.oauth.provider.ProtectedResourceProcessingFi
 import org.springframework.security.oauth.provider.UnauthenticatedRequestTokenProcessingFilter;
 import org.springframework.security.oauth.provider.UserAuthorizationProcessingFilter;
 import org.springframework.security.oauth.provider.token.OAuthTokenLifecycleRegistryPostProcessor;
-import org.springframework.security.oauth.provider.verifier.RandomValueInMemoryVerifierServices;
-import org.springframework.security.oauth.provider.callback.InMemoryCallbackServices;
+import org.springframework.security.oauth.provider.verifier.RandomValueVerifierServices;
 import org.springframework.util.StringUtils;
 import org.w3c.dom.Element;
 
@@ -128,23 +127,13 @@ public class OAuthProviderBeanDefinitionParser implements BeanDefinitionParser {
       accessTokenFilterBean.addPropertyValue("require10a", require10a);
     }
 
-    String callbackServicesRef = element.getAttribute("callback-services-ref");
-    if (!StringUtils.hasText(callbackServicesRef)) {
-      BeanDefinitionBuilder callbackServices = BeanDefinitionBuilder.rootBeanDefinition(InMemoryCallbackServices.class);
-      parserContext.getRegistry().registerBeanDefinition("oauthCallbackServices", callbackServices.getBeanDefinition());
-      callbackServicesRef = "oauthCallbackServices";
-    }
-    requestTokenFilterBean.addPropertyReference("callbackServices", callbackServicesRef);
-    authenticateTokenFilterBean.addPropertyReference("callbackServices", callbackServicesRef);
-
     String verifierServicesRef = element.getAttribute("verifier-services-ref");
     if (!StringUtils.hasText(verifierServicesRef)) {
-      BeanDefinitionBuilder verifierServices = BeanDefinitionBuilder.rootBeanDefinition(RandomValueInMemoryVerifierServices.class);
+      BeanDefinitionBuilder verifierServices = BeanDefinitionBuilder.rootBeanDefinition(RandomValueVerifierServices.class);
       parserContext.getRegistry().registerBeanDefinition("oauthVerifierServices", verifierServices.getBeanDefinition());
       verifierServicesRef = "oauthVerifierServices";
     }
     authenticateTokenFilterBean.addPropertyReference("verifierServices", verifierServicesRef);
-    accessTokenFilterBean.addPropertyReference("verifierServices", verifierServicesRef);
 
     parserContext.getRegistry().registerBeanDefinition("_oauthTokenRegistryPostProcessor",
       BeanDefinitionBuilder.rootBeanDefinition(OAuthTokenLifecycleRegistryPostProcessor.class).getBeanDefinition());

@@ -16,16 +16,13 @@
 
 package org.springframework.security.oauth.provider;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.AuthenticationException;
 import org.springframework.security.context.SecurityContextHolder;
 import org.springframework.security.oauth.common.OAuthCodec;
 import org.springframework.security.oauth.common.OAuthConsumerParameter;
 import org.springframework.security.oauth.common.OAuthProviderParameter;
-import org.springframework.security.oauth.provider.callback.OAuthCallbackServices;
 import org.springframework.security.oauth.provider.token.OAuthProviderToken;
 import org.springframework.security.ui.FilterChainOrder;
-import org.springframework.util.Assert;
 
 import javax.servlet.FilterChain;
 import javax.servlet.http.HttpServletRequest;
@@ -48,17 +45,10 @@ public class UnauthenticatedRequestTokenProcessingFilter extends OAuthProviderPr
   // something is specified, we'll assume that it's just "text/plain".
   private String responseContentType = "text/plain;charset=utf-8";
 
-  private OAuthCallbackServices callbackServices;
   private boolean require10a = true;
 
   public UnauthenticatedRequestTokenProcessingFilter() {
     setFilterProcessesUrl("/oauth_request_token");
-  }
-
-  @Override
-  public void afterPropertiesSet() throws Exception {
-    super.afterPropertiesSet();
-    Assert.notNull(getCallbackServices(), "Callback services are required.");
   }
 
   @Override
@@ -81,12 +71,8 @@ public class UnauthenticatedRequestTokenProcessingFilter extends OAuthProviderPr
       throw new IllegalStateException("The consumer key associated with the created auth token is not valid for the authenticated consumer.");
     }
 
-    //store the callback url.
     String tokenValue = authToken.getValue();
     String callback = authentication.getOAuthParameters().get(OAuthConsumerParameter.oauth_callback.toString());
-    if (callback != null) {
-      getCallbackServices().storeCallback(callback, tokenValue);
-    }
 
     StringBuilder responseValue = new StringBuilder(OAuthProviderParameter.oauth_token.toString())
       .append('=')
@@ -117,7 +103,8 @@ public class UnauthenticatedRequestTokenProcessingFilter extends OAuthProviderPr
    * @return The OAuth token.
    */
   protected OAuthProviderToken createOAuthToken(ConsumerAuthentication authentication) {
-    return getTokenServices().createUnauthorizedRequestToken(authentication.getConsumerDetails().getConsumerKey());
+    return getTokenServices().createUnauthorizedRequestToken(authentication.getConsumerDetails().getConsumerKey(),
+                                                             authentication.getOAuthParameters().get(OAuthConsumerParameter.oauth_callback.toString()));
   }
 
   /**
@@ -145,25 +132,6 @@ public class UnauthenticatedRequestTokenProcessingFilter extends OAuthProviderPr
    */
   public void setResponseContentType(String responseContentType) {
     this.responseContentType = responseContentType;
-  }
-
-  /**
-   * The callback services to use.
-   *
-   * @return The callback services to use.
-   */
-  public OAuthCallbackServices getCallbackServices() {
-    return callbackServices;
-  }
-
-  /**
-   * The callback services to use.
-   *
-   * @param callbackServices The callback services to use.
-   */
-  @Autowired
-  public void setCallbackServices(OAuthCallbackServices callbackServices) {
-    this.callbackServices = callbackServices;
   }
 
   /**

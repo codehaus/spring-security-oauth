@@ -1,22 +1,17 @@
 package org.springframework.security.oauth.provider.verifier;
 
-import org.springframework.security.oauth.common.OAuthConsumerParameter;
-import org.springframework.security.oauth.provider.token.OAuthTokenLifecycleListener;
-import org.springframework.security.oauth.provider.token.OAuthProviderToken;
 import org.springframework.beans.factory.InitializingBean;
 
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.Random;
 import java.security.SecureRandom;
 
 /**
- * Basic implementation of the verifier services that creates a random-value verifier and stores it in an in-memory map.
+ * Basic implementation of the verifier services that creates a random-value verifier.
  *
  * @author Ryan Heaton
  */
-public class RandomValueInMemoryVerifierServices implements OAuthVerifierServices, OAuthTokenLifecycleListener, InitializingBean {
+public class RandomValueVerifierServices implements OAuthVerifierServices, InitializingBean {
 
-  protected final ConcurrentHashMap<String, String> verifierStore = new ConcurrentHashMap<String, String>();
   private static final char[] DEFAULT_CODEC = "1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz".toCharArray();
 
   private Random random;
@@ -28,12 +23,10 @@ public class RandomValueInMemoryVerifierServices implements OAuthVerifierService
     }
   }
 
-  public String createVerifier(String requestToken) {
+  public String createVerifier() {
     byte[] verifierBytes = new byte[getVerifierLengthBytes()];
     getRandom().nextBytes(verifierBytes);
-    String verifier = getVerifierString(verifierBytes);
-    this.verifierStore.put(requestToken, verifier);
-    return verifier;
+    return getVerifierString(verifierBytes);
   }
 
   /**
@@ -49,22 +42,6 @@ public class RandomValueInMemoryVerifierServices implements OAuthVerifierService
       chars[i] = DEFAULT_CODEC[((verifierBytes[i] & 0xFF) % DEFAULT_CODEC.length)];
     }
     return new String(chars);
-  }
-
-  public void validateVerifier(String verifier, String requestToken) throws VerificationFailedException {
-    if (!verifier.equals(this.verifierStore.get(requestToken))) {
-      throw new VerificationFailedException("Incorrect OAuth verifier " + verifier + " for request token " + requestToken + ".");
-    }
-  }
-
-  public void tokenCreated(OAuthProviderToken token) {
-    //no-op; we don't care.
-  }
-
-  public void tokenExpired(OAuthProviderToken token) {
-    if (!token.isAccessToken()) {
-      verifierStore.remove(token.getValue());
-    }
   }
 
   /**
