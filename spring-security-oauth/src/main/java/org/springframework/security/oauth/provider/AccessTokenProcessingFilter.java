@@ -18,19 +18,16 @@ package org.springframework.security.oauth.provider;
 
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.oauth.common.OAuthCodec;
 import org.springframework.security.oauth.common.OAuthConsumerParameter;
 import org.springframework.security.oauth.common.OAuthProviderParameter;
-import org.springframework.security.oauth.common.OAuthCodec;
 import org.springframework.security.oauth.provider.token.OAuthProviderToken;
-import org.springframework.security.oauth.provider.verifier.OAuthVerifierServices;
-import org.springframework.util.Assert;
-import org.springframework.beans.factory.annotation.Autowired;
 
+import javax.servlet.FilterChain;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import javax.servlet.FilterChain;
-import java.util.Map;
 import java.io.IOException;
+import java.util.Map;
 
 /**
  * Processing filter for handling a request for an OAuth access token.
@@ -45,19 +42,10 @@ public class AccessTokenProcessingFilter extends OAuthProviderProcessingFilter {
   // something is specified, we'll assume that it's just "text/plain".
   private String responseContentType = "text/plain;charset=utf-8";
 
-  private OAuthVerifierServices verifierServices;
   private boolean require10a = true;
 
   public AccessTokenProcessingFilter() {
     setFilterProcessesUrl("/oauth_access_token");
-  }
-
-  @Override
-  public void afterPropertiesSet() throws Exception {
-    super.afterPropertiesSet();
-    if (isRequire10a()) {
-      Assert.notNull(getVerifierServices(), "Verifier services are required.");
-    }
   }
 
   protected OAuthProviderToken createOAuthToken(ConsumerAuthentication authentication) {
@@ -78,7 +66,10 @@ public class AccessTokenProcessingFilter extends OAuthProviderProcessingFilter {
       if (verifier == null) {
         throw new InvalidOAuthParametersException(messages.getMessage("AccessTokenProcessingFilter.missingVerifier", "Missing verifier."));
       }
-      getVerifierServices().validateVerifier(verifier, token);
+      OAuthProviderToken requestToken = getTokenServices().getToken(token);
+      if (!verifier.equals(requestToken.getVerifier())) {
+        throw new InvalidOAuthParametersException(messages.getMessage("AccessTokenProcessingFilter.missingVerifier", "Invalid verifier."));
+      }
     }
   }
 
@@ -125,25 +116,6 @@ public class AccessTokenProcessingFilter extends OAuthProviderProcessingFilter {
    */
   public void setResponseContentType(String responseContentType) {
     this.responseContentType = responseContentType;
-  }
-
-  /**
-   * The verifier services to use.
-   *
-   * @return The verifier services to use.
-   */
-  public OAuthVerifierServices getVerifierServices() {
-    return verifierServices;
-  }
-
-  /**
-   * The verifier services to use.
-   *
-   * @param verifierServices The verifier services to use.
-   */
-  @Autowired
-  public void setVerifierServices(OAuthVerifierServices verifierServices) {
-    this.verifierServices = verifierServices;
   }
 
   /**

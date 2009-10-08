@@ -19,7 +19,7 @@ package org.springframework.security.oauth.config;
 import org.springframework.beans.factory.support.BeanDefinitionBuilder;
 import org.springframework.beans.factory.xml.AbstractSingleBeanDefinitionParser;
 import org.springframework.beans.factory.xml.ParserContext;
-import org.springframework.security.oauth.provider.verifier.RandomValueInMemoryVerifierServices;
+import org.springframework.security.oauth.provider.verifier.RandomValueVerifierServices;
 import org.springframework.util.StringUtils;
 import org.w3c.dom.Element;
 
@@ -30,7 +30,7 @@ public class VerifierServiceBeanDefinitionParser extends AbstractSingleBeanDefin
 
   @Override
   protected Class getBeanClass(Element element) {
-    return RandomValueInMemoryVerifierServices .class;
+    return RandomValueVerifierServices.class;
   }
 
   @Override

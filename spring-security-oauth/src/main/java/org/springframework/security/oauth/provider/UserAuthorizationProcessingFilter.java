@@ -21,9 +21,10 @@ import org.springframework.security.authentication.InsufficientAuthenticationExc
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.oauth.provider.callback.OAuthCallbackException;
-import org.springframework.security.oauth.provider.callback.OAuthCallbackServices;
+import org.springframework.security.oauth.provider.token.InvalidOAuthTokenException;
+import org.springframework.security.oauth.provider.token.OAuthProviderToken;
 import org.springframework.security.oauth.provider.token.OAuthProviderTokenServices;
+import org.springframework.security.oauth.provider.verifier.OAuthVerifierServices;
 import org.springframework.security.web.authentication.AbstractAuthenticationProcessingFilter;
 import org.springframework.util.Assert;
 
@@ -43,10 +44,11 @@ import javax.servlet.http.HttpServletResponse;
 public class UserAuthorizationProcessingFilter extends AbstractAuthenticationProcessingFilter {
 
   protected static final String CALLBACK_ATTRIBUTE = UserAuthorizationProcessingFilter.class.getName() + "#CALLBACK";
+  protected static final String VERIFIER_ATTRIBUTE = UserAuthorizationProcessingFilter.class.getName() + "#VERIFIER";
 
   private OAuthProviderTokenServices tokenServices;
   private String tokenIdParameterName = "requestToken";
-  private OAuthCallbackServices callbackServices;
+  private OAuthVerifierServices verifierServices;
   private boolean require10a = true;
   
   protected UserAuthorizationProcessingFilter(String s) {
@@ -58,7 +60,7 @@ public class UserAuthorizationProcessingFilter extends AbstractAuthenticationPro
     // call super.
     super.afterPropertiesSet();
     Assert.notNull(getTokenServices(), "A token services must be provided.");
-    Assert.notNull(getCallbackServices(), "Callback services are required.");
+    Assert.notNull(getVerifierServices(), "Verifier services are required.");
   }
 
   public Authentication attemptAuthentication(HttpServletRequest request, HttpServletResponse response) throws AuthenticationException {
@@ -67,9 +69,14 @@ public class UserAuthorizationProcessingFilter extends AbstractAuthenticationPro
       throw new InvalidOAuthParametersException("An OAuth token id is required.");
     }
 
-    String callbackURL = getCallbackServices().readCallback(requestToken);
+    OAuthProviderToken token = getTokenServices().getToken(requestToken);
+    if (token == null) {
+      throw new InvalidOAuthTokenException("No callback value has been provided for request token " + requestToken + ".");
+    }
+
+    String callbackURL = token.getCallbackUrl();
     if (isRequire10a() && callbackURL == null) {
-      throw new OAuthCallbackException("No callback value has been provided for request token " + requestToken + ".");
+      throw new InvalidOAuthTokenException("No callback value has been provided for request token " + requestToken + ".");
     }
 
     if (callbackURL != null) {
@@ -80,7 +87,9 @@ public class UserAuthorizationProcessingFilter extends AbstractAuthenticationPro
     if (!authentication.isAuthenticated()) {
       throw new InsufficientAuthenticationException("User must be authenticated before authorizing a request token.");
     }
-    getTokenServices().authorizeRequestToken(requestToken, authentication);
+    String verifier = getVerifierServices().createVerifier();
+    request.setAttribute(VERIFIER_ATTRIBUTE, verifier);
+    getTokenServices().authorizeRequestToken(requestToken, verifier, authentication);
     return authentication;
   }
 
@@ -126,22 +135,22 @@ public class UserAuthorizationProcessingFilter extends AbstractAuthenticationPro
   }
 
   /**
-   * The callback services to use.
+   * The verifier services to use.
    *
-   * @return The callback services to use.
+   * @return The verifier services to use.
    */
-  public OAuthCallbackServices getCallbackServices() {
-    return callbackServices;
+  public OAuthVerifierServices getVerifierServices() {
+    return verifierServices;
   }
 
   /**
-   * The callback services to use.
+   * The verifier services to use.
    *
-   * @param callbackServices The callback services to use.
+   * @param verifierServices The verifier services to use.
    */
   @Autowired
-  public void setCallbackServices(OAuthCallbackServices callbackServices) {
-    this.callbackServices = callbackServices;
+  public void setVerifierServices(OAuthVerifierServices verifierServices) {
+    this.verifierServices = verifierServices;
   }
 
   /**

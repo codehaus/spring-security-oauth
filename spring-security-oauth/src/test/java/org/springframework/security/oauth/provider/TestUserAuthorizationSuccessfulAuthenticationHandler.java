@@ -40,12 +40,11 @@ public class TestUserAuthorizationSuccessfulAuthenticationHandler extends TestCa
 
     UserAuthorizationSuccessfulAuthenticationHandler handler = new UserAuthorizationSuccessfulAuthenticationHandler();
     OAuthVerifierServices vs = createMock(OAuthVerifierServices.class);
-    handler.setVerifierServices(vs);
     HttpServletRequest request = createMock(HttpServletRequest.class);
     HttpServletResponse response = createMock(HttpServletResponse.class);
 
-    expect(vs.createVerifier("mytok")).andReturn("myver");
     expect(request.getAttribute(UserAuthorizationProcessingFilter.CALLBACK_ATTRIBUTE)).andReturn("http://my.host.com/my/context");
+    expect(request.getAttribute(UserAuthorizationProcessingFilter.VERIFIER_ATTRIBUTE)).andReturn("myver");
     expect(request.getParameter("requestToken")).andReturn("mytok");
 
     expect(response.encodeRedirectURL("http://my.host.com/my/context?oauth_token=mytok&oauth_verifier=myver")).andReturn("http://my.host.com/my/context?oauth_token=mytok&oauth_verifier=myver");
@@ -59,10 +58,9 @@ public class TestUserAuthorizationSuccessfulAuthenticationHandler extends TestCa
     reset(response, request, vs);
 
     handler = new UserAuthorizationSuccessfulAuthenticationHandler();
-    handler.setVerifierServices(vs);
 
-    expect(vs.createVerifier("mytoka")).andReturn("myvera");
     expect(request.getAttribute(UserAuthorizationProcessingFilter.CALLBACK_ATTRIBUTE)).andReturn("http://my.hosting.com/my/context?with=some&query=parameter");
+    expect(request.getAttribute(UserAuthorizationProcessingFilter.VERIFIER_ATTRIBUTE)).andReturn("myvera");
     expect(request.getParameter("requestToken")).andReturn("mytoka");
 
     expect(response.encodeRedirectURL("http://my.hosting.com/my/context?with=some&query=parameter&oauth_token=mytoka&oauth_verifier=myvera")).andReturn("http://my.hosting.com/my/context?with=some&query=parameter&oauth_token=mytoka&oauth_verifier=myvera");

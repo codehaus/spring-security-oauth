@@ -37,10 +37,11 @@ public interface OAuthProviderTokenServices {
    * Create an unauthorized OAuth request token.
    *
    * @param consumerKey The consumer key for which to create the token.
+   * @param callbackUrl The callback URL associated with the consumer key.
    * @return The token.
    * @throws AuthenticationException If the consumer isn't valid or otherwise isn't allowed to create a new request token.
    */
-  OAuthProviderToken createUnauthorizedRequestToken(String consumerKey) throws AuthenticationException;
+  OAuthProviderToken createUnauthorizedRequestToken(String consumerKey, String callbackUrl) throws AuthenticationException;
 
   /**
    * Authorize the specified request token with the specified authentication credentials. After the
@@ -48,6 +49,7 @@ public interface OAuthProviderTokenServices {
    * to use it to obtain an access token.
    *
    * @param requestToken The request token.
+   * @param verifier The verifier to be assigned to the request token.
    * @param authentication The authentication credentials with which to authorize the request token. This is the
    * authentication of the <i>user</i> who has signed in and is authorizing the consumer to have access to a
    * protected resource. This same authentication can be pulled from the security context, but it's passed explicitly
@@ -56,7 +58,7 @@ public interface OAuthProviderTokenServices {
    * @throws AuthenticationException If the token is expired or otherwise unauthorizable, or if the
    * authentication credentials are insufficient.
    */
-  void authorizeRequestToken(String requestToken, Authentication authentication) throws AuthenticationException;
+  void authorizeRequestToken(String requestToken, String verifier, Authentication authentication) throws AuthenticationException;
 
   /**
    * Create an OAuth access token given the specified request token. This token will be used to provide

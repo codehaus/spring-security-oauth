@@ -25,10 +25,7 @@ import javax.servlet.ServletException;
 import java.io.IOException;
 
 import static org.springframework.security.oauth.provider.UserAuthorizationProcessingFilter.CALLBACK_ATTRIBUTE;
-import org.springframework.security.oauth.provider.callback.OAuthCallbackServices;
-import org.springframework.security.oauth.provider.verifier.OAuthVerifierServices;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.util.Assert;
+import static org.springframework.security.oauth.provider.UserAuthorizationProcessingFilter.VERIFIER_ATTRIBUTE;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -41,12 +38,10 @@ import org.apache.commons.logging.LogFactory;
  *
  * @author Andrew McCall
  */
-public class UserAuthorizationSuccessfulAuthenticationHandler extends SimpleUrlAuthenticationSuccessHandler implements org.springframework.beans.factory.InitializingBean {
+public class UserAuthorizationSuccessfulAuthenticationHandler extends SimpleUrlAuthenticationSuccessHandler {
 
   private static Log LOG = LogFactory.getLog(UserAuthorizationSuccessfulAuthenticationHandler.class);
 
-  private OAuthCallbackServices callbackServices;
-  private OAuthVerifierServices verifierServices;
   private String tokenIdParameterName = "requestToken";
   private String callbackParameterName = "callbackURL";
   private boolean require10a = true;
@@ -57,11 +52,6 @@ public class UserAuthorizationSuccessfulAuthenticationHandler extends SimpleUrlA
 
   public UserAuthorizationSuccessfulAuthenticationHandler(String s) {
     super(s);
-  }
-
-  public void afterPropertiesSet() throws Exception {
-    Assert.notNull(getCallbackServices(), "Callback services are required.");
-    Assert.notNull(getVerifierServices(), "Verifier services are required.");
   }
 
   @Override
@@ -91,17 +81,14 @@ public class UserAuthorizationSuccessfulAuthenticationHandler extends SimpleUrlA
       callbackURL = getDefaultTargetUrl();
     }
 
-    if (LOG.isDebugEnabled()) {
-      LOG.debug("Storing verifier.");
-    }
     String requestToken = request.getParameter(getTokenParameterName());
-    String verifier = getVerifierServices().createVerifier(requestToken);
     char appendChar = '?';
     if (callbackURL.indexOf('?') > 0) {
       appendChar = '&';
     }
-    String targetUrl = new StringBuilder(callbackURL).append(appendChar).append("oauth_token=").append(requestToken).append("&oauth_verifier=").append(verifier).toString();
 
+    String verifier = (String) request.getAttribute(VERIFIER_ATTRIBUTE);
+    String targetUrl = new StringBuilder(callbackURL).append(appendChar).append("oauth_token=").append(requestToken).append("&oauth_verifier=").append(verifier).toString();
     RedirectUtils.sendRedirect(request, response, targetUrl, this.isUseRelativeContext());
   }
 
@@ -122,46 +109,6 @@ public class UserAuthorizationSuccessfulAuthenticationHandler extends SimpleUrlA
   public void setTokenIdParameterName(String tokenIdParameterName) {
     this.tokenIdParameterName = tokenIdParameterName;
   }
-
-
-  /**
-   * The callback services to use.
-   *
-   * @return The callback services to use.
-   */
-  public OAuthCallbackServices getCallbackServices() {
-    return callbackServices;
-  }
-
-  /**
-   * The callback services to use.
-   *
-   * @param callbackServices The callback services to use.
-   */
-  @Autowired
-  public void setCallbackServices(OAuthCallbackServices callbackServices) {
-    this.callbackServices = callbackServices;
-  }
-
-  /**
-   * The verifier services to use.
-   *
-   * @return The verifier services to use.
-   */
-  public OAuthVerifierServices getVerifierServices() {
-    return verifierServices;
-  }
-
-  /**
-   * The verifier services to use.
-   *
-   * @param verifierServices The verifier services to use.
-   */
-  @Autowired
-  public void setVerifierServices(OAuthVerifierServices verifierServices) {
-    this.verifierServices = verifierServices;
-  }
-
 
   /**
    * Whether to require 1.0a support.

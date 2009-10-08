@@ -22,7 +22,8 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import static org.easymock.EasyMock.*;
 import org.springframework.security.oauth.provider.token.OAuthProviderTokenServices;
-import org.springframework.security.oauth.provider.callback.OAuthCallbackServices;
+import org.springframework.security.oauth.provider.token.OAuthProviderTokenImpl;
+import org.springframework.security.oauth.provider.verifier.OAuthVerifierServices;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -32,50 +33,50 @@ import javax.servlet.http.HttpServletResponse;
  */
 public class TestOAuthUserAuthorizationProcessingFilter extends TestCase {
 
-
   /**
    * tests the attempt to authenticate.
    */
   public void testAttemptAuthentication() throws Exception {
     UserAuthorizationProcessingFilter filter = new UserAuthorizationProcessingFilter("/");
+    OAuthVerifierServices vs = createMock(OAuthVerifierServices.class);
+    filter.setVerifierServices(vs);
     HttpServletRequest request = createMock(HttpServletRequest.class);
-    HttpServletResponse response = createMock(HttpServletResponse.class);
     Authentication authentication = createMock(Authentication.class);
     OAuthProviderTokenServices tokenServices = createMock(OAuthProviderTokenServices.class);
-    OAuthCallbackServices callbackServices = createMock(OAuthCallbackServices.class);
-    filter.setCallbackServices(callbackServices);
+    filter.setTokenServices(tokenServices);
 
     SecurityContextHolder.getContext().setAuthentication(authentication);
-    expect(authentication.isAuthenticated()).andReturn(false);
     expect(request.getParameter("requestToken")).andReturn("tok");
-    expect(callbackServices.readCallback("tok")).andReturn("callback");
+    OAuthProviderTokenImpl token = new OAuthProviderTokenImpl();
+    token.setCallbackUrl("callback");
+    expect(tokenServices.getToken("tok")).andReturn(token);
     request.setAttribute(UserAuthorizationProcessingFilter.CALLBACK_ATTRIBUTE, "callback");
-
-    replay(authentication, request, tokenServices, callbackServices);
-
+    expect(authentication.isAuthenticated()).andReturn(false);
+    replay(authentication, request, tokenServices, vs);
     try {
-      filter.attemptAuthentication(request, response);     
+      filter.attemptAuthentication(request, createNiceMock(HttpServletResponse.class));
       fail();
     }
     catch (InsufficientAuthenticationException e) {
-      verify(authentication, request, tokenServices, callbackServices);
-      reset(authentication, request, tokenServices, callbackServices);
+      verify(authentication, request, tokenServices, vs);
+      reset(authentication, request, tokenServices, vs);
     }
 
     expect(authentication.isAuthenticated()).andReturn(true);
     expect(request.getParameter("requestToken")).andReturn("tok");
-    expect(callbackServices.readCallback("tok")).andReturn("callback");
+    expect(tokenServices.getToken("tok")).andReturn(token);
     request.setAttribute(UserAuthorizationProcessingFilter.CALLBACK_ATTRIBUTE, "callback");
-    tokenServices.authorizeRequestToken("tok", authentication);
+    expect(vs.createVerifier()).andReturn("verifier");
+    request.setAttribute(UserAuthorizationProcessingFilter.VERIFIER_ATTRIBUTE, "verifier");
+    tokenServices.authorizeRequestToken("tok", "verifier", authentication);
     filter.setTokenServices(tokenServices);
-    replay(authentication, request, tokenServices, callbackServices);
-    filter.attemptAuthentication(request, response);
-    verify(authentication, request, tokenServices, callbackServices);
-    reset(authentication, request, tokenServices, callbackServices);
+    replay(authentication, request, tokenServices, vs);
+    filter.attemptAuthentication(request, createNiceMock(HttpServletResponse.class));
+    verify(authentication, request, tokenServices, vs);
+    reset(authentication, request, tokenServices, vs);
 
     SecurityContextHolder.getContext().setAuthentication(null);
   }
-
 
 
 }
