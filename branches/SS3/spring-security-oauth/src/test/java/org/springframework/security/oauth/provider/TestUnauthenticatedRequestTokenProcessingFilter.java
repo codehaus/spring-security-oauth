@@ -20,7 +20,6 @@ import static org.easymock.EasyMock.*;
 import org.springframework.security.oauth.provider.token.OAuthProviderToken;
 import org.springframework.security.oauth.provider.token.OAuthProviderTokenServices;
 import org.springframework.security.oauth.provider.token.OAuthAccessProviderToken;
-import org.springframework.security.oauth.provider.callback.OAuthCallbackServices;
 import org.springframework.security.oauth.common.OAuthConsumerParameter;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.GrantedAuthority;
@@ -51,8 +50,6 @@ public class TestUnauthenticatedRequestTokenProcessingFilter extends TestCase {
         return authToken;
       }
     };
-    OAuthCallbackServices cs = createMock(OAuthCallbackServices.class);
-    filter.setCallbackServices(cs);
     HttpServletRequest request = createMock(HttpServletRequest.class);
     HttpServletResponse response = createMock(HttpServletResponse.class);
     FilterChain filterChain = createMock(FilterChain.class);
@@ -62,14 +59,13 @@ public class TestUnauthenticatedRequestTokenProcessingFilter extends TestCase {
     expect(authToken.getConsumerKey()).andReturn("chi");
     expect(authToken.getValue()).andReturn("tokvalue");
     expect(authToken.getSecret()).andReturn("shhhhhh");
-    expect(consumerDetails.getAuthorities()).andReturn(new ArrayList<GrantedAuthority>());    
+    expect(consumerDetails.getAuthorities()).andReturn(new ArrayList<GrantedAuthority>());
     expect(consumerDetails.getConsumerKey()).andReturn("chi");
-    cs.storeCallback("mycallback", "tokvalue");
     response.setContentType("text/plain;charset=utf-8");
     StringWriter writer = new StringWriter();
     expect(response.getWriter()).andReturn(new PrintWriter(writer));
     response.flushBuffer();
-    replay(request, response, filterChain, authToken, consumerDetails, cs);
+    replay(request, response, filterChain, authToken, consumerDetails);
     TreeMap<String, String> params = new TreeMap<String, String>();
     params.put(OAuthConsumerParameter.oauth_callback.toString(), "mycallback");
     ConsumerAuthentication authentication = new ConsumerAuthentication(consumerDetails, creds, params);
@@ -77,8 +73,8 @@ public class TestUnauthenticatedRequestTokenProcessingFilter extends TestCase {
     SecurityContextHolder.getContext().setAuthentication(authentication);
     filter.onValidSignature(request, response, filterChain);
     assertEquals("oauth_token=tokvalue&oauth_token_secret=shhhhhh&oauth_callback_confirmed=true", writer.toString());
-    verify(request, response, filterChain, authToken, consumerDetails, cs);
-    reset(request, response, filterChain, authToken, consumerDetails, cs);
+    verify(request, response, filterChain, authToken, consumerDetails);
+    reset(request, response, filterChain, authToken, consumerDetails);
 
     SecurityContextHolder.getContext().setAuthentication(null);
   }
@@ -97,9 +93,11 @@ public class TestUnauthenticatedRequestTokenProcessingFilter extends TestCase {
 
     expect(consumerDetails.getConsumerKey()).andReturn("chi");
     expect(consumerDetails.getAuthorities()).andReturn(new ArrayList<GrantedAuthority>());
-    expect(tokenServices.createUnauthorizedRequestToken("chi")).andReturn(token);
+    expect(tokenServices.createUnauthorizedRequestToken("chi", "callback")).andReturn(token);
     replay(consumerDetails, tokenServices, token);
-    ConsumerAuthentication authentication = new ConsumerAuthentication(consumerDetails, creds);
+    TreeMap<String, String> map = new TreeMap<String, String>();
+    map.put(OAuthConsumerParameter.oauth_callback.toString(), "callback");
+    ConsumerAuthentication authentication = new ConsumerAuthentication(consumerDetails, creds, map);
     assertSame(token, filter.createOAuthToken(authentication));
     verify(consumerDetails, tokenServices, token);
     reset(consumerDetails, tokenServices, token);

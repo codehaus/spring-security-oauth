@@ -25,9 +25,8 @@ import org.springframework.beans.factory.xml.ParserContext;
 import org.springframework.beans.BeanMetadataElement;
 import org.springframework.security.config.BeanIds;
 import org.springframework.security.oauth.provider.*;
-import org.springframework.security.oauth.provider.callback.InMemoryCallbackServices;
 import org.springframework.security.oauth.provider.token.OAuthTokenLifecycleRegistryPostProcessor;
-import org.springframework.security.oauth.provider.verifier.RandomValueInMemoryVerifierServices;
+import org.springframework.security.oauth.provider.verifier.RandomValueVerifierServices;
 import org.springframework.security.web.authentication.SimpleUrlAuthenticationFailureHandler;
 import org.springframework.security.web.util.UrlMatcher;
 import org.springframework.security.web.access.ExceptionTranslationFilter;
@@ -131,18 +130,8 @@ public class OAuthProviderBeanDefinitionParser implements BeanDefinitionParser {
       protectedResourceFilterBean.addPropertyReference("providerSupport", supportRef);
     }
 
-    String callbackServicesRef = element.getAttribute("callback-services-ref");
-    if (!StringUtils.hasText(callbackServicesRef)) {
-      BeanDefinitionBuilder callbackServices = BeanDefinitionBuilder.rootBeanDefinition(InMemoryCallbackServices.class);
-      parserContext.getRegistry().registerBeanDefinition("oauthCallbackServices", callbackServices.getBeanDefinition());
-      callbackServicesRef = "oauthCallbackServices";
-    }
-    requestTokenFilterBean.addPropertyReference("callbackServices", callbackServicesRef);
-    authenticateTokenFilterBean.addPropertyReference("callbackServices", callbackServicesRef);
-
     BeanDefinitionBuilder successfulAuthenticationHandler = BeanDefinitionBuilder.rootBeanDefinition(UserAuthorizationSuccessfulAuthenticationHandler.class);
     successfulAuthenticationHandler.addConstructorArgValue(accessGrantedURL);
-    successfulAuthenticationHandler.addPropertyReference("callbackServices", callbackServicesRef);
 
     String callbackUrlParam = element.getAttribute("callback-url-param");
     if (StringUtils.hasText(callbackUrlParam)) {
@@ -159,12 +148,11 @@ public class OAuthProviderBeanDefinitionParser implements BeanDefinitionParser {
 
     String verifierServicesRef = element.getAttribute("verifier-services-ref");
     if (!StringUtils.hasText(verifierServicesRef)) {
-      BeanDefinitionBuilder verifierServices = BeanDefinitionBuilder.rootBeanDefinition(RandomValueInMemoryVerifierServices.class);
+      BeanDefinitionBuilder verifierServices = BeanDefinitionBuilder.rootBeanDefinition(RandomValueVerifierServices.class);
       parserContext.getRegistry().registerBeanDefinition("oauthVerifierServices", verifierServices.getBeanDefinition());
       verifierServicesRef = "oauthVerifierServices";
     }
-    successfulAuthenticationHandler.addPropertyReference("verifierServices", verifierServicesRef);
-    accessTokenFilterBean.addPropertyReference("verifierServices", verifierServicesRef);
+    authenticateTokenFilterBean.addPropertyReference("verifierServices", verifierServicesRef);
 
     // register the successfulAuthenticationHandler with the UserAuthorizationFilter
     String oauthSuccessfulAuthenticationHandlerRef = "oauthSuccessfulAuthenticationHandler";

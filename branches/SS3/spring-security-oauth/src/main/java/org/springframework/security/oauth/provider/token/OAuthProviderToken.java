@@ -30,6 +30,20 @@ public interface OAuthProviderToken extends Serializable {
   String getValue();
 
   /**
+   * The callback URL associated with this token.
+   *
+   * @return The callback URL associated with this token.
+   */
+  String getCallbackUrl();
+
+  /**
+   * The verifier string for this token.
+   *
+   * @return The verifier string for this token.
+   */
+  String getVerifier();
+
+  /**
    * The token secret.
    *
    * @return The token secret.
