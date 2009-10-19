@@ -23,6 +23,7 @@ import org.springframework.security.access.ConfigAttribute;
 import org.springframework.security.oauth.provider.OAuthAuthenticationDetails;
 
 import java.util.List;
+import java.util.Collection;
 
 /**
  * @author Ryan Heaton
@@ -46,7 +47,7 @@ public class ConsumerSecurityVoter implements AccessDecisionVoter {
    * @param clazz The class.
    * @return true.
    */
-  public boolean supports(Class clazz) {
+  public boolean supports(Class<?> clazz) {
     return true;
   }
 
@@ -58,7 +59,7 @@ public class ConsumerSecurityVoter implements AccessDecisionVoter {
    * @param configAttributes the ConfigAttributes.
    * @return The vote.
    */
-  public int vote(Authentication authentication, Object object, List<ConfigAttribute> configAttributes) {
+  public int vote(Authentication authentication, Object object, Collection<ConfigAttribute> configAttributes) {
     int result = ACCESS_ABSTAIN;
 
     if (authentication.getDetails() instanceof OAuthAuthenticationDetails) {
