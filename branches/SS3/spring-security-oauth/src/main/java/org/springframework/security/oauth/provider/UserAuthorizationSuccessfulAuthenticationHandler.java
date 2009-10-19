@@ -16,7 +16,6 @@
 package org.springframework.security.oauth.provider;
 
 import org.springframework.security.web.authentication.SimpleUrlAuthenticationSuccessHandler;
-import org.springframework.security.web.util.RedirectUtils;
 import org.springframework.security.core.Authentication;
 
 import javax.servlet.http.HttpServletRequest;
@@ -75,10 +74,7 @@ public class UserAuthorizationSuccessfulAuthenticationHandler extends SimpleUrlA
     }
 
     if ("oob".equals(callbackURL)) {
-      //(heatonra) what I'd LIKE to do is this:
-      // callbackURL = super.determineTargetUrl(request, response);
-      // but NO! They made that method private for some reason.
-      callbackURL = getDefaultTargetUrl();
+      callbackURL = super.determineTargetUrl(request, response);
     }
 
     String requestToken = request.getParameter(getTokenParameterName());
@@ -89,7 +85,7 @@ public class UserAuthorizationSuccessfulAuthenticationHandler extends SimpleUrlA
 
     String verifier = (String) request.getAttribute(VERIFIER_ATTRIBUTE);
     String targetUrl = new StringBuilder(callbackURL).append(appendChar).append("oauth_token=").append(requestToken).append("&oauth_verifier=").append(verifier).toString();
-    RedirectUtils.sendRedirect(request, response, targetUrl, this.isUseRelativeContext());
+    response.sendRedirect(response.encodeRedirectURL(targetUrl));
   }
 
   /**

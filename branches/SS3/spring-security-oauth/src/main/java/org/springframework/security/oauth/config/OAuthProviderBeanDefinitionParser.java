@@ -169,13 +169,13 @@ public class OAuthProviderBeanDefinitionParser implements BeanDefinitionParser {
 
     int index = insertIndex(filterChain);
     parserContext.getRegistry().registerBeanDefinition("oauthRequestTokenFilter", requestTokenFilterBean.getBeanDefinition());
-    filterChain.add(++index, new RuntimeBeanReference("oauthRequestTokenFilter"));
+    filterChain.add(index++, new RuntimeBeanReference("oauthRequestTokenFilter"));
     parserContext.getRegistry().registerBeanDefinition("oauthAuthenticateTokenFilter", authenticateTokenFilterBean.getBeanDefinition());
-    filterChain.add(++index, new RuntimeBeanReference("oauthAuthenticateTokenFilter"));
+    filterChain.add(index++, new RuntimeBeanReference("oauthAuthenticateTokenFilter"));
     parserContext.getRegistry().registerBeanDefinition("oauthAccessTokenFilter", accessTokenFilterBean.getBeanDefinition());
-    filterChain.add(++index, new RuntimeBeanReference("oauthAccessTokenFilter"));
+    filterChain.add(index++, new RuntimeBeanReference("oauthAccessTokenFilter"));
     parserContext.getRegistry().registerBeanDefinition("oauthProtectedResourceFilter", protectedResourceFilterBean.getBeanDefinition());
-    filterChain.add(++index, new RuntimeBeanReference("oauthProtectedResourceFilter"));
+    filterChain.add(index++, new RuntimeBeanReference("oauthProtectedResourceFilter"));
 
     return null;
   }

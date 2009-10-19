@@ -39,7 +39,7 @@ import org.springframework.security.web.FilterInvocation;
 import org.springframework.security.web.PortResolver;
 import org.springframework.security.web.PortResolverImpl;
 import org.springframework.security.web.access.intercept.FilterInvocationSecurityMetadataSource;
-import org.springframework.security.web.savedrequest.SavedRequest;
+import org.springframework.security.web.savedrequest.DefaultSavedRequest;
 import org.springframework.util.Assert;
 
 import javax.servlet.*;
@@ -185,7 +185,7 @@ public class OAuthConsumerProcessingFilter implements Filter, InitializingBean, 
    * @return The callback URL.
    */
   protected String getCallbackURL(HttpServletRequest request) {
-    return new SavedRequest(request, getPortResolver()).getFullRequestUrl();
+    return new DefaultSavedRequest(request, getPortResolver()).getRedirectUrl();
   }
 
   /**
