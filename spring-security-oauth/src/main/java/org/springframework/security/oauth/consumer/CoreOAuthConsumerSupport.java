@@ -276,7 +276,8 @@ public class CoreOAuthConsumerSupport implements OAuthConsumerSupport, Initializ
 
       OAuthConsumerParameter[] parameters = OAuthConsumerParameter.values();
       for (OAuthConsumerParameter parameter : parameters) {
-        String paramValue = oauthParams.containsKey(parameter.toString()) ? oauthParams.get(parameter.toString()).iterator().next() : null;
+        Set<String> paramValues = oauthParams.get(parameter.toString());
+        String paramValue = paramValues != null && !paramValues.isEmpty() ? paramValues.iterator().next() : null;
         if (paramValue != null) { //token is optional.
           if (writeComma) {
             builder.append(", ");
