@@ -190,10 +190,12 @@ public class OAuthProviderBeanDefinitionParser implements BeanDefinitionParser {
   private int insertIndex(List<BeanMetadataElement> filterChain) {
     int i;
     for (i = 0; i < filterChain.size(); i++) {
-      RootBeanDefinition filter = (RootBeanDefinition) filterChain.get(i);
-      String beanName = filter.getBeanClassName();
-      if (beanName.equals(ExceptionTranslationFilter.class.getName())) {
-         return i + 1;
+      BeanMetadataElement filter = filterChain.get(i);
+      if (filter instanceof BeanDefinition) {
+        String beanName = ((BeanDefinition) filter).getBeanClassName();
+        if (beanName.equals(ExceptionTranslationFilter.class.getName())) {
+           return i + 1;
+        }
       }
     }
     return filterChain.size();
