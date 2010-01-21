@@ -85,7 +85,7 @@ public class UserAuthorizationSuccessfulAuthenticationHandler extends SimpleUrlA
 
     String verifier = (String) request.getAttribute(VERIFIER_ATTRIBUTE);
     String targetUrl = new StringBuilder(callbackURL).append(appendChar).append("oauth_token=").append(requestToken).append("&oauth_verifier=").append(verifier).toString();
-    response.sendRedirect(response.encodeRedirectURL(targetUrl));
+    getRedirectStrategy().sendRedirect(request, response, targetUrl);
   }
 
   /**
