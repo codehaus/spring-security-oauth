@@ -33,6 +33,7 @@ import org.springframework.security.web.access.ExceptionTranslationFilter;
 import org.springframework.util.StringUtils;
 import org.w3c.dom.Element;
 
+import java.util.Iterator;
 import java.util.Map;
 import java.util.List;
 
@@ -164,8 +165,11 @@ public class OAuthProviderBeanDefinitionParser implements BeanDefinitionParser {
 
     BeanDefinition filterChainProxy = parserContext.getRegistry().getBeanDefinition(BeanIds.FILTER_CHAIN_PROXY);
     Map filterChainMap = (Map) filterChainProxy.getPropertyValues().getPropertyValue("filterChainMap").getValue();
-    UrlMatcher matcher = (UrlMatcher) filterChainProxy.getPropertyValues().getPropertyValue("matcher").getValue();
-    List<BeanMetadataElement> filterChain = (List<BeanMetadataElement>) filterChainMap.get(matcher.getUniversalMatchPattern());
+    List<BeanMetadataElement> filterChain = findFilterChain(filterChainMap);
+
+    if (filterChain == null) {
+      throw new IllegalStateException("Unable to find the filter chain for the universal pattern matcher where the oauth filters are to be inserted.");
+    }
 
     int index = insertIndex(filterChain);
     parserContext.getRegistry().registerBeanDefinition("oauthRequestTokenFilter", requestTokenFilterBean.getBeanDefinition());
@@ -176,6 +180,19 @@ public class OAuthProviderBeanDefinitionParser implements BeanDefinitionParser {
     filterChain.add(index++, new RuntimeBeanReference("oauthAccessTokenFilter"));
     parserContext.getRegistry().registerBeanDefinition("oauthProtectedResourceFilter", protectedResourceFilterBean.getBeanDefinition());
     filterChain.add(index++, new RuntimeBeanReference("oauthProtectedResourceFilter"));
+
+    return null;
+  }
+
+  protected List<BeanMetadataElement> findFilterChain(Map filterChainMap) {
+    //the filter chain we want is the last one in the sorted map.
+    Iterator valuesIt = filterChainMap.values().iterator();
+    while (valuesIt.hasNext()) {
+      List<BeanMetadataElement> filterChain = (List<BeanMetadataElement>) valuesIt.next();
+      if (!valuesIt.hasNext()) {
+        return filterChain;
+      }
+    }
 
     return null;
   }
