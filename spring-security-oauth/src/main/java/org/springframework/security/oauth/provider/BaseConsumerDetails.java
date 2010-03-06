@@ -28,7 +28,7 @@ import java.util.ArrayList;
  * @author Ryan Heaton
  * @author Andrew McCall
  */
-public class BaseConsumerDetails implements ResourceSpecificConsumerDetails {
+public class BaseConsumerDetails implements ResourceSpecificConsumerDetails, ExtraTrustConsumerDetails {
 
   private String consumerKey;
   private String consumerName;
@@ -36,6 +36,7 @@ public class BaseConsumerDetails implements ResourceSpecificConsumerDetails {
   private List<GrantedAuthority> authorities = new ArrayList<GrantedAuthority>();
   private String resourceName;
   private String resourceDescription;
+  private boolean requiredToObtainAuthenticatedToken = true;
 
   /**
    * The consumer key.
@@ -143,5 +144,23 @@ public class BaseConsumerDetails implements ResourceSpecificConsumerDetails {
    */
   public void setResourceDescription(String resourceDescription) {
     this.resourceDescription = resourceDescription;
+  }
+
+  /**
+   * Whether this consumer is required to obtain an authenticated oauth token.
+   *
+   * @return Whether this consumer is required to obtain an authenticated oauth token.
+   */
+  public boolean isRequiredToObtainAuthenticatedToken() {
+    return requiredToObtainAuthenticatedToken;
+  }
+
+  /**
+   * Whether this consumer is required to obtain an authenticated oauth token.
+   *
+   * @param requiredToObtainAuthenticatedToken Whether this consumer is required to obtain an authenticated oauth token.
+   */
+  public void setRequiredToObtainAuthenticatedToken(boolean requiredToObtainAuthenticatedToken) {
+    this.requiredToObtainAuthenticatedToken = requiredToObtainAuthenticatedToken;
   }
 }
