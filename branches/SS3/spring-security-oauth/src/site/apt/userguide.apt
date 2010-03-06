@@ -205,6 +205,8 @@ Contents
 
     *<<resourceDescription>>: The description of the resource.
 
+    *<<requiredToObtainAuthenticatedToken>>: Whether this consumer is required to obtain an authenticated oauth token. If <<true>>, it means that the OAuth consumer won't be granted access to the protected resource unless the user is directed to the token authorization page. If <<false>>, it means that the provider has an additional level of trust with the consumer. Not requiring an authenticated access token is also known as "2-legged" OAuth or "signed fetch". For more information, see {{{./twolegged.html}two-legged OAuth}}.
+
     []
 
   *The <<<token-services>>> element is a simple element that can be used to provide an in-memory implementation of the provider token services.

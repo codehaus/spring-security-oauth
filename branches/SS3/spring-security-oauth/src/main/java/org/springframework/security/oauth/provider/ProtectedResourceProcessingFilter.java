@@ -36,7 +36,7 @@ import java.util.Map;
  * request into the security context using a presented access token.  Default behavior of this filter allows
  * the request to continue even if OAuth credentials are not presented (allowing another filter to potentially
  * load a different authentication request into the security context). If the protected resource is available
- * ONLY via OAuth access token, set <code>requireOAuthCredentials</code> to true. 
+ * ONLY via OAuth access token, set <code>ignoreMissingCredentials</code> to <code>false</code>. 
  *
  * @author Ryan Heaton
  * @author Andrew McCall
@@ -58,32 +58,30 @@ public class ProtectedResourceProcessingFilter extends OAuthProviderProcessingFi
 
   protected void onValidSignature(HttpServletRequest request, HttpServletResponse response, FilterChain chain) throws IOException, ServletException {
     ConsumerAuthentication authentication = (ConsumerAuthentication) SecurityContextHolder.getContext().getAuthentication();
-    OAuthProviderToken authToken = getTokenServices().getToken(authentication.getConsumerCredentials().getToken());
-    if (authToken == null) {
-      throw new AccessDeniedException("Invalid access token.");
-    }
-    else if (!authToken.isAccessToken()) {
-      throw new AccessDeniedException("Token should be an access token.");
-    }
-    else {
-      Authentication userAuthentication = ((OAuthAccessProviderToken) authToken).getUserAuthentication();
-      if (userAuthentication instanceof AbstractAuthenticationToken) {
-        //initialize the details with the consumer that is actually making the request on behalf of the user.
-        ((AbstractAuthenticationToken) userAuthentication).setDetails(new OAuthAuthenticationDetails(request, authentication.getConsumerDetails()));
+    String token = authentication.getConsumerCredentials().getToken();
+    if (token != null) {
+      OAuthProviderToken authToken = getTokenServices().getToken(token);
+      if (authToken == null) {
+        throw new AccessDeniedException("Invalid access token.");
       }
-      SecurityContextHolder.getContext().setAuthentication(userAuthentication);
+      else if (!authToken.isAccessToken()) {
+        throw new AccessDeniedException("Token should be an access token.");
+      }
+      else {
+        Authentication userAuthentication = ((OAuthAccessProviderToken) authToken).getUserAuthentication();
+        if (userAuthentication instanceof AbstractAuthenticationToken) {
+          //initialize the details with the consumer that is actually making the request on behalf of the user.
+          ((AbstractAuthenticationToken) userAuthentication).setDetails(new OAuthAuthenticationDetails(request, authentication.getConsumerDetails()));
+        }
+        SecurityContextHolder.getContext().setAuthentication(userAuthentication);
+      }
     }
-    chain.doFilter(request, response);
-  }
-
-  @Override
-  protected void validateOAuthParams(ConsumerDetails consumerDetails, Map<String, String> oauthParams) throws InvalidOAuthParametersException {
-    super.validateOAuthParams(consumerDetails, oauthParams);
-
-    String token = oauthParams.get(OAuthConsumerParameter.oauth_token.toString());
-    if (token == null) {
+    else if ((!(authentication.getConsumerDetails() instanceof ExtraTrustConsumerDetails)) ||
+      ((ExtraTrustConsumerDetails)authentication.getConsumerDetails()).isRequiredToObtainAuthenticatedToken()) {
       throw new InvalidOAuthParametersException(messages.getMessage("ProtectedResourceProcessingFilter.missingToken", "Missing auth token."));
     }
+
+    chain.doFilter(request, response);
   }
 
   @Override

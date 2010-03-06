@@ -11,6 +11,7 @@ Welcome
   As you can probably deduce from its name, the purpose of this project is to provide an {{{http://oauth.net}OAuth}}
   implementation for {{{http://static.springframework.org/spring-security/site/}Spring Security}}.  <As of version 3.0,
   support is provided for OAuth Spec 1.0a.> Support is also provided for both OAuth provider developers and OAuth consumer developers.
+  As of version 3.13, there is also support for 2-legged OAuth (a.k.a. "Signed Fetch").
 
   Applying security to an application is not for the faint of heart, and OAuth is no exception. Before you get started,
   you're going to want to make sure you understand OAuth and the problem it's designed to address. There is good
