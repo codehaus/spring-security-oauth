@@ -106,6 +106,11 @@ public class ConsumerServiceBeanDefinitionParser extends AbstractSingleBeanDefin
         consumer.setResourceDescription(resourceDescription);
       }
 
+      String requiredToObtainAuthenticatedToken = consumerElement.getAttribute("requiredToObtainAuthenticatedToken");
+      if (requiredToObtainAuthenticatedToken != null && "false".equalsIgnoreCase(requiredToObtainAuthenticatedToken)) {
+        consumer.setRequiredToObtainAuthenticatedToken(false);
+      }
+
       consumers.put(key, consumer);
     }
 

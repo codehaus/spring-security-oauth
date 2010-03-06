@@ -52,8 +52,7 @@ public class CoreOAuthProviderSupport implements OAuthProviderSupport {
     if (parameters == null) {
       //if there is no header authorization parameters, then the oauth parameters are the supported OAuth request parameters.
       parameters = new HashMap<String, String>();
-      Set<String> supportedOAuthParameters1 = getSupportedOAuthParameters();
-      for (String supportedOAuthParameter : supportedOAuthParameters1) {
+      for (String supportedOAuthParameter : getSupportedOAuthParameters()) {
         String param = request.getParameter(supportedOAuthParameter);
         if (param != null) {
           parameters.put(supportedOAuthParameter, param);
