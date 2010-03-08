@@ -1,9 +1,8 @@
 package org.springframework.security.oauth.provider;
 
-import org.springframework.security.Authentication;
+import org.springframework.security.authentication.AbstractAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth.provider.token.OAuthAccessProviderToken;
-import org.springframework.security.oauth.provider.token.OAuthProviderToken;
-import org.springframework.security.providers.AbstractAuthenticationToken;
 
 import javax.servlet.http.HttpServletRequest;
 
