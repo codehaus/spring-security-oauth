@@ -182,6 +182,8 @@ Contents
 
     *<<verifier-services-ref>>: The reference to the bean that defines the verifier services. Default is to supply an instance of <<<org.springframework.security.oauth.provider.verifier.RandomValueInMemoryVerifierServices>>>
 
+    *<<auth-handler-ref>>: The reference to the bean that defines the authentication handler. Default is to supply an instance of <<<org.springframework.security.oauth.provider.DefaultAuthenticationHandler>>>
+
     *<<support-ref>>: The reference to the bean that defines the provider support logic. Default is to supply an instance of <<<org.springframework.security.oauth.provider.CoreOAuthProviderSupport>>>
 
     *<<token-id-param>>: The name of the request parameter that specifies to the 'authenticate-token-url' the id of the token that is to be authenticated. Default value: "requestToken".

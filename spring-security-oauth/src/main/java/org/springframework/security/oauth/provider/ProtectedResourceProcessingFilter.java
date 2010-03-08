@@ -45,6 +45,7 @@ public class ProtectedResourceProcessingFilter extends OAuthProviderProcessingFi
   public static final int FILTER_CHAIN_ORDER = AccessTokenProcessingFilter.FILTER_CHAIN_ORDER + 1;
 
   private boolean allowAllMethods = true;
+  private OAuthAuthenticationHandler authHandler = new DefaultAuthenticationHandler();
 
   public ProtectedResourceProcessingFilter() {
     //we're going to ignore missing credentials by default.  This is to allow a chance for the resource to
@@ -60,6 +61,7 @@ public class ProtectedResourceProcessingFilter extends OAuthProviderProcessingFi
   protected void onValidSignature(HttpServletRequest request, HttpServletResponse response, FilterChain chain) throws IOException, ServletException {
     ConsumerAuthentication authentication = (ConsumerAuthentication) SecurityContextHolder.getContext().getAuthentication();
     String token = authentication.getConsumerCredentials().getToken();
+    OAuthAccessProviderToken accessToken = null;
     if (token != null) {
       OAuthProviderToken authToken = getTokenServices().getToken(token);
       if (authToken == null) {
@@ -68,19 +70,17 @@ public class ProtectedResourceProcessingFilter extends OAuthProviderProcessingFi
       else if (!authToken.isAccessToken()) {
         throw new AccessDeniedException("Token should be an access token.");
       }
-      else {
-        Authentication userAuthentication = ((OAuthAccessProviderToken) authToken).getUserAuthentication();
-        if (userAuthentication instanceof AbstractAuthenticationToken) {
-          //initialize the details with the consumer that is actually making the request on behalf of the user.
-          ((AbstractAuthenticationToken) userAuthentication).setDetails(new OAuthAuthenticationDetails(request, authentication.getConsumerDetails()));
-        }
-        SecurityContextHolder.getContext().setAuthentication(userAuthentication);
+      else if (authToken instanceof OAuthAccessProviderToken) {
+        accessToken = (OAuthAccessProviderToken) authToken;
       }
     }
     else if ((!(authentication.getConsumerDetails() instanceof ExtraTrustConsumerDetails)) ||
       ((ExtraTrustConsumerDetails)authentication.getConsumerDetails()).isRequiredToObtainAuthenticatedToken()) {
       throw new InvalidOAuthParametersException(messages.getMessage("ProtectedResourceProcessingFilter.missingToken", "Missing auth token."));
     }
+
+    Authentication userAuthentication = authHandler.createAuthentication(request, authentication, accessToken);
+    SecurityContextHolder.getContext().setAuthentication(userAuthentication);
 
     chain.doFilter(request, response);
   }
@@ -122,4 +122,21 @@ public class ProtectedResourceProcessingFilter extends OAuthProviderProcessingFi
     this.allowAllMethods = allowAllMethods;
   }
 
+  /**
+   * The authentication handler.
+   *
+   * @return The authentication handler.
+   */
+  public OAuthAuthenticationHandler getAuthHandler() {
+    return authHandler;
+  }
+
+  /**
+   * The authentication handler.
+   *
+   * @param authHandler The authentication handler.
+   */
+  public void setAuthHandler(OAuthAuthenticationHandler authHandler) {
+    this.authHandler = authHandler;
+  }
 }
