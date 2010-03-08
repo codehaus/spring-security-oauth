@@ -131,7 +131,7 @@ public class CoreOAuthConsumerSupport implements OAuthConsumerSupport, Initializ
         httpMethod + " because the OAuth provider doesn't accept the OAuth Authorization header.");
     }
 
-    return readResource(resourceDetails, url, httpMethod, accessToken, resourceDetails.getAdditionalParameters());
+    return readResource(resourceDetails, url, httpMethod, accessToken, resourceDetails.getAdditionalParameters(), null);
   }
 
   /**
@@ -139,12 +139,13 @@ public class CoreOAuthConsumerSupport implements OAuthConsumerSupport, Initializ
    *
    * @param details The details of the resource.
    * @param url The URL of the resource.
-   * @param token The token.
    * @param httpMethod The http method.
+   * @param token The token.
    * @param additionalParameters Any additional request parameters.
+   * @param additionalRequestHeaders Any additional request parameters.
    * @return The resource.
    */
-  protected InputStream readResource(ProtectedResourceDetails details, URL url, String httpMethod, OAuthConsumerToken token, Map<String, String> additionalParameters) {
+  protected InputStream readResource(ProtectedResourceDetails details, URL url, String httpMethod, OAuthConsumerToken token, Map<String, String> additionalParameters, Map<String, String> additionalRequestHeaders) {
     url = configureURLForProtectedAccess(url, token, details, httpMethod, additionalParameters);
     String realm = details.getAuthorizationHeaderRealm();
     boolean sendOAuthParamsInRequestBody = !details.isAcceptsAuthorizationHeader() && (("POST".equalsIgnoreCase(httpMethod) || "PUT".equalsIgnoreCase(httpMethod)));
@@ -155,6 +156,19 @@ public class CoreOAuthConsumerSupport implements OAuthConsumerSupport, Initializ
     }
     catch (ProtocolException e) {
       throw new IllegalStateException(e);
+    }
+
+    Map<String, String> reqHeaders = details.getAdditionalRequestHeaders();
+    if (reqHeaders != null) {
+      for (Map.Entry<String, String> requestHeader : reqHeaders.entrySet()) {
+        connection.setRequestProperty(requestHeader.getKey(), requestHeader.getValue());
+      }
+    }
+
+    if (additionalRequestHeaders != null) {
+      for (Map.Entry<String, String> requestHeader : additionalRequestHeaders.entrySet()) {
+        connection.setRequestProperty(requestHeader.getKey(), requestHeader.getValue());
+      }
     }
 
     int responseCode;
@@ -354,7 +368,11 @@ public class CoreOAuthConsumerSupport implements OAuthConsumerSupport, Initializ
       requestToken.setNonce(getNonceFactory().generateNonce());
     }
 
-    InputStream inputStream = readResource(details, tokenURL, httpMethod, requestToken, additionalParameters);
+    TreeMap<String, String> requestHeaders = new TreeMap<String, String>();
+    if ("POST".equalsIgnoreCase(httpMethod)) {
+      requestHeaders.put("Content-Type", "application/x-www-form-urlencoded");
+    }
+    InputStream inputStream = readResource(details, tokenURL, httpMethod, requestToken, additionalParameters, requestHeaders);
     String tokenInfo;
     try {
       ByteArrayOutputStream out = new ByteArrayOutputStream();
