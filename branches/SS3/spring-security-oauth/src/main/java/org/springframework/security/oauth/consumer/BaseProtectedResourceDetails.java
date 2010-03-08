@@ -40,6 +40,7 @@ public class BaseProtectedResourceDetails implements ProtectedResourceDetails {
   private String authorizationHeaderRealm;
   private boolean use10a = true;
   private Map<String, String> additionalParameters;
+  private Map<String, String> additionalRequestHeaders;
 
   public String getId() {
     return id;
@@ -143,5 +144,13 @@ public class BaseProtectedResourceDetails implements ProtectedResourceDetails {
 
   public void setAdditionalParameters(Map<String, String> additionalParameters) {
     this.additionalParameters = additionalParameters;
+  }
+
+  public Map<String, String> getAdditionalRequestHeaders() {
+    return additionalRequestHeaders;
+  }
+
+  public void setAdditionalRequestHeaders(Map<String, String> additionalRequestHeaders) {
+    this.additionalRequestHeaders = additionalRequestHeaders;
   }
 }

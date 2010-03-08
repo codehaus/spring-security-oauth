@@ -126,9 +126,10 @@ public class TestCoreOAuthConsumerSupport extends TestCase {
 
     expect(details.getAuthorizationHeaderRealm()).andReturn("realm1");
     expect(details.isAcceptsAuthorizationHeader()).andReturn(true);
+    expect(details.getAdditionalRequestHeaders()).andReturn(null);
     replay(details);
     try {
-      support.readResource(details, url, "POST", token , null);
+      support.readResource(details, url, "POST", token , null, null);
       fail("shouldn't have been a valid response code.");
     }
     catch (OAuthRequestFailedException e) {
@@ -143,11 +144,12 @@ public class TestCoreOAuthConsumerSupport extends TestCase {
 
     expect(details.getAuthorizationHeaderRealm()).andReturn(null);
     expect(details.isAcceptsAuthorizationHeader()).andReturn(true);
+    expect(details.getAdditionalRequestHeaders()).andReturn(null);
     connectionProps.responseCode = 400;
     connectionProps.responseMessage = "Nasty";
     replay(details);
     try {
-      support.readResource(details, url, "POST", token, null);
+      support.readResource(details, url, "POST", token, null, null);
       fail("shouldn't have been a valid response code.");
     }
     catch (OAuthRequestFailedException e) {
@@ -162,12 +164,13 @@ public class TestCoreOAuthConsumerSupport extends TestCase {
 
     expect(details.getAuthorizationHeaderRealm()).andReturn(null);
     expect(details.isAcceptsAuthorizationHeader()).andReturn(true);
+    expect(details.getAdditionalRequestHeaders()).andReturn(null);
     connectionProps.responseCode = 401;
     connectionProps.responseMessage = "Bad Realm";
     connectionProps.headerFields.put("WWW-Authenticate", "realm=\"goodrealm\"");
     replay(details);
     try {
-      support.readResource(details, url, "POST", token, null);
+      support.readResource(details, url, "POST", token, null, null);
       fail("shouldn't have been a valid response code.");
     }
     catch (InvalidOAuthRealmException e) {
@@ -182,10 +185,11 @@ public class TestCoreOAuthConsumerSupport extends TestCase {
 
     expect(details.getAuthorizationHeaderRealm()).andReturn(null);
     expect(details.isAcceptsAuthorizationHeader()).andReturn(true);
+    expect(details.getAdditionalRequestHeaders()).andReturn(null);
     connectionProps.responseCode = 200;
     connectionProps.responseMessage = "Congrats";
     replay(details);
-    assertSame(inputStream, support.readResource(details, url, "GET", token, null));
+    assertSame(inputStream, support.readResource(details, url, "GET", token, null, null));
     verify(details);
     reset(details);
     assertFalse(connectionProps.doOutput);
@@ -195,10 +199,11 @@ public class TestCoreOAuthConsumerSupport extends TestCase {
 
     expect(details.getAuthorizationHeaderRealm()).andReturn(null);
     expect(details.isAcceptsAuthorizationHeader()).andReturn(false);
+    expect(details.getAdditionalRequestHeaders()).andReturn(null);
     connectionProps.responseCode = 200;
     connectionProps.responseMessage = "Congrats";
     replay(details);
-    assertSame(inputStream, support.readResource(details, url, "POST", token, null));
+    assertSame(inputStream, support.readResource(details, url, "POST", token, null, null));
     assertEquals("POSTBODY", new String(((ByteArrayOutputStream) connectionProps.outputStream).toByteArray()));
     verify(details);
     reset(details);
@@ -343,7 +348,7 @@ public class TestCoreOAuthConsumerSupport extends TestCase {
     final ByteArrayInputStream in = new ByteArrayInputStream("oauth_token=mytoken&oauth_token_secret=mytokensecret".getBytes("UTF-8"));
     CoreOAuthConsumerSupport support = new CoreOAuthConsumerSupport() {
       @Override
-      protected InputStream readResource(ProtectedResourceDetails details, URL url, String httpMethod, OAuthConsumerToken token, Map<String, String> additionalParameters) {
+      protected InputStream readResource(ProtectedResourceDetails details, URL url, String httpMethod, OAuthConsumerToken token, Map<String, String> additionalParameters, Map<String, String> additionalRequestHeaders) {
         return in;
       }
     };

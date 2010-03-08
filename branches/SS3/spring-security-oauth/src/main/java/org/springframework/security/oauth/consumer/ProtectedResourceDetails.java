@@ -118,4 +118,11 @@ public interface ProtectedResourceDetails {
    * @return The additional OAuth parameters for this protected resource, or null if none.
    */
   Map<String, String> getAdditionalParameters();
+
+  /**
+   * The additional request headers to send.
+   *
+   * @return The additional request headers to send.
+   */
+  Map<String, String> getAdditionalRequestHeaders();
 }
