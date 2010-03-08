@@ -137,6 +137,15 @@ public class ProtectedResourceDetailsBeanDefinitionParser extends AbstractSingle
         resource.setAdditionalParameters(additionalParams);
       }
 
+      List additionalRequestHeaders = DomUtils.getChildElementsByTagName(consumerElement, "additionalRequestHeader");
+      if (additionalRequestHeaders != null && !additionalRequestHeaders.isEmpty()) {
+        Map<String, String> headers = new HashMap<String, String>();
+        for (Object additionalParameter : additionalRequestHeaders) {
+          headers.put(((Element)additionalParameter).getAttribute("name"), ((Element)additionalParameter).getAttribute("value"));
+        }
+        resource.setAdditionalRequestHeaders(headers);
+      }
+
       resources.put(id, resource);
     }
 
