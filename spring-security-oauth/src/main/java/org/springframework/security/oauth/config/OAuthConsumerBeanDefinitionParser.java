@@ -160,10 +160,24 @@ public class OAuthConsumerBeanDefinitionParser implements BeanDefinitionParser {
     parserContext.getRegistry().registerBeanDefinition("oauthConsumerFilter", consumerFilterBean.getBeanDefinition());
     BeanDefinition filterChainProxy = parserContext.getRegistry().getBeanDefinition(BeanIds.FILTER_CHAIN_PROXY);
     Map filterChainMap = (Map) filterChainProxy.getPropertyValues().getPropertyValue("filterChainMap").getValue();
-    List<BeanMetadataElement> filterChain = (List<BeanMetadataElement>) filterChainMap.get(matcher.getUniversalMatchPattern());
+    List<BeanMetadataElement> filterChain = findFilterChain(filterChainMap);
 
     //parserContext.getRegistry().registerBeanDefinition("oauthRequestTokenFilter", requestTokenFilterBean.getBeanDefinition());
     filterChain.add(filterChain.size(), new RuntimeBeanReference("oauthConsumerFilter"));
     return null;
   }
+
+  protected List<BeanMetadataElement> findFilterChain(Map filterChainMap) {
+    //the filter chain we want is the last one in the sorted map.
+    Iterator valuesIt = filterChainMap.values().iterator();
+    while (valuesIt.hasNext()) {
+      List<BeanMetadataElement> filterChain = (List<BeanMetadataElement>) valuesIt.next();
+      if (!valuesIt.hasNext()) {
+        return filterChain;
+      }
+    }
+
+    return null;
+  }
+
 }
