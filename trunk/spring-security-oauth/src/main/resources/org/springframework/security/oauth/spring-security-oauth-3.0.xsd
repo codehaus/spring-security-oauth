@@ -115,6 +115,14 @@
           </xs:documentation>
         </xs:annotation>
       </xs:attribute>
+      <xs:attribute name="auth-handler-ref" type="xs:string">
+        <xs:annotation>
+          <xs:documentation>
+            The reference to the bean that defines the oauth authentication handler. Default value:
+            org.springframework.security.oauth.provider.DefaultAuthenticationHandler
+          </xs:documentation>
+        </xs:annotation>
+      </xs:attribute>
     </xs:complexType>
   </xs:element>
 

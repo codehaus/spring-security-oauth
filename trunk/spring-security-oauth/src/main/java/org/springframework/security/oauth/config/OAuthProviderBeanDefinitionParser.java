@@ -120,6 +120,11 @@ public class OAuthProviderBeanDefinitionParser implements BeanDefinitionParser {
       protectedResourceFilterBean.addPropertyReference("providerSupport", supportRef);
     }
 
+    String authHandlerRef = element.getAttribute("auth-handler-ref");
+    if (StringUtils.hasText(authHandlerRef)) {
+      protectedResourceFilterBean.addPropertyReference("authHandler", authHandlerRef);
+    }
+
     String require10a = element.getAttribute("require10a");
     if (StringUtils.hasText(require10a)) {
       requestTokenFilterBean.addPropertyValue("require10a", require10a);
