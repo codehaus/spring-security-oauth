@@ -29,7 +29,6 @@ public class OAuthConsumerToken implements Serializable {
   private String resourceId;
   private String value;
   private String secret;
-  private String nonce;
   private boolean accessToken;
   private Map<String, String> additionalParameters;
 
@@ -85,24 +84,6 @@ public class OAuthConsumerToken implements Serializable {
    */
   public void setSecret(String secret) {
     this.secret = secret;
-  }
-
-  /**
-   * The nonce associated with this token.
-   *
-   * @return The nonce associated with this token.
-   */
-  public String getNonce() {
-    return nonce;
-  }
-
-  /**
-   * The nonce associated with this token.
-   *
-   * @param nonce The nonce associated with this token.
-   */
-  public void setNonce(String nonce) {
-    this.nonce = nonce;
   }
 
   /**
