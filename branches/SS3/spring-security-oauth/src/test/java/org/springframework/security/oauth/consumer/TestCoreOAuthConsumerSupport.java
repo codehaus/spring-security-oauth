@@ -353,18 +353,14 @@ public class TestCoreOAuthConsumerSupport extends TestCase {
       }
     };
 
-    NonceFactory nonceFactory = createMock(NonceFactory.class);
-    support.setNonceFactory(nonceFactory);
     ProtectedResourceDetails details = createMock(ProtectedResourceDetails.class);
     URL url = new URL("https://myhost.com/somepath?with=some&query=params&too");
 
-    expect(nonceFactory.generateNonce()).andReturn("mynonce");
     expect(details.getId()).andReturn("resourceId");
-    replay(details, nonceFactory);
+    replay(details);
     OAuthConsumerToken token = support.getTokenFromProvider(details, url, "POST", null, null);
-    verify(details, nonceFactory);
-    reset(details, nonceFactory);
-    assertEquals("mynonce", token.getNonce());
+    verify(details);
+    reset(details);
     assertFalse(token.isAccessToken());
     assertEquals("mytoken", token.getValue());
     assertEquals("mytokensecret", token.getSecret());
@@ -387,7 +383,6 @@ public class TestCoreOAuthConsumerSupport extends TestCase {
     OAuthSignatureMethodFactory sigFactory = createMock(OAuthSignatureMethodFactory.class);
     support.setSignatureFactory(sigFactory);
     OAuthConsumerToken token = new OAuthConsumerToken();
-    token.setNonce("mynonce");
     OAuthSignatureMethod sigMethod = createMock(OAuthSignatureMethod.class);
 
     expect(details.getConsumerKey()).andReturn("my-consumer-key");
@@ -407,7 +402,7 @@ public class TestCoreOAuthConsumerSupport extends TestCase {
     assertTrue(params.containsKey("too"));
     assertTrue(params.remove("too").isEmpty());
     assertNull(params.remove(OAuthConsumerParameter.oauth_token.toString()));
-    assertEquals("mynonce", params.remove(OAuthConsumerParameter.oauth_nonce.toString()).iterator().next());
+    assertNotNull(params.remove(OAuthConsumerParameter.oauth_nonce.toString()).iterator().next());
     assertEquals("my-consumer-key", params.remove(OAuthConsumerParameter.oauth_consumer_key.toString()).iterator().next());
     assertEquals("MYSIGNATURE", params.remove(OAuthConsumerParameter.oauth_signature.toString()).iterator().next());
     assertEquals("1.0", params.remove(OAuthConsumerParameter.oauth_version.toString()).iterator().next());
