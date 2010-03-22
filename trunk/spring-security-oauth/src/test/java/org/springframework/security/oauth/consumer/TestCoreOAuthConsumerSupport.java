@@ -16,25 +16,24 @@
 
 package org.springframework.security.oauth.consumer;
 
-import static org.easymock.EasyMock.*;
-import org.springframework.security.oauth.consumer.token.OAuthConsumerToken;
-import org.springframework.security.oauth.consumer.net.DefaultOAuthURLStreamHandlerFactory;
-import org.springframework.security.oauth.consumer.nonce.NonceFactory;
+import junit.framework.TestCase;
 import org.springframework.security.oauth.common.OAuthConsumerParameter;
 import org.springframework.security.oauth.common.signature.HMAC_SHA1SignatureMethod;
+import org.springframework.security.oauth.common.signature.OAuthSignatureMethod;
 import org.springframework.security.oauth.common.signature.OAuthSignatureMethodFactory;
 import org.springframework.security.oauth.common.signature.SharedConsumerSecret;
-import org.springframework.security.oauth.common.signature.OAuthSignatureMethod;
-
-import junit.framework.TestCase;
+import org.springframework.security.oauth.consumer.net.DefaultOAuthURLStreamHandlerFactory;
+import org.springframework.security.oauth.consumer.token.OAuthConsumerToken;
 
 import javax.servlet.http.HttpServletRequest;
-import java.net.URL;
+import java.io.*;
 import java.net.MalformedURLException;
 import java.net.ProtocolException;
+import java.net.URL;
 import java.net.URLEncoder;
-import java.io.*;
 import java.util.*;
+
+import static org.easymock.EasyMock.*;
 
 /**
  * @author Ryan Heaton
@@ -272,7 +271,7 @@ public class TestCoreOAuthConsumerSupport extends TestCase {
     expect(details.isAcceptsAuthorizationHeader()).andReturn(true);
     expect(details.getAuthorizationHeaderRealm()).andReturn("myrealm");
     replay(details);
-    assertEquals("OAuth realm=\"myrealm\"", support.getAuthorizationHeader(details, token, url, "POST", null));
+    assertEquals("OAuth realm=\"myrealm\", query=\"params\", with=\"some\"", support.getAuthorizationHeader(details, token, url, "POST", null));
     verify(details);
     reset(details);
 
@@ -282,7 +281,7 @@ public class TestCoreOAuthConsumerSupport extends TestCase {
     expect(details.isAcceptsAuthorizationHeader()).andReturn(true);
     expect(details.getAuthorizationHeaderRealm()).andReturn("myrealm");
     replay(details);
-    assertEquals("OAuth realm=\"myrealm\", oauth_consumer_key=\"mykey\", oauth_timestamp=\"myts\", oauth_nonce=\"mynonce\"", support.getAuthorizationHeader(details, token, url, "POST", null));
+    assertEquals("OAuth realm=\"myrealm\", oauth_consumer_key=\"mykey\", oauth_nonce=\"mynonce\", oauth_timestamp=\"myts\", query=\"params\", with=\"some\"", support.getAuthorizationHeader(details, token, url, "POST", null));
     verify(details);
     reset(details);
   }
