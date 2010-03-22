@@ -287,16 +287,15 @@ public class CoreOAuthConsumerSupport implements OAuthConsumerSupport, Initializ
         writeComma = true;
       }
 
-      OAuthConsumerParameter[] parameters = OAuthConsumerParameter.values();
-      for (OAuthConsumerParameter parameter : parameters) {
-        Set<String> paramValues = oauthParams.get(parameter.toString());
+      for (Map.Entry<String, Set<String>> paramValuesEntry : oauthParams.entrySet()) {
+        Set<String> paramValues = paramValuesEntry.getValue();
         String paramValue = paramValues != null && !paramValues.isEmpty() ? paramValues.iterator().next() : null;
         if (paramValue != null) { //token is optional.
           if (writeComma) {
             builder.append(", ");
           }
 
-          builder.append(parameter.toString()).append("=\"").append(oauthEncode(paramValue)).append('"');
+          builder.append(paramValuesEntry.getKey()).append("=\"").append(oauthEncode(paramValue)).append('"');
           writeComma = true;
         }
       }
