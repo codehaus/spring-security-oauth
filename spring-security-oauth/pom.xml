@@ -6,7 +6,7 @@
   <name>OAuth for Spring Security</name>
   <description>Module for providing OAuth support to Spring Security</description>
   <packaging>jar</packaging>
-  <version>3.13.SS3-SNAPSHOT</version>
+  <version>3.13.SS3</version>
 
   <build>
     <plugins>
@@ -94,6 +94,15 @@
         </executions>
       </plugin>
     </plugins>
+    <extensions>
+      <!--see http://jira.codehaus.org/browse/MNG-4301
+      bug in maven 2.2: invalid checksums-->
+      <extension>
+        <groupId>org.apache.maven.wagon</groupId>
+        <artifactId>wagon-webdav</artifactId>
+        <version>1.0-beta-2</version>
+      </extension>
+    </extensions>
   </build>
 
   <reporting>
