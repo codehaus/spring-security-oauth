@@ -365,7 +365,6 @@ public class CoreOAuthConsumerSupport implements OAuthConsumerSupport, Initializ
     if (!isAccessToken) {
       //create an empty token to make a request for a new unauthorized request token.
       requestToken = new OAuthConsumerToken();
-      requestToken.setNonce(getNonceFactory().generateNonce());
     }
 
     TreeMap<String, String> requestHeaders = new TreeMap<String, String>();
@@ -423,7 +422,6 @@ public class CoreOAuthConsumerSupport implements OAuthConsumerSupport, Initializ
     OAuthConsumerToken consumerToken = new OAuthConsumerToken();
     consumerToken.setValue(tokenValue);
     consumerToken.setSecret(tokenSecret);
-    consumerToken.setNonce(requestToken.getNonce());
     consumerToken.setResourceId(details.getId());
     consumerToken.setAccessToken(isAccessToken);
     return consumerToken;
@@ -483,7 +481,7 @@ public class CoreOAuthConsumerSupport implements OAuthConsumerSupport, Initializ
     }
 
     String tokenSecret = requestToken == null ? null : requestToken.getSecret();
-    String nonce = requestToken == null ? getNonceFactory().generateNonce() : requestToken.getNonce();
+    String nonce = getNonceFactory().generateNonce();
     oauthParams.put(OAuthConsumerParameter.oauth_consumer_key.toString(), Collections.singleton(details.getConsumerKey()));
     if ((requestToken != null) && (requestToken.getValue() != null)) {
       oauthParams.put(OAuthConsumerParameter.oauth_token.toString(), Collections.singleton(requestToken.getValue()));
