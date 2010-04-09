@@ -26,6 +26,7 @@ import org.springframework.security.oauth.provider.token.OAuthProviderToken;
 import org.springframework.security.oauth.provider.token.OAuthProviderTokenServices;
 import org.springframework.security.oauth.provider.verifier.OAuthVerifierServices;
 import org.springframework.security.ui.AbstractProcessingFilter;
+import org.springframework.security.ui.rememberme.NullRememberMeServices;
 import org.springframework.util.Assert;
 
 import javax.servlet.http.HttpServletRequest;
@@ -40,7 +41,6 @@ import javax.servlet.http.HttpServletRequest;
  * Upon successful authorization of the request token, the response is a redirect back to the callback, if supplied.
  * Otherwise, the response is a redirect to the {@link #setDefaultTargetUrl(String) default target URL}. Upon failure
  * to authorize, the response is a redirect to {@link #setAuthenticationFailureUrl(String) failure URL}.
- *
  *
  * @author Ryan Heaton
  */
@@ -62,9 +62,11 @@ public class UserAuthorizationProcessingFilter extends AbstractProcessingFilter 
 
   @Override
   public void afterPropertiesSet() throws Exception {
-    Assert.notNull(getRememberMeServices());
     Assert.notNull(getTokenServices(), "A token services must be provided.");
     Assert.notNull(getVerifierServices(), "Verifier services are required.");
+    if (getRememberMeServices() == null) {
+      setRememberMeServices(new NullRememberMeServices());
+    }
   }
 
   public Authentication attemptAuthentication(HttpServletRequest request) throws AuthenticationException {
@@ -82,7 +84,7 @@ public class UserAuthorizationProcessingFilter extends AbstractProcessingFilter 
     if (isRequire10a() && callbackURL == null) {
       throw new InvalidOAuthTokenException("No callback value has been provided for request token " + requestToken + ".");
     }
-    
+
     if (callbackURL != null) {
       request.setAttribute(CALLBACK_ATTRIBUTE, callbackURL);
     }
@@ -212,7 +214,7 @@ public class UserAuthorizationProcessingFilter extends AbstractProcessingFilter 
   @Autowired
   public void setVerifierServices(OAuthVerifierServices verifierServices) {
     this.verifierServices = verifierServices;
-  }  
+  }
 
   /**
    * Whether to require 1.0a support.
