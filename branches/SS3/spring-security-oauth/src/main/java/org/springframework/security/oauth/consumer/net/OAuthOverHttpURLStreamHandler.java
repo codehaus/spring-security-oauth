@@ -49,17 +49,6 @@ public class OAuthOverHttpURLStreamHandler extends sun.net.www.protocol.http.Han
   }
 
   @Override
-  protected URLConnection openConnection(URL url) throws IOException {
-    HttpURLConnection connection = (HttpURLConnection) super.openConnection(url);
-    connection.setRequestMethod(this.httpMethod);
-    if (resourceDetails.isAcceptsAuthorizationHeader()) {
-      String authHeader = support.getAuthorizationHeader(resourceDetails, accessToken, url, httpMethod, additionalParameters);
-      connection.setRequestProperty("Authorization", authHeader);
-    }
-    return connection;
-  }
-
-  @Override
   protected URLConnection openConnection(URL url, Proxy proxy) throws IOException {
     HttpURLConnection connection = (HttpURLConnection) super.openConnection(url, proxy);
     connection.setRequestMethod(this.httpMethod);
