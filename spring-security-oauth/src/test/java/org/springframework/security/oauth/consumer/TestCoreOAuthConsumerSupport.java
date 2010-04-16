@@ -228,18 +228,25 @@ public class TestCoreOAuthConsumerSupport extends TestCase {
     OAuthConsumerToken token = new OAuthConsumerToken();
     URL url = new URL("https://myhost.com/somepath?with=some&query=params&too");
 
+    expect(details.isAcceptsAuthorizationHeader()).andReturn(true);
+    replay(details);
+    assertEquals("https://myhost.com/somepath?with=some&query=params&too", support.configureURLForProtectedAccess(url, token, details, "GET", null).toString());
+    verify(details);
+    reset(details);
+
+    expect(details.isAcceptsAuthorizationHeader()).andReturn(false);
     replay(details);
     assertEquals("https://myhost.com/somepath?myquerystring", support.configureURLForProtectedAccess(url, token, details, "GET", null).toString());
     verify(details);
     reset(details);
 
     replay(details);
-    assertEquals("https://myhost.com/somepath", support.configureURLForProtectedAccess(url, token, details, "POST", null).toString());
+    assertEquals("https://myhost.com/somepath?with=some&query=params&too", support.configureURLForProtectedAccess(url, token, details, "POST", null).toString());
     verify(details);
     reset(details);
 
     replay(details);
-    assertEquals("https://myhost.com/somepath", support.configureURLForProtectedAccess(url, token, details, "PUT", null).toString());
+    assertEquals("https://myhost.com/somepath?with=some&query=params&too", support.configureURLForProtectedAccess(url, token, details, "PUT", null).toString());
     verify(details);
     reset(details);
   }
