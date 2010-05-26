@@ -283,7 +283,7 @@ public class CoreOAuthConsumerSupport implements OAuthConsumerSupport, Initializ
       return null;
     }
     else {
-      Map<String, Set<String>> oauthParams = loadOAuthParameters(details, url, accessToken, httpMethod, additionalParameters);
+      Map<String, Set<CharSequence>> oauthParams = loadOAuthParameters(details, url, accessToken, httpMethod, additionalParameters);
       String realm = details.getAuthorizationHeaderRealm();
 
       StringBuilder builder = new StringBuilder("OAuth ");
@@ -293,15 +293,15 @@ public class CoreOAuthConsumerSupport implements OAuthConsumerSupport, Initializ
         writeComma = true;
       }
 
-      for (Map.Entry<String, Set<String>> paramValuesEntry : oauthParams.entrySet()) {
-        Set<String> paramValues = paramValuesEntry.getValue();
-        String paramValue = paramValues != null && !paramValues.isEmpty() ? paramValues.iterator().next() : null;
-        if (paramValue != null) { //token is optional.
+      for (Map.Entry<String, Set<CharSequence>> paramValuesEntry : oauthParams.entrySet()) {
+        Set<CharSequence> paramValues = paramValuesEntry.getValue();
+        CharSequence paramValue = findValidHeaderValue(paramValues);
+        if (paramValue != null) {
           if (writeComma) {
             builder.append(", ");
           }
 
-          builder.append(paramValuesEntry.getKey()).append("=\"").append(oauthEncode(paramValue)).append('"');
+          builder.append(paramValuesEntry.getKey()).append("=\"").append(oauthEncode(paramValue.toString())).append('"');
           writeComma = true;
         }
       }
@@ -310,9 +310,26 @@ public class CoreOAuthConsumerSupport implements OAuthConsumerSupport, Initializ
     }
   }
 
+  /**
+   * Finds a valid header value that is valid for the OAuth header.
+   *
+   * @param paramValues The possible values for the oauth header.
+   * @return The selected value, or null if none were found.
+   */
+  protected String findValidHeaderValue(Set<CharSequence> paramValues) {
+    String selectedValue = null;
+    if (paramValues != null && !paramValues.isEmpty()) {
+      CharSequence value = paramValues.iterator().next();
+      if (!(value instanceof QueryParameterValue)) {
+        selectedValue = value.toString();
+      }
+    }
+    return selectedValue;
+  }
+
   // Inherited.
   public String getOAuthQueryString(ProtectedResourceDetails details, OAuthConsumerToken accessToken, URL url, String httpMethod, Map<String, String> additionalParameters) {
-    Map<String, Set<String>> oauthParams = loadOAuthParameters(details, url, accessToken, httpMethod, additionalParameters);
+    Map<String, Set<CharSequence>> oauthParams = loadOAuthParameters(details, url, accessToken, httpMethod, additionalParameters);
 
     StringBuilder queryString = new StringBuilder();
     if (details.isAcceptsAuthorizationHeader()) {
@@ -332,11 +349,11 @@ public class CoreOAuthConsumerSupport implements OAuthConsumerSupport, Initializ
     while (parametersIt.hasNext()) {
       String parameter = parametersIt.next();
       queryString.append(parameter);
-      Set<String> values = oauthParams.get(parameter);
+      Set<CharSequence> values = oauthParams.get(parameter);
       if (values != null) {
-        Iterator<String> valuesIt = values.iterator();
+        Iterator<CharSequence> valuesIt = values.iterator();
         while (valuesIt.hasNext()) {
-          String parameterValue = valuesIt.next();
+          CharSequence parameterValue = valuesIt.next();
           if (parameterValue != null) {
             queryString.append('=').append(parameterValue);
           }
@@ -446,14 +463,14 @@ public class CoreOAuthConsumerSupport implements OAuthConsumerSupport, Initializ
    * @param additionalParameters Additional oauth parameters (outside of the core oauth spec).
    * @return The parameters.
    */
-  protected Map<String, Set<String>> loadOAuthParameters(ProtectedResourceDetails details, URL requestURL, OAuthConsumerToken requestToken, String httpMethod, Map<String, String> additionalParameters) {
-    Map<String, Set<String>> oauthParams = new TreeMap<String, Set<String>>();
+  protected Map<String, Set<CharSequence>> loadOAuthParameters(ProtectedResourceDetails details, URL requestURL, OAuthConsumerToken requestToken, String httpMethod, Map<String, String> additionalParameters) {
+    Map<String, Set<CharSequence>> oauthParams = new TreeMap<String, Set<CharSequence>>();
 
     if (additionalParameters != null) {
       for (Map.Entry<String, String> additionalParam : additionalParameters.entrySet()) {
-        Set<String> values = oauthParams.get(additionalParam.getKey());
+        Set<CharSequence> values = oauthParams.get(additionalParam.getKey());
         if (values == null) {
-          values = new TreeSet<String>();
+          values = new HashSet<CharSequence>();
           oauthParams.put(additionalParam.getKey(), values);
         }
         if (additionalParam.getValue() != null) {
@@ -467,19 +484,19 @@ public class CoreOAuthConsumerSupport implements OAuthConsumerSupport, Initializ
       StringTokenizer queryTokenizer = new StringTokenizer(query, "&");
       while (queryTokenizer.hasMoreElements()) {
         String token = (String) queryTokenizer.nextElement();
-        String value = null;
+        CharSequence value = null;
         int equalsIndex = token.indexOf('=');
         if (equalsIndex < 0) {
           token = urlDecode(token);
         }
         else {
-          value = urlDecode(token.substring(equalsIndex + 1));
+          value = new QueryParameterValue(urlDecode(token.substring(equalsIndex + 1)));
           token = urlDecode(token.substring(0, equalsIndex));
         }
 
-        Set<String> values = oauthParams.get(token);
+        Set<CharSequence> values = oauthParams.get(token);
         if (values == null) {
-          values = new TreeSet<String>();
+          values = new HashSet<CharSequence>();
           oauthParams.put(token, values);
         }
         if (value != null) {
@@ -490,19 +507,19 @@ public class CoreOAuthConsumerSupport implements OAuthConsumerSupport, Initializ
 
     String tokenSecret = requestToken == null ? null : requestToken.getSecret();
     String nonce = getNonceFactory().generateNonce();
-    oauthParams.put(OAuthConsumerParameter.oauth_consumer_key.toString(), Collections.singleton(details.getConsumerKey()));
+    oauthParams.put(OAuthConsumerParameter.oauth_consumer_key.toString(), Collections.singleton((CharSequence) details.getConsumerKey()));
     if ((requestToken != null) && (requestToken.getValue() != null)) {
-      oauthParams.put(OAuthConsumerParameter.oauth_token.toString(), Collections.singleton(requestToken.getValue()));
+      oauthParams.put(OAuthConsumerParameter.oauth_token.toString(), Collections.singleton((CharSequence) requestToken.getValue()));
     }
 
-    oauthParams.put(OAuthConsumerParameter.oauth_nonce.toString(), Collections.singleton(nonce));
-    oauthParams.put(OAuthConsumerParameter.oauth_signature_method.toString(), Collections.singleton(details.getSignatureMethod()));
-    oauthParams.put(OAuthConsumerParameter.oauth_timestamp.toString(), Collections.singleton(String.valueOf(System.currentTimeMillis() / 1000)));
-    oauthParams.put(OAuthConsumerParameter.oauth_version.toString(), Collections.singleton("1.0"));
+    oauthParams.put(OAuthConsumerParameter.oauth_nonce.toString(), Collections.singleton((CharSequence) nonce));
+    oauthParams.put(OAuthConsumerParameter.oauth_signature_method.toString(), Collections.singleton((CharSequence) details.getSignatureMethod()));
+    oauthParams.put(OAuthConsumerParameter.oauth_timestamp.toString(), Collections.singleton((CharSequence) String.valueOf(System.currentTimeMillis() / 1000)));
+    oauthParams.put(OAuthConsumerParameter.oauth_version.toString(), Collections.singleton((CharSequence) "1.0"));
     String signatureBaseString = getSignatureBaseString(oauthParams, requestURL, httpMethod);
     OAuthSignatureMethod signatureMethod = getSignatureFactory().getSignatureMethod(details.getSignatureMethod(), details.getSharedSecret(), tokenSecret);
     String signature = signatureMethod.sign(signatureBaseString);
-    oauthParams.put(OAuthConsumerParameter.oauth_signature.toString(), Collections.singleton(signature));
+    oauthParams.put(OAuthConsumerParameter.oauth_signature.toString(), Collections.singleton((CharSequence) signature));
     return oauthParams;
   }
 
@@ -578,10 +595,10 @@ public class CoreOAuthConsumerSupport implements OAuthConsumerSupport, Initializ
    * @param httpMethod  The http method.
    * @return The signature base string.
    */
-  protected String getSignatureBaseString(Map<String, Set<String>> oauthParams, URL requestURL, String httpMethod) {
+  protected String getSignatureBaseString(Map<String, Set<CharSequence>> oauthParams, URL requestURL, String httpMethod) {
     TreeMap<String, TreeSet<String>> sortedParameters = new TreeMap<String, TreeSet<String>>();
 
-    for (Map.Entry<String, Set<String>> param : oauthParams.entrySet()) {
+    for (Map.Entry<String, Set<CharSequence>> param : oauthParams.entrySet()) {
       //first encode all parameter names and values (spec section 9.1)
       String key = oauthEncode(param.getKey());
 
@@ -592,8 +609,8 @@ public class CoreOAuthConsumerSupport implements OAuthConsumerSupport, Initializ
         sortedParameters.put(key, sortedValues);
       }
 
-      for (String value : param.getValue()) {
-        sortedValues.add(oauthEncode(value));
+      for (CharSequence value : param.getValue()) {
+        sortedValues.add(oauthEncode(value.toString()));
       }
     }
 
@@ -753,5 +770,44 @@ public class CoreOAuthConsumerSupport implements OAuthConsumerSupport, Initializ
    */
   public void setReadTimeout(int readTimeout) {
     this.readTimeout = readTimeout;
+  }
+
+  /**
+   * Marker class for an oauth parameter value that is a query parameter and should therefore not be included in the authorization header.
+   */
+  public static class QueryParameterValue implements CharSequence {
+
+    private final String value;
+
+    public QueryParameterValue(String value) {
+      this.value = value;
+    }
+
+    public int length() {
+      return this.value.length();
+    }
+
+    public char charAt(int index) {
+      return this.value.charAt(index);
+    }
+
+    public CharSequence subSequence(int start, int end) {
+      return this.value.subSequence(start, end);
+    }
+
+    @Override
+    public String toString() {
+      return this.value;
+    }
+
+    @Override
+    public int hashCode() {
+      return this.value.hashCode();
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+      return this.value.equals(obj);
+    }
   }
 }
