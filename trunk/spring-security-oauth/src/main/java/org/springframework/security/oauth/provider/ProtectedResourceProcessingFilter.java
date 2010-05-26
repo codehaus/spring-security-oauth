@@ -16,11 +16,9 @@
 
 package org.springframework.security.oauth.provider;
 
-import org.springframework.security.Authentication;
 import org.springframework.security.AccessDeniedException;
-import org.springframework.security.providers.AbstractAuthenticationToken;
+import org.springframework.security.Authentication;
 import org.springframework.security.context.SecurityContextHolder;
-import org.springframework.security.oauth.common.OAuthConsumerParameter;
 import org.springframework.security.oauth.provider.token.OAuthAccessProviderToken;
 import org.springframework.security.oauth.provider.token.OAuthProviderToken;
 
@@ -29,7 +27,6 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.util.Map;
 
 /**
  * Processing filter for requests to protected resources. This filter attempts to load the OAuth authentication

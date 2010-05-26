@@ -23,6 +23,5 @@ public interface OAuthTokenLifecycleRegistry {
    *
    * @param lifecycleListeners The listeners.
    */
-  @Autowired ( required = false )
   void register(OAuthTokenLifecycleListener... lifecycleListeners);
 }
