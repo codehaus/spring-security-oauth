@@ -47,10 +47,12 @@ public class UserAuthorizationSuccessfulAuthenticationHandler extends SimpleUrlA
 
   public UserAuthorizationSuccessfulAuthenticationHandler() {
     super();
+    setRedirectStrategy(new DefaultRedirectStrategy());
   }
 
   public UserAuthorizationSuccessfulAuthenticationHandler(String s) {
     super(s);
+    setRedirectStrategy(new DefaultRedirectStrategy());
   }
 
   @Override
