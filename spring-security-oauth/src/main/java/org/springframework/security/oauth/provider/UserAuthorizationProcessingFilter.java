@@ -30,6 +30,8 @@ import org.springframework.security.ui.rememberme.NullRememberMeServices;
 import org.springframework.util.Assert;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
 
 /**
  * Processing filter for handling a request to authenticate an OAuth request token. The default {@link #setFilterProcessesUrl(String) processes URL}
@@ -55,6 +57,7 @@ public class UserAuthorizationProcessingFilter extends AbstractProcessingFilter 
   private String callbackParameterName = "callbackURL";
   private OAuthVerifierServices verifierServices;
   private boolean require10a = true;
+  private final DefaultRedirectStrategy redirectStrategy = new DefaultRedirectStrategy();
 
   public UserAuthorizationProcessingFilter() {
     setDefaultTargetUrl("/");
@@ -131,6 +134,17 @@ public class UserAuthorizationProcessingFilter extends AbstractProcessingFilter 
 
   public String getDefaultFilterProcessesUrl() {
     return "/oauth_authenticate_token";
+  }
+
+  @Override
+  protected void sendRedirect(HttpServletRequest request, HttpServletResponse response, String url) throws IOException {
+    this.redirectStrategy.sendRedirect(request, response, url);
+  }
+
+  @Override
+  public void setUseRelativeContext(boolean useRelativeContext) {
+    this.redirectStrategy.setContextRelative(useRelativeContext);
+    super.setUseRelativeContext(useRelativeContext);
   }
 
   /**
