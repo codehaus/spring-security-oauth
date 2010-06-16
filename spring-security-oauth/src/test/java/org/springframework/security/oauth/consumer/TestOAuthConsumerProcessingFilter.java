@@ -103,6 +103,7 @@ public class TestOAuthConsumerProcessingFilter extends TestCase {
     expect(tokenServices.getToken("dep2")).andReturn(token2);
     expect(request.getParameter("oauth_verifier")).andReturn("verifier");
     expect(support.getAccessToken(token2, "verifier")).andReturn(token2a);
+    tokenServices.removeToken("dep2");
     tokenServices.storeToken("dep2", token2a);
     expect(tokenServices.getToken("dep3")).andReturn(null);
     OAuthConsumerToken token3 = new OAuthConsumerToken();
