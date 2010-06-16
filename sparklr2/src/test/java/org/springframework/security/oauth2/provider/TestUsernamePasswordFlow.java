@@ -56,7 +56,7 @@ public class TestUsernamePasswordFlow extends TestCase {
    * tests an invalid flow
    */
   public void testInvalidFlow() throws Exception {
-    int port = 8888;
+    int port = 8080;
     Client client = Client.create();
     client.setFollowRedirects(false);
 

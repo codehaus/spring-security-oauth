@@ -134,7 +134,13 @@ public class OAuthConsumerProcessingFilter implements Filter, InitializingBean, 
               }
 
               //authorize the request token and store it.
-              token = getConsumerSupport().getAccessToken(token, request.getParameter(OAuthProviderParameter.oauth_verifier.toString()));
+              try {
+                token = getConsumerSupport().getAccessToken(token, request.getParameter(OAuthProviderParameter.oauth_verifier.toString()));
+              }
+              finally {
+                //make sure any request tokens are removed.
+                tokenServices.removeToken(dependency);
+              }
 
               if (LOG.isDebugEnabled()) {
                 LOG.debug("Access token " + token + " obtained for dependency " + dependency + ". Now storing and using.");
