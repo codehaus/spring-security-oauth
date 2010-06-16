@@ -41,4 +41,10 @@ public interface OAuthConsumerTokenServices {
    */
   void storeToken(String resourceId, OAuthConsumerToken token);
 
+  /**
+   * Removes the token for the specified resource.
+   *
+   * @param resourceId The id of the resource.
+   */
+  void removeToken(String resourceId);
 }

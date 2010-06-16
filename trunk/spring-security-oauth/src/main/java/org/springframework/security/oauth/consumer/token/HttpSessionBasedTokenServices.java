@@ -36,10 +36,40 @@ public class HttpSessionBasedTokenServices implements OAuthConsumerTokenServices
   }
 
   public OAuthConsumerToken getToken(String resourceId) throws AuthenticationException {
-    return (OAuthConsumerToken) this.session.getAttribute(KEY_PREFIX + "#" + resourceId);
+    OAuthConsumerToken consumerToken = (OAuthConsumerToken) this.session.getAttribute(KEY_PREFIX + "#" + resourceId);
+    if (consumerToken != null) {
+      Long expiration = (Long) this.session.getAttribute(KEY_PREFIX + "#" + resourceId + "#EXPIRATION");
+      if (expiration != null && (System.currentTimeMillis() > expiration)) {
+        //token expired; remove it
+        removeToken(resourceId);
+        consumerToken = null;
+      }
+    }
+
+    return consumerToken;
   }
 
   public void storeToken(String resourceId, OAuthConsumerToken token) {
     this.session.setAttribute(KEY_PREFIX + "#" + resourceId, token);
+
+    //adding support for oauth session extension (http://oauth.googlecode.com/svn/spec/ext/session/1.0/drafts/1/spec.html)
+    Long expiration = null;
+    String expiresInValue = token.getAdditionalParameters() != null ? token.getAdditionalParameters().get("oauth_expires_in") : null;
+    if (expiresInValue != null) {
+      try {
+        expiration = System.currentTimeMillis() + (Integer.parseInt(expiresInValue) * 1000);
+      }
+      catch (NumberFormatException e) {
+        //fall through.
+      }
+    }
+
+    if (expiration != null) {
+      this.session.setAttribute(KEY_PREFIX + "#" + resourceId + "#EXPIRATION", expiration);
+    }
+  }
+
+  public void removeToken(String resourceId) {
+    this.session.removeAttribute(KEY_PREFIX + "#" + resourceId);
   }
 }
