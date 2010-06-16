@@ -2,21 +2,18 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 
   <modelVersion>4.0.0</modelVersion>
-  <groupId>org.codehaus.enunciate.samples.sparklr</groupId>
+
+  <parent>
+    <groupId>org.codehaus.spring-security-oauth</groupId>
+    <artifactId>spring-security-oauth-parent</artifactId>
+    <version>3.17.SS3-SNAPSHOT</version>
+  </parent>
+
   <artifactId>tonr</artifactId>
   <packaging>war</packaging>
-  <version>3.16.SS3-SNAPSHOT</version>
 
   <build>
     <plugins>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-compiler-plugin</artifactId>
-        <configuration>
-          <source>1.5</source>
-          <target>1.5</target>
-        </configuration>
-      </plugin>
       <plugin>
         <groupId>org.mortbay.jetty</groupId>
         <artifactId>maven-jetty-plugin</artifactId>
@@ -28,6 +25,13 @@
           </connectors>
         </configuration>
       </plugin>
+      <plugin>
+        <!--skip deploy (this is just a test module)-->
+        <artifactId>maven-deploy-plugin</artifactId>
+        <configuration>
+          <skip>true</skip>
+        </configuration>
+      </plugin>
     </plugins>
   </build>
 
@@ -35,25 +39,25 @@
     <dependency>
       <groupId>org.codehaus.spring-security-oauth</groupId>
       <artifactId>spring-security-oauth</artifactId>
-      <version>3.16.SS3</version>
+      <version>${project.version}</version>
     </dependency>
 
     <dependency>
       <groupId>org.springframework.security</groupId>
       <artifactId>spring-security-taglibs</artifactId>
-      <version>3.0.2.RELEASE</version>
+      <version>${spring.security.version}</version>
     </dependency>
 
     <dependency>
       <groupId>org.springframework</groupId>
       <artifactId>spring-webmvc</artifactId>
-      <version>3.0.1.RELEASE</version>
+      <version>${spring.version}</version>
     </dependency>
 
     <dependency>
       <groupId>org.springframework</groupId>
       <artifactId>spring-tx</artifactId>
-      <version>3.0.1.RELEASE</version>
+      <version>${spring.version}</version>
     </dependency>
 
     <dependency>
