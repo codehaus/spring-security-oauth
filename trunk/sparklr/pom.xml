@@ -5,7 +5,7 @@
   <groupId>org.codehaus.enunciate.samples.sparklr</groupId>
   <artifactId>sparklr</artifactId>
   <packaging>war</packaging>
-  <version>3.16-SNAPSHOT</version>
+  <version>3.17</version>
 
   <build>
     <plugins>
@@ -44,7 +44,7 @@
     <dependency>
       <groupId>org.codehaus.spring-security-oauth</groupId>
       <artifactId>spring-security-oauth</artifactId>
-      <version>3.16</version>
+      <version>${project.version}</version>
     </dependency>
 
     <dependency>

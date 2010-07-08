@@ -6,7 +6,7 @@
   <name>OAuth for Spring Security</name>
   <description>Module for providing OAuth support to Spring Security</description>
   <packaging>jar</packaging>
-  <version>3.17-SNAPSHOT</version>
+  <version>3.17</version>
 
   <build>
     <plugins>
