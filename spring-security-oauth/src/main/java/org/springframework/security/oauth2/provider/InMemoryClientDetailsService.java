@@ -16,8 +16,8 @@
 
 package org.springframework.security.oauth2.provider;
 
-import org.springframework.security.oauth.common.OAuthException;
-import org.springframework.security.oauth.provider.InvalidOAuthParametersException;
+import org.springframework.security.oauth2.common.exceptions.ClientAuthenticationException;
+import org.springframework.security.oauth2.common.exceptions.OAuth2Exception;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -31,10 +31,10 @@ public class InMemoryClientDetailsService implements ClientDetailsService {
 
   private Map<String, ? extends ClientDetails> clientDetailsStore = new HashMap<String, ClientDetails>();
 
-  public ClientDetails loadClientByClientId(String clientId) throws OAuthException {
+  public ClientDetails loadClientByClientId(String clientId) throws OAuth2Exception {
     ClientDetails details = clientDetailsStore.get(clientId);
     if (details == null) {
-      throw new InvalidOAuthParametersException("Client not found: " + clientId);
+      throw new ClientAuthenticationException("Client not found: " + clientId);
     }
     return details;
   }

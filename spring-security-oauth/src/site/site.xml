@@ -28,7 +28,8 @@
     </menu>
 
     <menu name="Other Links">
-      <item name="OAuth" href="http://oauth.net/"/>
+      <item name="OAuth 1.0" href="http://oauth.net/"/>
+      <item name="OAuth 2.0" href="http://tools.ietf.org/html/draft-ietf-oauth-v2-05"/>
       <item name="Spring Security" href="http://static.springframework.org/spring-security/site/"/>
       <item name="Spring" href="http://springframework.org/"/>
     </menu>

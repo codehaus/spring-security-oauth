@@ -16,6 +16,7 @@ public class BaseClientDetails implements ClientDetails {
   private String clientSecret;
   private List<String> scope;
   private List<String> authorizedFlows;
+  private String webServerRedirectUri;
   private List<GrantedAuthority> authorities = Collections.emptyList();
 
   public String getClientId() {
@@ -56,6 +57,14 @@ public class BaseClientDetails implements ClientDetails {
 
   public void setAuthorizedFlows(List<String> authorizedFlows) {
     this.authorizedFlows = authorizedFlows;
+  }
+
+  public String getWebServerRedirectUri() {
+    return webServerRedirectUri;
+  }
+
+  public void setWebServerRedirectUri(String webServerRedirectUri) {
+    this.webServerRedirectUri = webServerRedirectUri;
   }
 
   public List<GrantedAuthority> getAuthorities() {

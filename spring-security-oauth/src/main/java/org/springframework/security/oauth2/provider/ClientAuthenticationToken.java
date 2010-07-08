@@ -18,7 +18,25 @@ public class ClientAuthenticationToken extends AbstractAuthenticationToken {
   private final String clientSecret;
   private final String flowType;
   private final Set<String> scope;
-  private final HttpServletRequest request;
+  private final boolean requiresImmediateAuthentication;
+  private final String state;
+  private final transient HttpServletRequest request;
+  private final String verificationCode;
+  private final String requestedRedirect;
+  private boolean denied;
+
+  public ClientAuthenticationToken(String clientId, String clientSecret, Set<String> scope, String flowType) {
+    super(null);
+    this.clientId = clientId;
+    this.clientSecret = clientSecret;
+    this.flowType = flowType;
+    this.scope = scope;
+    this.request = null;
+    this.requiresImmediateAuthentication = false;
+    this.state = null;
+    this.verificationCode = null;
+    this.requestedRedirect = null;
+  }
 
   /**
    * Construct an unauthenticated Client Authentication from a request and a specific authorization type.
@@ -30,6 +48,10 @@ public class ClientAuthenticationToken extends AbstractAuthenticationToken {
     super(null);
     this.clientId = request.getParameter("client_id");
     this.clientSecret = request.getParameter("client_secret");
+    this.requiresImmediateAuthentication = "true".equalsIgnoreCase(request.getParameter("immediate"));
+    this.requestedRedirect = request.getParameter("redirect_uri");
+    this.state = request.getParameter("state");
+    this.verificationCode = request.getParameter("code");
 
     Set<String> scope = new TreeSet<String>();
     String scopeValue = request.getParameter("scope");
@@ -56,6 +78,10 @@ public class ClientAuthenticationToken extends AbstractAuthenticationToken {
     this.scope = unauthenticated.getScope();
     this.flowType = unauthenticated.getFlowType();
     this.request = unauthenticated.getRequest();
+    this.requestedRedirect = unauthenticated.getRequestedRedirect();
+    this.requiresImmediateAuthentication = false; //irrelevant for authenticated requests.
+    this.state = unauthenticated.getState();
+    this.verificationCode = unauthenticated.getVerificationCode();
     setAuthenticated(true);
   }
 
@@ -75,6 +101,18 @@ public class ClientAuthenticationToken extends AbstractAuthenticationToken {
     return getClientSecret();
   }
 
+  public boolean isRequiresImmediateAuthentication() {
+    return this.requiresImmediateAuthentication;
+  }
+
+  public String getRequestedRedirect() {
+    return requestedRedirect;
+  }
+
+  public String getState() {
+    return state;
+  }
+
   public Set<String> getScope() {
     return this.scope;
   }
@@ -85,5 +123,18 @@ public class ClientAuthenticationToken extends AbstractAuthenticationToken {
 
   public HttpServletRequest getRequest() {
     return request;
+  }
+
+  public String getVerificationCode() {
+    return verificationCode;
+  }
+
+  public boolean isDenied() {
+    return denied;
+  }
+
+  public void setDenied(boolean denied) {
+    this.denied = denied;
+    setAuthenticated(!denied);
   }
 }

@@ -55,6 +55,14 @@ public interface ClientDetails {
   List<String> getAuthorizedFlows();
 
   /**
+   * The redirect URI for this client during the "web_server" flow. Return null if the redirect uri isn't specified. This value is ignored if the
+   * "web_server" flow isn't supported by this client.
+   *
+   * @return The redirect URI for this client during the "web_server" flow.
+   */
+  String getWebServerRedirectUri();
+
+  /**
    * Get the authorities that are granted to the OAuth client.  Note that these are NOT the authorities
    * that are granted to the client with a user-authorized access token. Instead, these authorities are
    * inherent to the client itself.
