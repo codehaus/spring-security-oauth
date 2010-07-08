@@ -12,7 +12,7 @@ Introduction
   is the OAuth <consumer>.
 
   For this tutorial, we will see OAuth for Spring Security in action by deploying a photo-sharing application and a
-  photo-printing application on our local machine.  We'll named the photo-sharing application "Sparklr" and the
+  photo-printing application on our local machine.  We'll name the photo-sharing application "Sparklr" and the
   photo-printing application "Tonr".  A user named "Marissa" (who has an account at both Sparkr and Tonr) will use Tonr
   to access her photos on Sparklr without ever giving Tonr her credentials to Sparklr.
 

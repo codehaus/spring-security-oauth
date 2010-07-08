@@ -16,7 +16,8 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
 /**
- * Basic authorization filter for OAuth 2.0 as defined by http://tools.ietf.org/html/draft-ietf-oauth-v2-05
+ * Basic authorization filter for OAuth 2.0 as defined by http://tools.ietf.org/html/draft-ietf-oauth-v2-05. This authorization filter processes requests from
+ * OAuth clients (as opposed to OAuth users via user agent).
  *
  * @author Ryan Heaton
  */

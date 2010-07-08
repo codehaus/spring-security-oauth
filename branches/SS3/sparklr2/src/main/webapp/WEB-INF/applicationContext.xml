@@ -29,10 +29,15 @@
     </authentication-provider>
   </authentication-manager>
 
-  <oauth:provider client-details-service-ref="clientDetails"/>
+  <oauth:provider client-details-service-ref="clientDetails">
+    <oauth:flows>
+      <oauth:web_server user-approval-page="/oauth/confirm_access"/>
+    </oauth:flows>
+  </oauth:provider>
 
   <oauth:client-details-service id="clientDetails">
-    <oauth:client clientId="my-trusted-client" authorizedFlows="username"/>
+    <oauth:client clientId="my-trusted-client" authorizedFlows="username,web_server"/>
+    <oauth:client clientId="my-less-trusted-client" authorizedFlows="web_server"/>
   </oauth:client-details-service>
 
 </beans:beans>

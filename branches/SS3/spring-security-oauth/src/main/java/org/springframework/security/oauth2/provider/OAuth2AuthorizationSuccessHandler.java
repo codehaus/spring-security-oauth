@@ -36,6 +36,7 @@ public class OAuth2AuthorizationSuccessHandler implements AuthenticationSuccessH
 
       OAuth2AccessToken accessToken = getTokenServices().createAccessToken((OAuth2Authentication) authentication);
       OAuth2Serialization serialization = getSerializationService().serialize(accessToken, request.getParameter("form"));
+      response.setHeader("Cache-Control","no-store");
       response.setContentType(serialization.getMediaType());
       response.getWriter().write(serialization.getSerializedForm());
       return;

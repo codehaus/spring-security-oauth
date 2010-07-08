@@ -16,7 +16,7 @@
 
 package org.springframework.security.oauth2.provider;
 
-import org.springframework.security.oauth.common.OAuthException;
+import org.springframework.security.oauth2.common.exceptions.OAuth2Exception;
 
 /**
  * A service that provides the details about an oauth consumer.
@@ -30,8 +30,8 @@ public interface ClientDetailsService {
    *
    * @param clientId The client id.
    * @return The client details.
-   * @throws org.springframework.security.oauth.common.OAuthException If the client account is locked, expired, disabled, or for any other reason.
+   * @throws OAuth2Exception If the client account is locked, expired, disabled, or for any other reason.
    */
-  ClientDetails loadClientByClientId(String clientId) throws OAuthException;
+  ClientDetails loadClientByClientId(String clientId) throws OAuth2Exception;
 
 }

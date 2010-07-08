@@ -17,7 +17,6 @@
 package org.springframework.security.oauth2.config;
 
 import org.springframework.beans.factory.xml.NamespaceHandlerSupport;
-import org.springframework.security.oauth.config.*;
 
 /**
  * @author Ryan Heaton

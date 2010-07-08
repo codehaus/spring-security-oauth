@@ -73,8 +73,13 @@ public class OAuth2ExceptionHandlerFilter extends GenericFilterBean {
 
   protected void handleSecurityException(HttpServletRequest request, HttpServletResponse response, FilterChain chain, RuntimeException ase) throws IOException {
     if (ase instanceof OAuth2Exception) {
+      if (logger.isDebugEnabled()) {
+        logger.debug("OAuth error.", ase);
+      }
+      
       OAuth2Serialization serialization = getSerializationService().serialize((OAuth2Exception) ase, request.getParameter("format"));
       response.setStatus(400);
+      response.setHeader("Cache-Control", "no-store");
       response.setContentType(serialization.getMediaType());
       response.getWriter().write(serialization.getSerializedForm());
       response.flushBuffer();
