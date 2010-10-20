@@ -13,10 +13,9 @@ Welcome
   support is provided for OAuth Spec 1.0a.> Support is also provided for both OAuth provider developers and OAuth consumer developers.
   As of version 3.13, there is also support for {{{./twolegged.html}two-legged OAuth}} (a.k.a. "Signed Fetch").
 
-  As of version 3.17, some support for {{{http://tools.ietf.org/html/draft-ietf-oauth-v2-05}OAuth 2.0}} has been added. Future releases will
-  add support for other OAuth 2.0 flows for both the client and the provider. Look at {{{http://jira.codehaus.org/browse/OAUTHSS-50}OAUTHSS-50}}
-  to view the current progress of support for OAuth 2.0. Also note that OAuth 2.0 support is only available for Spring Security 3 and not
-  implemented for Spring Security 2.x.
+  As of version 3.17, some support for {{{http://tools.ietf.org/html/draft-ietf-oauth-v2-05}OAuth 2.0}} has been added. Additional
+  support will be added at this project's {{{http://static.springsource.org/spring-security/oauth/support.html}new location}}. Also 
+  note that OAuth 2.0 support is only available for Spring Security 3 and not implemented for Spring Security 2.x.
 
   Applying security to an application is not for the faint of heart, and OAuth is no exception. Before you get started,
   you're going to want to make sure you understand OAuth and the problem it's designed to address. There is good

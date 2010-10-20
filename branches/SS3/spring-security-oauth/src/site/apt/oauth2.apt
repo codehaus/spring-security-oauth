@@ -116,7 +116,7 @@ Introduction
 
 *{User Agent Flow}
 
-  Support for the User Agent OAuth 2.0 Flow is being tracked by {{{http://jira.codehaus.org/browse/OAUTHSS-54}OAUTHSS-54}}. 
+  Not implemented here. See this project's {{{http://static.springsource.org/spring-security/oauth/support.html}new location}}.
 
 *{Web Server Flow}
 
@@ -137,7 +137,7 @@ Introduction
 
 *{Device Flow}
 
-  Support for the Device OAuth 2.0 Flow is being tracked by {{{http://jira.codehaus.org/browse/OAUTHSS-56}OAUTHSS-56}}.
+  Not implemented here. See this project's {{{http://static.springsource.org/spring-security/oauth/support.html}new location}}.
 
 *{Username Password Flow}
 
@@ -146,12 +146,12 @@ Introduction
 
 *{Client Credentials Flow}
 
-  Support for the Client Credentials OAuth 2.0 Flow is being tracked by {{{http://jira.codehaus.org/browse/OAUTHSS-58}OAUTHSS-58}}.
+  Not implemented here. See this project's {{{http://static.springsource.org/spring-security/oauth/support.html}new location}}.
 
 *{Assertion Flow}
 
-  Support for the Assertion OAuth 2.0 Flow is being tracked by {{{http://jira.codehaus.org/browse/OAUTHSS-59}OAUTHSS-59}}.
+  Not implemented here. See this project's {{{http://static.springsource.org/spring-security/oauth/support.html}new location}}.
 
 {OAuth 2.0 Client}
 
-  Support for an OAuth 2.0 client is still under development.
+  Not implemented here. See this project's {{{http://static.springsource.org/spring-security/oauth/support.html}new location}}. 
